@@ -4,10 +4,7 @@
 
 # SpectreScan
 <p align="left">
-  <img src="https://skillicons.dev/icons?i=python" alt="Python" width="30" height="30"/>
-  <img src="https://cdn.simpleicons.org/linux/FCC624" alt="Linux" width="30" height="30"/>
-  <img src="https://cdn.simpleicons.org/windows/0078D6" alt="Windows" width="30" height="30"/>
-  <img src="https://cdn.simpleicons.org/apple/000000" alt="macOS" width="30" height="30"/>
+  <img src="https://skillicons.dev/icons?i=python,linux,windows,apple" alt="Platform Support" height="30"/>
 </p>
 
 **Professional-grade Open Source Port Scanner**
