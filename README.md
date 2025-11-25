@@ -472,7 +472,7 @@ spectrescan --gui
 
 ---
 
-## <img src="https://cdn.simpleicons.org/sonarqube/4E9BCD" width="20" height="20" style="vertical-align: middle;"/> Scan Modes
+## <img src="https://cdn.simpleicons.org/radar/00C853" width="20" height="20" style="vertical-align: middle;"/> Scan Modes
 
 ### TCP Connect Scan
 
@@ -607,7 +607,7 @@ spectrescan 192.168.0.0/22 \
 
 ---
 
-## <img src="https://cdn.simpleicons.org/visualstudiocode/007ACC" width="20" height="20" style="vertical-align: middle;"/> Development
+## <img src="https://cdn.simpleicons.org/git/F05032" width="20" height="20" style="vertical-align: middle;"/> Development
 
 ### Setup Development Environment
 
