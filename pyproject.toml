@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectrescan"
+version = "1.0.0"
+description = "Professional-grade port scanner with CLI, TUI, and GUI interfaces"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "BitSpectreLabs"}
+]
+keywords = ["port scanner", "network security", "penetration testing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "Topic :: Security",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/BitSpectreLabs/SpectreScan"
+Repository = "https://github.com/BitSpectreLabs/SpectreScan"
+Documentation = "https://github.com/BitSpectreLabs/SpectreScan/wiki"
+Issues = "https://github.com/BitSpectreLabs/SpectreScan/issues"
+
+[project.scripts]
+spectrescan = "spectrescan.cli.main:main"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["spectrescan/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=spectrescan --cov-report=html --cov-report=term"
