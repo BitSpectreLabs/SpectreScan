@@ -1,12 +1,14 @@
 """
 Banner grabbing module for service identification
 by BitSpectreLabs
+
+Supports both IPv4 and IPv6 addresses.
 """
 
 import socket
 import ssl
 from typing import Optional, Tuple
-from spectrescan.core.utils import format_banner
+from spectrescan.core.utils import format_banner, is_ipv6
 
 
 # Common service probes
@@ -97,7 +99,9 @@ class BannerGrabber:
         
         try:
             # Try standard connection first
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # Select address family based on IP version
+            addr_family = socket.AF_INET6 if is_ipv6(host) else socket.AF_INET
+            sock = socket.socket(addr_family, socket.SOCK_STREAM)
             sock.settimeout(self.timeout)
             sock.connect((host, port))
             
@@ -150,7 +154,9 @@ class BannerGrabber:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
             
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # Select address family based on IP version
+            addr_family = socket.AF_INET6 if is_ipv6(host) else socket.AF_INET
+            sock = socket.socket(addr_family, socket.SOCK_STREAM)
             sock.settimeout(self.timeout)
             
             ssl_sock = context.wrap_socket(sock, server_hostname=host)
@@ -184,7 +190,9 @@ class BannerGrabber:
             Tuple of (banner, service_name)
         """
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # Select address family based on IP version
+            addr_family = socket.AF_INET6 if is_ipv6(host) else socket.AF_INET
+            sock = socket.socket(addr_family, socket.SOCK_DGRAM)
             sock.settimeout(self.timeout)
             
             # Send empty probe

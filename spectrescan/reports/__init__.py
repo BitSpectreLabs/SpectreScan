@@ -30,6 +30,16 @@ from spectrescan.reports.templates import (
     create_default_templates
 )
 from spectrescan.reports.interactive_html import generate_interactive_html_report
+from spectrescan.reports.markdown_report import (
+    MarkdownReportGenerator,
+    generate_markdown_report,
+    generate_simple_markdown,
+    generate_markdown_summary,
+    results_to_markdown_table,
+    TEMPLATE_MINIMAL,
+    TEMPLATE_EXECUTIVE,
+    TEMPLATE_TECHNICAL
+)
 
 
 def generate_json_report(results: List[ScanResult], output_path: Path, summary: Optional[Dict] = None) -> None:
@@ -162,4 +172,13 @@ __all__ = [
     "generate_custom_report",
     "create_default_templates",
     "generate_interactive_html_report",
+    # Markdown reports
+    "MarkdownReportGenerator",
+    "generate_markdown_report",
+    "generate_simple_markdown",
+    "generate_markdown_summary",
+    "results_to_markdown_table",
+    "TEMPLATE_MINIMAL",
+    "TEMPLATE_EXECUTIVE",
+    "TEMPLATE_TECHNICAL",
 ]

@@ -1,6 +1,8 @@
 """
 Host discovery module for SpectreScan
 by BitSpectreLabs
+
+Supports both IPv4 and IPv6 host discovery.
 """
 
 import socket
@@ -8,7 +10,7 @@ import subprocess
 import platform
 import concurrent.futures
 from typing import List, Optional, Callable
-from spectrescan.core.utils import HostInfo, parse_target
+from spectrescan.core.utils import HostInfo, parse_target, is_ipv6, get_ip_version, IPVersion
 
 
 class HostDiscovery:
@@ -88,35 +90,54 @@ class HostDiscovery:
     
     def _ping_host(self, ip: str) -> Optional[HostInfo]:
         """
-        Ping a single host.
+        Ping a single host (supports both IPv4 and IPv6).
         
         Args:
-            ip: IP address
+            ip: IP address (IPv4 or IPv6)
             
         Returns:
             HostInfo if host is up, None otherwise
         """
-        # Determine ping command based on OS
-        param = "-n" if platform.system().lower() == "windows" else "-c"
-        timeout_param = "-w" if platform.system().lower() == "windows" else "-W"
-        timeout_value = str(int(self.timeout * 1000)) if platform.system().lower() == "windows" else str(int(self.timeout))
+        # Determine if IPv6
+        ipv6 = is_ipv6(ip)
         
-        command = ["ping", param, "1", timeout_param, timeout_value, ip]
+        # Determine ping command based on OS and IP version
+        is_windows = platform.system().lower() == "windows"
+        
+        if ipv6:
+            # Use ping6 or ping -6 for IPv6
+            if is_windows:
+                # Windows uses ping -6 for IPv6
+                command = ["ping", "-6", "-n", "1", "-w", str(int(self.timeout * 1000)), ip]
+            else:
+                # Linux/macOS: try ping6 first, fall back to ping -6
+                ping_cmd = self._get_ping6_command()
+                if ping_cmd == "ping6":
+                    command = ["ping6", "-c", "1", "-W", str(int(self.timeout)), ip]
+                else:
+                    command = ["ping", "-6", "-c", "1", "-W", str(int(self.timeout)), ip]
+        else:
+            # IPv4 ping
+            param = "-n" if is_windows else "-c"
+            timeout_param = "-w" if is_windows else "-W"
+            timeout_value = str(int(self.timeout * 1000)) if is_windows else str(int(self.timeout))
+            command = ["ping", param, "1", timeout_param, timeout_value, ip]
         
         try:
+            creationflags = subprocess.CREATE_NO_WINDOW if is_windows else 0
             result = subprocess.run(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                timeout=self.timeout + 1,
-                creationflags=subprocess.CREATE_NO_WINDOW if platform.system().lower() == "windows" else 0
+                timeout=self.timeout + 2,
+                creationflags=creationflags
             )
             
             if result.returncode == 0:
                 # Try to resolve hostname
                 hostname = self._resolve_hostname(ip)
                 
-                # Parse TTL from output if available
+                # Parse TTL/hop limit from output if available
                 output = result.stdout.decode('utf-8', errors='ignore')
                 ttl = self._parse_ttl_from_ping(output)
                 
@@ -124,12 +145,33 @@ class HostDiscovery:
                     ip=ip,
                     hostname=hostname,
                     is_up=True,
-                    ttl=ttl
+                    ttl=ttl,
+                    ip_version=6 if ipv6 else 4
                 )
         except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
             pass
         
         return None
+    
+    def _get_ping6_command(self) -> str:
+        """
+        Determine the correct ping6 command for the system.
+        
+        Returns:
+            'ping6' if available, otherwise 'ping'
+        """
+        try:
+            result = subprocess.run(
+                ["which", "ping6"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=2
+            )
+            if result.returncode == 0:
+                return "ping6"
+        except (subprocess.SubprocessError, FileNotFoundError):
+            pass
+        return "ping"
     
     def _tcp_sweep(
         self, 
@@ -172,17 +214,21 @@ class HostDiscovery:
     
     def _tcp_probe(self, ip: str, port: int) -> Optional[HostInfo]:
         """
-        Probe host with TCP connection.
+        Probe host with TCP connection (supports both IPv4 and IPv6).
         
         Args:
-            ip: IP address
+            ip: IP address (IPv4 or IPv6)
             port: Port number
             
         Returns:
             HostInfo if host responds, None otherwise
         """
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # Determine address family based on IP version
+            ipv6 = is_ipv6(ip)
+            af = socket.AF_INET6 if ipv6 else socket.AF_INET
+            
+            sock = socket.socket(af, socket.SOCK_STREAM)
             sock.settimeout(self.timeout)
             result = sock.connect_ex((ip, port))
             sock.close()
@@ -192,7 +238,8 @@ class HostDiscovery:
                 return HostInfo(
                     ip=ip,
                     hostname=hostname,
-                    is_up=True
+                    is_up=True,
+                    ip_version=6 if ipv6 else 4
                 )
         except (socket.error, OSError):
             pass
@@ -237,21 +284,28 @@ class HostDiscovery:
     
     def _parse_ttl_from_ping(self, output: str) -> Optional[int]:
         """
-        Parse TTL value from ping output.
+        Parse TTL/Hop Limit value from ping output.
+        
+        Supports both IPv4 TTL and IPv6 Hop Limit.
         
         Args:
             output: Ping command output
             
         Returns:
-            TTL value or None
+            TTL/Hop Limit value or None
         """
         import re
         
-        # Windows: TTL=64
-        # Linux: ttl=64
+        # Windows IPv4: TTL=64
+        # Linux IPv4: ttl=64
+        # Windows IPv6: Hop Limit = 64
+        # Linux IPv6: hlim=64
         patterns = [
             r'TTL=(\d+)',
             r'ttl=(\d+)',
+            r'hlim=(\d+)',
+            r'Hop Limit\s*=\s*(\d+)',
+            r'hop limit=(\d+)',
         ]
         
         for pattern in patterns:

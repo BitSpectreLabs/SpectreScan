@@ -1,11 +1,13 @@
 """
 UDP scan implementation
 by BitSpectreLabs
+
+Supports both IPv4 and IPv6 addresses.
 """
 
 import socket
 from typing import List, Optional, Callable
-from spectrescan.core.utils import ScanResult
+from spectrescan.core.utils import ScanResult, is_ipv6
 from datetime import datetime
 
 
@@ -25,20 +27,25 @@ class UdpScanner:
         """
         Perform UDP scan on a single port.
         
+        Supports both IPv4 and IPv6 addresses.
+        
         UDP scanning is challenging because:
         - Open ports may not respond
-        - Closed ports send ICMP port unreachable
+        - Closed ports send ICMP/ICMPv6 port unreachable
         - No response can mean open|filtered
         
         Args:
-            host: Target host
+            host: Target host (IPv4 or IPv6)
             port: Target port
             
         Returns:
             ScanResult object
         """
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # Determine address family based on IP version
+            af = socket.AF_INET6 if is_ipv6(host) else socket.AF_INET
+            
+            sock = socket.socket(af, socket.SOCK_DGRAM)
             sock.settimeout(self.timeout)
             
             # Send empty UDP packet (or service-specific probe)
@@ -63,7 +70,7 @@ class UdpScanner:
                 # No response - could be open or filtered
                 sock.close()
                 
-                # Try to determine if filtered by checking for ICMP unreachable
+                # Try to determine if filtered by checking for ICMP/ICMPv6 unreachable
                 # This would require raw socket access, so we mark as open|filtered
                 return ScanResult(
                     host=host,
@@ -74,7 +81,7 @@ class UdpScanner:
                 )
             
         except socket.error as e:
-            # ICMP port unreachable received - port is closed
+            # ICMP/ICMPv6 port unreachable received - port is closed
             if "forcibly closed" in str(e).lower() or "connection refused" in str(e).lower():
                 return ScanResult(
                     host=host,

@@ -1,15 +1,25 @@
 """
 Utility functions for SpectreScan
 by BitSpectreLabs
+
+Supports both IPv4 and IPv6 addresses.
 """
 
 import ipaddress
 import socket
 import re
 from typing import List, Tuple, Optional, Union
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from enum import Enum
+
+
+class IPVersion(Enum):
+    """IP version enum for address handling."""
+    IPv4 = 4
+    IPv6 = 6
+    UNKNOWN = 0
 
 
 @dataclass
@@ -38,22 +48,258 @@ class HostInfo:
     ttl: Optional[int] = None
     latency_ms: Optional[float] = None
     is_up: bool = True
+    ip_version: int = 4  # 4 for IPv4, 6 for IPv6
+    
+    def __post_init__(self):
+        """Detect IP version after initialization."""
+        self.ip_version = get_ip_version(self.ip).value
 
 
-def parse_target(target: Union[str, List[str]]) -> List[str]:
+def get_ip_version(ip: str) -> IPVersion:
+    """
+    Determine the IP version of an address.
+    
+    Args:
+        ip: IP address string
+        
+    Returns:
+        IPVersion enum (IPv4, IPv6, or UNKNOWN)
+        
+    Examples:
+        >>> get_ip_version("192.168.1.1")
+        IPVersion.IPv4
+        >>> get_ip_version("2001:db8::1")
+        IPVersion.IPv6
+        >>> get_ip_version("invalid")
+        IPVersion.UNKNOWN
+    """
+    try:
+        addr = ipaddress.ip_address(ip)
+        return IPVersion.IPv6 if addr.version == 6 else IPVersion.IPv4
+    except ValueError:
+        return IPVersion.UNKNOWN
+
+
+def is_ipv6(ip: str) -> bool:
+    """
+    Check if string is an IPv6 address.
+    
+    Args:
+        ip: IP address string
+        
+    Returns:
+        True if IPv6, False otherwise
+        
+    Examples:
+        >>> is_ipv6("2001:db8::1")
+        True
+        >>> is_ipv6("192.168.1.1")
+        False
+    """
+    return get_ip_version(ip) == IPVersion.IPv6
+
+
+def is_ipv4(ip: str) -> bool:
+    """
+    Check if string is an IPv4 address.
+    
+    Args:
+        ip: IP address string
+        
+    Returns:
+        True if IPv4, False otherwise
+        
+    Examples:
+        >>> is_ipv4("192.168.1.1")
+        True
+        >>> is_ipv4("2001:db8::1")
+        False
+    """
+    return get_ip_version(ip) == IPVersion.IPv4
+
+
+def normalize_ipv6(ip: str) -> str:
+    """
+    Normalize IPv6 address to standard format.
+    
+    Args:
+        ip: IPv6 address (can be compressed or expanded)
+        
+    Returns:
+        Normalized IPv6 address string
+        
+    Examples:
+        >>> normalize_ipv6("2001:0db8:0000:0000:0000:0000:0000:0001")
+        '2001:db8::1'
+        >>> normalize_ipv6("::1")
+        '::1'
+    """
+    # Remove brackets if present (e.g., [::1]) and zone id (e.g., %eth0)
+    ip = ip.strip()
+    if ip.startswith('[') and ']' in ip:
+        ip = ip[1:ip.index(']')]
+    if '%' in ip:
+        ip = ip.split('%', 1)[0]
+
+    try:
+        addr = ipaddress.IPv6Address(ip)
+        return str(addr)
+    except ValueError:
+        return ip
+
+
+def expand_ipv6(ip: str) -> str:
+    """
+    Expand IPv6 address to full format.
+    
+    Args:
+        ip: IPv6 address (can be compressed)
+        
+    Returns:
+        Fully expanded IPv6 address string
+        
+    Examples:
+        >>> expand_ipv6("2001:db8::1")
+        '2001:0db8:0000:0000:0000:0000:0000:0001'
+        >>> expand_ipv6("::1")
+        '0000:0000:0000:0000:0000:0000:0000:0001'
+    """
+    try:
+        addr = ipaddress.IPv6Address(ip)
+        return addr.exploded
+    except ValueError:
+        return ip
+
+
+def format_ip_for_url(ip: str) -> str:
+    """
+    Format IP address for use in URLs (bracket IPv6).
+    
+    Args:
+        ip: IP address string
+        
+    Returns:
+        URL-safe IP address (IPv6 wrapped in brackets)
+        
+    Examples:
+        >>> format_ip_for_url("192.168.1.1")
+        '192.168.1.1'
+        >>> format_ip_for_url("2001:db8::1")
+        '[2001:db8::1]'
+    """
+    if is_ipv6(ip):
+        return f"[{ip}]"
+    return ip
+
+
+def parse_ipv6_target(target: str) -> List[str]:
+    """
+    Parse IPv6 target specification into list of addresses.
+    
+    Supports:
+    - Single IPv6: "2001:db8::1"
+    - IPv6 CIDR: "2001:db8::/32"
+    - IPv6 range: "2001:db8::1-ff" (last segment range)
+    - Bracketed IPv6: "[2001:db8::1]"
+    
+    Args:
+        target: IPv6 target specification
+        
+    Returns:
+        List of IPv6 addresses
+        
+    Raises:
+        ValueError: If target specification is invalid
+        
+    Examples:
+        >>> parse_ipv6_target("2001:db8::1")
+        ['2001:db8::1']
+        >>> parse_ipv6_target("2001:db8::/126")
+        ['2001:db8::1', '2001:db8::2']
+    """
+    # Remove brackets if present
+    target = target.strip()
+    if target.startswith('[') and ']' in target:
+        target = target[1:target.index(']')]
+    
+    # Handle CIDR notation
+    if '/' in target:
+        try:
+            network = ipaddress.IPv6Network(target, strict=False)
+            # For large networks, limit to first 65536 addresses
+            hosts = list(network.hosts())
+            if len(hosts) > 65536:
+                hosts = hosts[:65536]
+            if not hosts:
+                # /128 network, return the address itself
+                return [str(network.network_address)]
+            return [str(ip) for ip in hosts]
+        except ValueError as e:
+            raise ValueError(f"Invalid IPv6 CIDR: {target}") from e
+    
+    # Handle range notation (e.g., 2001:db8::1-ff)
+    if '-' in target:
+        # Find the last colon to identify the last segment
+        last_colon = target.rfind(':')
+        if last_colon != -1 and '-' in target[last_colon:]:
+            base = target[:last_colon + 1]
+            range_part = target[last_colon + 1:]
+            
+            if '-' in range_part:
+                start_hex, end_hex = range_part.split('-', 1)
+                try:
+                    # Handle empty start (e.g., "2001:db8::-ff" means "2001:db8::0-ff")
+                    start_val = int(start_hex, 16) if start_hex else 0
+                    end_val = int(end_hex, 16)
+                    
+                    if start_val > end_val:
+                        raise ValueError(f"Invalid IPv6 range: start > end in {target}")
+                    if end_val > 0xFFFF:
+                        raise ValueError(f"Invalid IPv6 range: value > 0xFFFF in {target}")
+                    
+                    # Limit range to prevent memory issues
+                    if (end_val - start_val) > 65536:
+                        end_val = start_val + 65536
+                    
+                    addresses = []
+                    for i in range(start_val, end_val + 1):
+                        addr_str = f"{base}{i:x}"
+                        try:
+                            # Validate and normalize
+                            addr = ipaddress.IPv6Address(addr_str)
+                            addresses.append(str(addr))
+                        except ValueError:
+                            continue
+                    return addresses
+                except ValueError as e:
+                    raise ValueError(f"Invalid IPv6 range: {target}") from e
+    
+    # Single IPv6 address
+    try:
+        addr = ipaddress.IPv6Address(target)
+        return [str(addr)]
+    except ValueError:
+        raise ValueError(f"Invalid IPv6 address: {target}")
+
+
+def parse_target(target: Union[str, List[str]], prefer_ipv6: bool = False) -> List[str]:
     """
     Parse target specification into list of IP addresses.
     
-    Supports multiple input formats:
-    - Single IP: "192.168.1.1"
-    - CIDR notation: "192.168.1.0/24"
-    - IP range: "192.168.1.1-254"
+    Supports multiple input formats for both IPv4 and IPv6:
+    - Single IPv4: "192.168.1.1"
+    - Single IPv6: "2001:db8::1" or "[2001:db8::1]"
+    - IPv4 CIDR: "192.168.1.0/24"
+    - IPv6 CIDR: "2001:db8::/32"
+    - IPv4 range: "192.168.1.1-254"
+    - IPv6 range: "2001:db8::1-ff"
     - Hostname: "example.com"
-    - Comma-separated: "192.168.1.1,192.168.1.2,example.com"
-    - List of targets: ["192.168.1.1", "example.com"]
+    - Comma-separated: "192.168.1.1,2001:db8::1,example.com"
+    - List of targets: ["192.168.1.1", "2001:db8::1"]
     
     Args:
         target: Target specification (string or list of strings)
+        prefer_ipv6: If True, prefer IPv6 when resolving hostnames
         
     Returns:
         List of IP addresses/hostnames
@@ -66,6 +312,10 @@ def parse_target(target: Union[str, List[str]]) -> List[str]:
         ['192.168.1.1']
         >>> parse_target("192.168.1.0/30")
         ['192.168.1.1', '192.168.1.2']
+        >>> parse_target("2001:db8::1")
+        ['2001:db8::1']
+        >>> parse_target("2001:db8::/126")
+        ['2001:db8::1', '2001:db8::2']
         >>> parse_target("192.168.1.1,example.com")
         ['192.168.1.1', '93.184.216.34']
         >>> parse_target(["192.168.1.1", "192.168.1.2"])
@@ -76,26 +326,47 @@ def parse_target(target: Union[str, List[str]]) -> List[str]:
     # Handle list input
     if isinstance(target, list):
         for t in target:
-            all_targets.extend(parse_target(t))
+            all_targets.extend(parse_target(t, prefer_ipv6))
         return all_targets
     
-    # Handle comma-separated targets
-    if ',' in target:
-        for t in target.split(','):
+    target = target.strip()
+    
+    # Handle comma-separated targets (but not inside IPv6 brackets)
+    if ',' in target and not (target.startswith('[') and ',' not in target.split(']')[0]):
+        # Split carefully to avoid breaking bracketed IPv6
+        parts = _split_targets_with_ipv6(target)
+        for t in parts:
             t = t.strip()
             if t:
-                all_targets.extend(parse_target(t))
+                all_targets.extend(parse_target(t, prefer_ipv6))
         return all_targets
     
-    # Check if it's a CIDR notation
+    # Check for bracketed IPv6 address
+    if target.startswith('['):
+        # Extract IPv6 from brackets
+        if ']' in target:
+            ipv6_part = target[1:target.index(']')]
+            return parse_ipv6_target(ipv6_part)
+        else:
+            raise ValueError(f"Invalid bracketed IPv6: {target}")
+    
+    # Check if it looks like IPv6 (contains multiple colons)
+    if ':' in target and target.count(':') >= 2:
+        return parse_ipv6_target(target)
+    
+    # Check if it's a CIDR notation (IPv4)
     if '/' in target:
         try:
             network = ipaddress.ip_network(target, strict=False)
-            return [str(ip) for ip in network.hosts()]
+            hosts = list(network.hosts())
+            if not hosts:
+                # /32 network, return the address itself
+                return [str(network.network_address)]
+            return [str(ip) for ip in hosts]
         except ValueError:
             pass
     
-    # Check if it's a range (192.168.1.1-254)
+    # Check if it's an IPv4 range (192.168.1.1-254)
     if '-' in target and '.' in target:
         parts = target.split('.')
         if len(parts) == 4 and '-' in parts[3]:
@@ -111,18 +382,139 @@ def parse_target(target: Union[str, List[str]]) -> List[str]:
                 except ValueError as e:
                     raise ValueError(f"Invalid IP range: {target}") from e
     
-    # Try as hostname or single IP
+    # Try as single IP address first
     try:
-        # Try to resolve as hostname
-        ip = socket.gethostbyname(target)
+        addr = ipaddress.ip_address(target)
+        return [str(addr)]
+    except ValueError:
+        pass
+    
+    # Try as hostname - resolve to IP
+    try:
+        if prefer_ipv6:
+            # Try IPv6 first, then IPv4
+            ip = resolve_hostname(target, prefer_ipv6=True)
+        else:
+            # Default: IPv4 first
+            ip = socket.gethostbyname(target)
         return [ip]
     except socket.gaierror:
-        # If resolution fails, try as IP
+        raise ValueError(f"Invalid target specification: {target}")
+
+
+def _split_targets_with_ipv6(target_string: str) -> List[str]:
+    """
+    Split comma-separated targets while preserving bracketed IPv6 addresses.
+    
+    Args:
+        target_string: Comma-separated target string
+        
+    Returns:
+        List of individual targets
+        
+    Examples:
+        >>> _split_targets_with_ipv6("192.168.1.1,[2001:db8::1],example.com")
+        ['192.168.1.1', '[2001:db8::1]', 'example.com']
+    """
+    targets = []
+    current = ""
+    bracket_depth = 0
+    
+    for char in target_string:
+        if char == '[':
+            bracket_depth += 1
+            current += char
+        elif char == ']':
+            bracket_depth -= 1
+            current += char
+        elif char == ',' and bracket_depth == 0:
+            if current.strip():
+                targets.append(current.strip())
+            current = ""
+        else:
+            current += char
+    
+    if current.strip():
+        targets.append(current.strip())
+    
+    return targets
+
+
+def resolve_hostname(hostname: str, prefer_ipv6: bool = False) -> str:
+    """
+    Resolve hostname to IP address with IPv4/IPv6 preference.
+    
+    Args:
+        hostname: Hostname to resolve
+        prefer_ipv6: If True, prefer IPv6 address if available
+        
+    Returns:
+        Resolved IP address
+        
+    Raises:
+        socket.gaierror: If hostname cannot be resolved
+        
+    Examples:
+        >>> resolve_hostname("localhost")
+        '127.0.0.1'
+        >>> resolve_hostname("localhost", prefer_ipv6=True)
+        '::1'
+    """
+    if prefer_ipv6:
+        # Try IPv6 first
         try:
-            ipaddress.ip_address(target)
-            return [target]
-        except ValueError:
-            raise ValueError(f"Invalid target specification: {target}")
+            result = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+            if result:
+                return result[0][4][0]
+        except socket.gaierror:
+            pass
+        # Fall back to IPv4
+        return socket.gethostbyname(hostname)
+    else:
+        # Try IPv4 first (default behavior)
+        try:
+            return socket.gethostbyname(hostname)
+        except socket.gaierror:
+            pass
+        # Fall back to IPv6
+        result = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+        if result:
+            return result[0][4][0]
+        raise socket.gaierror(f"Cannot resolve hostname: {hostname}")
+
+
+def resolve_hostname_all(hostname: str) -> Tuple[List[str], List[str]]:
+    """
+    Resolve hostname to all available IPv4 and IPv6 addresses.
+    
+    Args:
+        hostname: Hostname to resolve
+        
+    Returns:
+        Tuple of (ipv4_addresses, ipv6_addresses)
+        
+    Examples:
+        >>> ipv4, ipv6 = resolve_hostname_all("example.com")
+        >>> print(f"IPv4: {ipv4}, IPv6: {ipv6}")
+    """
+    ipv4_addrs = []
+    ipv6_addrs = []
+    
+    # Get IPv4 addresses
+    try:
+        result = socket.getaddrinfo(hostname, None, socket.AF_INET)
+        ipv4_addrs = list(set(r[4][0] for r in result))
+    except socket.gaierror:
+        pass
+    
+    # Get IPv6 addresses
+    try:
+        result = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+        ipv6_addrs = list(set(r[4][0] for r in result))
+    except socket.gaierror:
+        pass
+    
+    return ipv4_addrs, ipv6_addrs
 
 
 def parse_targets_from_file(filepath: Union[str, Path]) -> List[str]:
@@ -294,7 +686,27 @@ def get_service_name(port: int, protocol: str = "tcp") -> Optional[str]:
 
 
 def is_valid_ip(ip: str) -> bool:
-    """Check if string is a valid IP address."""
+    """
+    Check if string is a valid IP address (IPv4 or IPv6).
+    
+    Args:
+        ip: IP address string
+        
+    Returns:
+        True if valid IPv4 or IPv6, False otherwise
+        
+    Examples:
+        >>> is_valid_ip("192.168.1.1")
+        True
+        >>> is_valid_ip("2001:db8::1")
+        True
+        >>> is_valid_ip("invalid")
+        False
+    """
+    # Handle bracketed IPv6
+    if ip.startswith('[') and ip.endswith(']'):
+        ip = ip[1:-1]
+    
     try:
         ipaddress.ip_address(ip)
         return True

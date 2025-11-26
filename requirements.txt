@@ -9,10 +9,16 @@ Pillow>=10.0.0  # For GUI logo display
 
 # Scanning dependencies
 scapy>=2.5.0  # Optional for SYN scanning
+dnspython>=2.4.0  # DNS enumeration
 
 # Report generation
 reportlab>=4.0.0  # Optional for PDF reports and charts
 Jinja2>=3.1.0  # Optional for custom report templates
+
+# REST API Server
+fastapi>=0.109.0  # REST API framework
+pydantic>=2.5.0  # Data validation
+uvicorn[standard]>=0.27.0  # ASGI server
 
 # Testing
 pytest>=7.4.0

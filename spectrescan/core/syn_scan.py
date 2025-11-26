@@ -1,11 +1,13 @@
 """
 TCP SYN scan implementation using scapy
 by BitSpectreLabs
+
+Supports both IPv4 and IPv6 addresses.
 """
 
 import socket
 from typing import List, Optional, Callable
-from spectrescan.core.utils import ScanResult
+from spectrescan.core.utils import ScanResult, is_ipv6
 from datetime import datetime
 
 
@@ -82,16 +84,26 @@ class SynScanner:
         """
         Perform SYN scan using scapy.
         
+        Supports both IPv4 and IPv6 addresses.
+        
         Args:
-            host: Target host
+            host: Target host (IPv4 or IPv6)
             port: Target port
             
         Returns:
             ScanResult object
         """
         try:
-            # Create SYN packet
-            ip_packet = self.scapy.IP(dst=host)
+            # Determine if IPv6 and create appropriate packet
+            ipv6 = is_ipv6(host)
+            
+            if ipv6:
+                # Create IPv6 SYN packet
+                ip_packet = self.scapy.IPv6(dst=host)
+            else:
+                # Create IPv4 SYN packet
+                ip_packet = self.scapy.IP(dst=host)
+            
             tcp_packet = self.scapy.TCP(dport=port, flags='S')
             packet = ip_packet / tcp_packet
             
@@ -118,10 +130,16 @@ class SynScanner:
                 
                 if tcp_layer.flags == 0x12:  # SYN-ACK
                     # Port is open - send RST to close connection
-                    rst_packet = self.scapy.IP(dst=host) / self.scapy.TCP(
-                        dport=port,
-                        flags='R'
-                    )
+                    if ipv6:
+                        rst_packet = self.scapy.IPv6(dst=host) / self.scapy.TCP(
+                            dport=port,
+                            flags='R'
+                        )
+                    else:
+                        rst_packet = self.scapy.IP(dst=host) / self.scapy.TCP(
+                            dport=port,
+                            flags='R'
+                        )
                     self.scapy.send(rst_packet, verbose=0)
                     
                     return ScanResult(
@@ -141,8 +159,8 @@ class SynScanner:
                         timestamp=datetime.now()
                     )
             
-            # ICMP response indicates filtered
-            if response.haslayer(self.scapy.ICMP):
+            # ICMP/ICMPv6 response indicates filtered
+            if response.haslayer(self.scapy.ICMP) or (ipv6 and response.haslayer(self.scapy.ICMPv6DestUnreach)):
                 return ScanResult(
                     host=host,
                     port=port,
@@ -168,15 +186,20 @@ class SynScanner:
         """
         Fallback to connect scan if scapy not available.
         
+        Supports both IPv4 and IPv6 addresses.
+        
         Args:
-            host: Target host
+            host: Target host (IPv4 or IPv6)
             port: Target port
             
         Returns:
             ScanResult object
         """
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # Determine address family based on IP version
+            af = socket.AF_INET6 if is_ipv6(host) else socket.AF_INET
+            
+            sock = socket.socket(af, socket.SOCK_STREAM)
             sock.settimeout(self.timeout)
             result = sock.connect_ex((host, port))
             sock.close()

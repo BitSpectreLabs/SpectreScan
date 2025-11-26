@@ -12,7 +12,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from spectrescan.core.utils import (
     ScanResult, HostInfo, parse_target, parse_ports,
-    get_service_name, calculate_scan_time
+    get_service_name, calculate_scan_time, is_ipv6
 )
 from spectrescan.core.presets import ScanConfig, ScanPreset, get_preset_config
 from spectrescan.core.syn_scan import SynScanner
@@ -267,15 +267,20 @@ class PortScanner:
         """
         Perform single TCP connect (legacy method).
         
+        Supports both IPv4 and IPv6 addresses.
+        
         Args:
-            host: Target host
+            host: Target host (IPv4 or IPv6)
             port: Target port
             
         Returns:
             ScanResult
         """
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # Determine address family based on IP version
+            af = socket.AF_INET6 if is_ipv6(host) else socket.AF_INET
+            
+            sock = socket.socket(af, socket.SOCK_STREAM)
             sock.settimeout(self.timing_template.timeout)
             result = sock.connect_ex((host, port))
             sock.close()

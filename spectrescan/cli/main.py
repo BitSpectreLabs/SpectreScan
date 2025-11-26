@@ -104,6 +104,8 @@ def scan(
     service_detection: bool = typer.Option(True, "--service-detection/--no-service-detection", help="Enable service detection"),
     os_detection: bool = typer.Option(False, "--os-detection", help="Enable OS detection"),
     banner_grab: bool = typer.Option(True, "--banner-grab/--no-banner-grab", help="Enable banner grabbing"),
+    ssl_analysis: bool = typer.Option(False, "--ssl-analysis", help="Enable SSL/TLS analysis on HTTPS ports"),
+    cve_check: bool = typer.Option(False, "--cve-check", help="Check detected services for CVEs (requires internet)"),
     randomize: bool = typer.Option(False, "--randomize", help="Randomize scan order"),
     
     # Output
@@ -112,7 +114,10 @@ def scan(
     xml_output: Optional[Path] = typer.Option(None, "--xml", help="Save XML output"),
     html_output: Optional[Path] = typer.Option(None, "--html", help="Save HTML report"),
     pdf_output: Optional[Path] = typer.Option(None, "--pdf", help="Save PDF report with charts"),
+    markdown_output: Optional[Path] = typer.Option(None, "--markdown", "--md", help="Save Markdown report"),
     executive_summary: Optional[Path] = typer.Option(None, "--exec-summary", help="Save executive summary"),
+    ssl_output: Optional[Path] = typer.Option(None, "--ssl-output", help="Save SSL/TLS analysis report (JSON)"),
+    cve_output: Optional[Path] = typer.Option(None, "--cve-output", help="Save CVE check results (JSON)"),
     
     # Misc
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Quiet mode (only show open ports)"),
@@ -317,6 +322,161 @@ def scan(
             if info.os_guess:
                 console.print(f"  {host}: [cyan]{info.os_guess}[/cyan]")
     
+    # SSL/TLS Analysis
+    ssl_results = {}
+    if ssl_analysis:
+        from spectrescan.core.ssl_analyzer import SSLAnalyzer, VulnerabilityStatus
+        ssl_ports = [443, 8443, 8080, 993, 995, 465, 636, 989, 990]
+        https_ports = [r for r in open_results if r.port in ssl_ports]
+        
+        if https_ports:
+            console.print("\n[bold]SSL/TLS Analysis:[/bold]")
+            analyzer = SSLAnalyzer(timeout=config.timeout)
+            
+            for result in https_ports:
+                console.print(f"\n  Analyzing {result.host}:{result.port}...")
+                ssl_result = analyzer.analyze(result.host, result.port)
+                ssl_results[f"{result.host}:{result.port}"] = ssl_result
+                
+                if ssl_result.certificate:
+                    cert = ssl_result.certificate
+                    cn = cert.subject.get("commonName", "Unknown")
+                    console.print(f"    [cyan]Certificate:[/cyan] {cn}")
+                    
+                    if cert.is_expired:
+                        console.print(f"    [red]EXPIRED[/red] - Certificate has expired!")
+                    elif cert.days_until_expiry < 30:
+                        console.print(f"    [yellow]WARNING[/yellow] - Expires in {cert.days_until_expiry} days")
+                    else:
+                        console.print(f"    [green]Valid[/green] - Expires in {cert.days_until_expiry} days")
+                    
+                    if cert.is_self_signed:
+                        console.print(f"    [yellow]Self-signed certificate[/yellow]")
+                
+                # Show supported protocols
+                if ssl_result.supported_protocols:
+                    protocols = [p.value for p in ssl_result.supported_protocols]
+                    console.print(f"    [cyan]Protocols:[/cyan] {', '.join(protocols)}")
+                
+                # Show preferred cipher
+                if ssl_result.preferred_cipher:
+                    cipher = ssl_result.preferred_cipher
+                    console.print(f"    [cyan]Cipher:[/cyan] {cipher.name} ({cipher.bits}-bit)")
+                
+                # Show vulnerabilities
+                vulns = [v for v in ssl_result.vulnerabilities 
+                         if v.status == VulnerabilityStatus.VULNERABLE]
+                if vulns:
+                    console.print(f"    [red]Vulnerabilities:[/red]")
+                    for v in vulns:
+                        console.print(f"      - {v.name}: {v.severity}")
+                
+                # Show risk score
+                risk = ssl_result.get_risk_score()
+                if risk >= 75:
+                    console.print(f"    [red]Risk Score: {risk}/100 (CRITICAL)[/red]")
+                elif risk >= 50:
+                    console.print(f"    [yellow]Risk Score: {risk}/100 (HIGH)[/yellow]")
+                elif risk >= 25:
+                    console.print(f"    [yellow]Risk Score: {risk}/100 (MEDIUM)[/yellow]")
+                else:
+                    console.print(f"    [green]Risk Score: {risk}/100 (LOW)[/green]")
+    
+    # CVE Check
+    cve_results = {}
+    if cve_check:
+        from spectrescan.core.cve_matcher import CVEMatcher, CVESeverity, cve_result_to_dict
+        import asyncio
+        
+        # Collect unique services from open ports
+        services_to_check = []
+        seen_services = set()
+        
+        for result in open_results:
+            if result.service and result.service != "unknown":
+                service_key = result.service.lower()
+                
+                # Extract version from banner if available
+                version = None
+                if result.banner:
+                    # Try to extract version from banner
+                    import re
+                    version_patterns = [
+                        r'(\d+\.\d+\.\d+)',
+                        r'v(\d+\.\d+)',
+                        r'/(\d+\.\d+)',
+                    ]
+                    for pattern in version_patterns:
+                        match = re.search(pattern, result.banner)
+                        if match:
+                            version = match.group(1)
+                            break
+                
+                if (service_key, version) not in seen_services:
+                    seen_services.add((service_key, version))
+                    services_to_check.append({
+                        "product": result.service,
+                        "version": version,
+                        "host": result.host,
+                        "port": result.port
+                    })
+        
+        if services_to_check:
+            console.print("\n[bold]CVE Vulnerability Check:[/bold]")
+            console.print("[dim]Querying NVD API for known vulnerabilities...[/dim]\n")
+            
+            matcher = CVEMatcher(timeout=30.0)
+            
+            for service_info in services_to_check:
+                product = service_info["product"]
+                version = service_info.get("version")
+                host = service_info["host"]
+                port = service_info["port"]
+                
+                console.print(f"  Checking {product}" + (f" v{version}" if version else "") + f" ({host}:{port})...")
+                
+                try:
+                    result = matcher.lookup_by_product_sync(product, version)
+                    key = f"{host}:{port}:{product}"
+                    cve_results[key] = result
+                    
+                    if result.error:
+                        console.print(f"    [yellow]Could not check: {result.error}[/yellow]")
+                    elif result.total_found == 0:
+                        console.print(f"    [green]No known CVEs found[/green]")
+                    else:
+                        # Display results by severity
+                        if result.critical_count > 0:
+                            console.print(f"    [red]CRITICAL: {result.critical_count} vulnerabilities[/red]")
+                        if result.high_count > 0:
+                            console.print(f"    [red]HIGH: {result.high_count} vulnerabilities[/red]")
+                        if result.medium_count > 0:
+                            console.print(f"    [yellow]MEDIUM: {result.medium_count} vulnerabilities[/yellow]")
+                        if result.low_count > 0:
+                            console.print(f"    [dim]LOW: {result.low_count} vulnerabilities[/dim]")
+                        
+                        # Show top 3 critical/high CVEs
+                        top_cves = [c for c in result.cves if c.severity in [CVESeverity.CRITICAL, CVESeverity.HIGH]][:3]
+                        for cve in top_cves:
+                            score = cve.highest_cvss_score
+                            score_str = f" (CVSS: {score:.1f})" if score else ""
+                            exploit_str = " [EXPLOIT]" if cve.exploit_available else ""
+                            console.print(f"      - {cve.cve_id}{score_str}{exploit_str}")
+                            if len(cve.description) > 100:
+                                console.print(f"        {cve.description[:100]}...")
+                        
+                        if len(result.cves) > 3:
+                            console.print(f"      ... and {len(result.cves) - 3} more")
+                
+                except Exception as e:
+                    console.print(f"    [red]Error: {e}[/red]")
+            
+            # Save CVE cache
+            matcher.save_cache()
+        else:
+            console.print("\n[yellow]No services detected to check for CVEs[/yellow]")
+            console.print("[dim]Try enabling service detection with --service-detection[/dim]")
+    
     # Save outputs
     if json_output:
         generate_json_report(results, json_output, summary)
@@ -333,6 +493,19 @@ def scan(
     if html_output:
         generate_html_report(results, html_output, summary, scanner.host_info)
         console.print(f"[green]✓[/green] HTML report saved to: {html_output}")
+
+    if markdown_output:
+        from spectrescan.reports import generate_markdown_report
+        generate_markdown_report(
+            results, 
+            markdown_output, 
+            summary, 
+            scanner.host_info,
+            include_toc=True,
+            include_mermaid=True,
+            include_banners=True
+        )
+        console.print(f"[green]✓[/green] Markdown report saved to: {markdown_output}")
     
     if pdf_output:
         try:
@@ -347,6 +520,21 @@ def scan(
         from spectrescan.reports import generate_executive_summary
         generate_executive_summary(results, summary, scanner.host_info, executive_summary)
         console.print(f"[green]✓[/green] Executive summary saved to: {executive_summary}")
+    
+    if ssl_output and ssl_results:
+        import json
+        ssl_data = {host: result.to_dict() for host, result in ssl_results.items()}
+        with open(ssl_output, 'w') as f:
+            json.dump(ssl_data, f, indent=2, default=str)
+        console.print(f"[green]✓[/green] SSL/TLS analysis saved to: {ssl_output}")
+    
+    if cve_output and cve_results:
+        import json
+        from spectrescan.core.cve_matcher import cve_result_to_dict
+        cve_data = {key: cve_result_to_dict(result) for key, result in cve_results.items()}
+        with open(cve_output, 'w') as f:
+            json.dump(cve_data, f, indent=2, default=str)
+        console.print(f"[green]✓[/green] CVE check results saved to: {cve_output}")
 
 
 @app.command(name="presets")
@@ -354,6 +542,579 @@ def list_scan_presets():
     """List available scan presets."""
     print_logo()
     console.print(list_presets())
+
+
+@app.command(name="ssl")
+def ssl_analyze(
+    target: str = typer.Argument(..., help="Target hostname or IP address"),
+    port: int = typer.Option(443, "-p", "--port", help="Target port (default: 443)"),
+    timeout: float = typer.Option(5.0, "--timeout", help="Connection timeout in seconds"),
+    json_output: Optional[Path] = typer.Option(None, "--json", help="Save JSON output"),
+    verbose: bool = typer.Option(False, "-v", "--verbose", help="Verbose output"),
+):
+    """
+    Perform SSL/TLS analysis on a target.
+    
+    Examples:
+    
+      spectrescan ssl example.com
+      
+      spectrescan ssl 192.168.1.1 -p 8443
+      
+      spectrescan ssl example.com --json ssl_report.json
+    """
+    from spectrescan.core.ssl_analyzer import SSLAnalyzer, VulnerabilityStatus
+    
+    print_logo()
+    console.print(f"\n[bold]SSL/TLS Analysis: {target}:{port}[/bold]\n")
+    
+    analyzer = SSLAnalyzer(timeout=timeout)
+    result = analyzer.analyze(target, port)
+    
+    if result.error:
+        console.print(f"[red]Error:[/red] {result.error}")
+        return
+    
+    # Certificate Information
+    console.print("[bold cyan]Certificate Information:[/bold cyan]")
+    if result.certificate:
+        cert = result.certificate
+        console.print(f"  Subject: {cert.subject.get('commonName', 'N/A')}")
+        console.print(f"  Issuer: {cert.issuer.get('organizationName', 'N/A')}")
+        console.print(f"  Serial: {cert.serial_number[:20]}..." if len(cert.serial_number) > 20 else f"  Serial: {cert.serial_number}")
+        
+        if cert.not_before:
+            console.print(f"  Valid From: {cert.not_before.strftime('%Y-%m-%d %H:%M:%S')}")
+        if cert.not_after:
+            console.print(f"  Valid Until: {cert.not_after.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        if cert.is_expired:
+            console.print(f"  [red]Status: EXPIRED[/red]")
+        elif cert.days_until_expiry < 30:
+            console.print(f"  [yellow]Status: Expires in {cert.days_until_expiry} days[/yellow]")
+        else:
+            console.print(f"  [green]Status: Valid ({cert.days_until_expiry} days remaining)[/green]")
+        
+        if cert.is_self_signed:
+            console.print(f"  [yellow]Self-Signed: Yes[/yellow]")
+        
+        if verbose and cert.san:
+            console.print(f"  SANs: {', '.join(cert.san[:5])}" + ("..." if len(cert.san) > 5 else ""))
+        
+        console.print(f"  Fingerprint (SHA256): {cert.fingerprint_sha256[:32]}...")
+    else:
+        console.print("  [yellow]No certificate available[/yellow]")
+    
+    # Protocol Support
+    console.print(f"\n[bold cyan]Protocol Support:[/bold cyan]")
+    if result.supported_protocols:
+        for protocol in result.supported_protocols:
+            if protocol.value in ["SSLv2", "SSLv3", "TLSv1.0", "TLSv1.1"]:
+                console.print(f"  [red]{protocol.value}[/red] (deprecated)")
+            else:
+                console.print(f"  [green]{protocol.value}[/green]")
+    else:
+        console.print("  [yellow]Could not determine supported protocols[/yellow]")
+    
+    # Cipher Suites
+    console.print(f"\n[bold cyan]Cipher Suites:[/bold cyan]")
+    if result.cipher_suites:
+        for cipher in result.cipher_suites[:10 if not verbose else None]:
+            strength_color = {
+                "Strong": "green",
+                "Acceptable": "cyan",
+                "Weak": "yellow",
+                "Insecure": "red",
+            }.get(cipher.strength.value, "white")
+            fs = " (FS)" if cipher.is_forward_secrecy else ""
+            console.print(f"  [{strength_color}]{cipher.name}[/{strength_color}] - {cipher.bits}-bit{fs}")
+        if not verbose and len(result.cipher_suites) > 10:
+            console.print(f"  ... and {len(result.cipher_suites) - 10} more")
+    else:
+        console.print("  [yellow]Could not enumerate ciphers[/yellow]")
+    
+    # Security Headers
+    console.print(f"\n[bold cyan]Security Features:[/bold cyan]")
+    if result.hsts_enabled:
+        console.print(f"  [green]HSTS: Enabled[/green] (max-age: {result.hsts_max_age})")
+    else:
+        console.print(f"  [yellow]HSTS: Not enabled[/yellow]")
+    
+    if result.ocsp_stapling:
+        console.print(f"  [green]OCSP Stapling: Enabled[/green]")
+    else:
+        console.print(f"  [yellow]OCSP Stapling: Not detected[/yellow]")
+    
+    # Vulnerabilities
+    console.print(f"\n[bold cyan]Vulnerability Assessment:[/bold cyan]")
+    vulnerable = [v for v in result.vulnerabilities if v.status == VulnerabilityStatus.VULNERABLE]
+    not_vulnerable = [v for v in result.vulnerabilities if v.status == VulnerabilityStatus.NOT_VULNERABLE]
+    
+    if vulnerable:
+        console.print(f"  [red]Found {len(vulnerable)} vulnerabilities:[/red]")
+        for vuln in vulnerable:
+            cve = f" ({vuln.cve})" if vuln.cve else ""
+            console.print(f"    - {vuln.name}{cve}: {vuln.severity}")
+            if verbose:
+                console.print(f"      {vuln.description}")
+                console.print(f"      Recommendation: {vuln.recommendation}")
+    else:
+        console.print(f"  [green]No critical vulnerabilities detected[/green]")
+    
+    if verbose and not_vulnerable:
+        console.print(f"\n  [green]Passed checks:[/green]")
+        for vuln in not_vulnerable:
+            console.print(f"    - {vuln.name}")
+    
+    # Risk Score
+    risk = result.get_risk_score()
+    console.print(f"\n[bold cyan]Overall Risk Score:[/bold cyan]")
+    if risk >= 75:
+        console.print(f"  [red bold]{risk}/100 - CRITICAL[/red bold]")
+        console.print("  [red]Immediate action required![/red]")
+    elif risk >= 50:
+        console.print(f"  [yellow bold]{risk}/100 - HIGH[/yellow bold]")
+        console.print("  [yellow]Significant security issues detected[/yellow]")
+    elif risk >= 25:
+        console.print(f"  [yellow]{risk}/100 - MEDIUM[/yellow]")
+        console.print("  [yellow]Some improvements recommended[/yellow]")
+    else:
+        console.print(f"  [green bold]{risk}/100 - LOW[/green bold]")
+        console.print("  [green]Good security posture[/green]")
+    
+    # Save output
+    if json_output:
+        import json
+        with open(json_output, 'w') as f:
+            json.dump(result.to_dict(), f, indent=2, default=str)
+        console.print(f"\n[green]✓[/green] SSL analysis saved to: {json_output}")
+
+
+@app.command(name="cve")
+def cve_lookup(
+    query: str = typer.Argument(..., help="Product name, CPE string, or CVE ID to lookup"),
+    version: Optional[str] = typer.Option(None, "-v", "--version", help="Product version"),
+    vendor: Optional[str] = typer.Option(None, "--vendor", help="Vendor name"),
+    severity: Optional[str] = typer.Option(None, "-s", "--severity", help="Minimum severity filter (critical, high, medium, low)"),
+    max_results: int = typer.Option(20, "--max", help="Maximum number of results"),
+    json_output: Optional[Path] = typer.Option(None, "--json", help="Save JSON output"),
+    verbose: bool = typer.Option(False, "--verbose", help="Verbose output with full descriptions"),
+):
+    """
+    Look up CVE vulnerabilities for a product or CVE ID.
+    
+    Uses the NVD (National Vulnerability Database) API to fetch real-time
+    vulnerability information.
+    
+    Examples:
+    
+      spectrescan cve nginx
+      
+      spectrescan cve openssh -v 8.2
+      
+      spectrescan cve CVE-2021-44228
+      
+      spectrescan cve apache --vendor apache -s critical
+      
+      spectrescan cve "cpe:2.3:a:nginx:nginx:1.19.0:*:*:*:*:*:*:*"
+    """
+    from spectrescan.core.cve_matcher import (
+        CVEMatcher, CVESeverity, format_cve_report, cve_result_to_dict
+    )
+    import re
+    
+    print_logo()
+    console.print(f"\n[bold]CVE Vulnerability Lookup[/bold]\n")
+    
+    # Parse severity filter
+    severity_filter = None
+    if severity:
+        severity_map = {
+            "critical": CVESeverity.CRITICAL,
+            "high": CVESeverity.HIGH,
+            "medium": CVESeverity.MEDIUM,
+            "low": CVESeverity.LOW
+        }
+        severity_filter = severity_map.get(severity.lower())
+        if not severity_filter:
+            console.print(f"[red]Error:[/red] Invalid severity '{severity}'")
+            console.print("Valid options: critical, high, medium, low")
+            return
+    
+    matcher = CVEMatcher(timeout=30.0)
+    
+    # Determine query type
+    if re.match(r"^CVE-\d{4}-\d{4,}$", query.upper()):
+        # CVE ID lookup
+        console.print(f"Looking up [cyan]{query.upper()}[/cyan]...\n")
+        
+        cve = matcher.lookup_cve_id_sync(query)
+        
+        if not cve:
+            console.print(f"[yellow]CVE not found: {query}[/yellow]")
+            return
+        
+        # Display CVE details
+        console.print(f"[bold cyan]{cve.cve_id}[/bold cyan]")
+        
+        severity_colors = {
+            CVESeverity.CRITICAL: "red bold",
+            CVESeverity.HIGH: "red",
+            CVESeverity.MEDIUM: "yellow",
+            CVESeverity.LOW: "dim",
+        }
+        color = severity_colors.get(cve.severity, "white")
+        
+        score = cve.highest_cvss_score
+        score_str = f" (CVSS: {score:.1f})" if score else ""
+        console.print(f"Severity: [{color}]{cve.severity.value.upper()}{score_str}[/{color}]")
+        
+        if cve.published_date:
+            console.print(f"Published: {cve.published_date.strftime('%Y-%m-%d')}")
+        
+        if cve.exploit_available:
+            console.print("[red]** EXPLOIT AVAILABLE **[/red]")
+        
+        if cve.patch_available:
+            console.print("[green]Patch Available[/green]")
+        
+        console.print(f"\n[bold]Description:[/bold]")
+        console.print(f"  {cve.description}")
+        
+        if cve.cwe_ids:
+            console.print(f"\n[bold]CWE:[/bold] {', '.join(cve.cwe_ids)}")
+        
+        if cve.primary_cvss:
+            cvss = cve.primary_cvss
+            console.print(f"\n[bold]CVSS {cvss.version.value}:[/bold]")
+            console.print(f"  Base Score: {cvss.base_score}")
+            if cvss.vector_string:
+                console.print(f"  Vector: {cvss.vector_string}")
+        
+        if verbose and cve.references:
+            console.print(f"\n[bold]References:[/bold]")
+            for ref in cve.references[:10]:
+                tags = f" [{', '.join(ref.tags)}]" if ref.tags else ""
+                console.print(f"  - {ref.url}{tags}")
+        
+        if json_output:
+            import json
+            cve_data = {
+                "cve_id": cve.cve_id,
+                "description": cve.description,
+                "severity": cve.severity.value,
+                "cvss_score": cve.highest_cvss_score,
+                "published": cve.published_date.isoformat() if cve.published_date else None,
+                "exploit_available": cve.exploit_available,
+                "patch_available": cve.patch_available,
+                "cwe_ids": cve.cwe_ids,
+                "references": [{"url": r.url, "tags": r.tags} for r in cve.references]
+            }
+            with open(json_output, 'w') as f:
+                json.dump(cve_data, f, indent=2)
+            console.print(f"\n[green]✓[/green] CVE details saved to: {json_output}")
+    
+    elif query.startswith("cpe:"):
+        # CPE lookup
+        console.print(f"Looking up CVEs for CPE: [cyan]{query}[/cyan]...\n")
+        
+        result = matcher.lookup_by_cpe_sync(query, severity_filter, max_results)
+        
+        if result.error:
+            console.print(f"[red]Error:[/red] {result.error}")
+            return
+        
+        # Display results
+        report = format_cve_report(result, verbose=verbose)
+        console.print(report)
+        
+        if json_output:
+            import json
+            with open(json_output, 'w') as f:
+                json.dump(cve_result_to_dict(result), f, indent=2)
+            console.print(f"\n[green]✓[/green] CVE results saved to: {json_output}")
+    
+    else:
+        # Product name lookup
+        display_name = query + (f" v{version}" if version else "")
+        console.print(f"Looking up CVEs for [cyan]{display_name}[/cyan]...\n")
+        
+        result = matcher.lookup_by_product_sync(
+            product=query,
+            version=version,
+            vendor=vendor,
+            severity_filter=severity_filter,
+            max_results=max_results
+        )
+        
+        if result.error:
+            console.print(f"[red]Error:[/red] {result.error}")
+            return
+        
+        # Display results
+        report = format_cve_report(result, verbose=verbose)
+        console.print(report)
+        
+        if json_output:
+            import json
+            with open(json_output, 'w') as f:
+                json.dump(cve_result_to_dict(result), f, indent=2)
+            console.print(f"\n[green]✓[/green] CVE results saved to: {json_output}")
+    
+    # Save cache
+    matcher.save_cache()
+
+
+@app.command(name="dns")
+def dns_enumerate(
+    target: str = typer.Argument(..., help="Target domain to enumerate"),
+    
+    # Record types
+    record_types: Optional[str] = typer.Option(
+        None, "-t", "--types",
+        help="DNS record types to query (comma-separated: A,AAAA,MX,TXT,NS,SOA,CNAME,SRV,CAA)"
+    ),
+    
+    # Subdomain enumeration
+    subdomains: bool = typer.Option(False, "-s", "--subdomains", help="Enable subdomain enumeration"),
+    wordlist: Optional[Path] = typer.Option(
+        None, "-w", "--wordlist",
+        help="Custom wordlist for subdomain enumeration"
+    ),
+    wordlist_size: str = typer.Option(
+        "medium", "--wordlist-size",
+        help="Built-in wordlist size: small (~100), medium (~500)"
+    ),
+    
+    # Zone transfer
+    zone_transfer: bool = typer.Option(False, "-z", "--zone-transfer", help="Attempt DNS zone transfers"),
+    
+    # Reverse lookup
+    reverse: bool = typer.Option(False, "-r", "--reverse", help="Perform reverse DNS lookups on discovered IPs"),
+    
+    # Options
+    timeout: float = typer.Option(5.0, "--timeout", help="DNS query timeout in seconds"),
+    threads: int = typer.Option(50, "--threads", help="Number of threads for subdomain enumeration"),
+    nameservers: Optional[str] = typer.Option(
+        None, "-n", "--nameservers",
+        help="Custom nameservers to use (comma-separated)"
+    ),
+    
+    # Output
+    json_output: Optional[Path] = typer.Option(None, "--json", help="Save JSON output"),
+    verbose: bool = typer.Option(False, "-v", "--verbose", help="Verbose output"),
+):
+    """
+    Perform DNS enumeration on a target domain.
+    
+    Features:
+    - Forward DNS lookups (A, AAAA, CNAME, MX, TXT, NS, SOA, SRV, CAA)
+    - Reverse DNS lookups (PTR records)
+    - Subdomain enumeration with wordlists
+    - DNS zone transfer attempts (AXFR)
+    - Wildcard DNS detection
+    
+    Examples:
+    
+      # Basic DNS lookup
+      spectrescan dns example.com
+      
+      # Subdomain enumeration
+      spectrescan dns example.com --subdomains
+      
+      # With custom wordlist
+      spectrescan dns example.com -s -w /path/to/wordlist.txt
+      
+      # Zone transfer attempt
+      spectrescan dns example.com --zone-transfer
+      
+      # Full enumeration with all options
+      spectrescan dns example.com -s -z -r --json dns_report.json
+      
+      # Specific record types only
+      spectrescan dns example.com -t MX,TXT,NS
+    """
+    try:
+        from spectrescan.core.dns_enum import (
+            DNSEnumerator, DNSRecordType, format_dns_report
+        )
+    except ImportError:
+        console.print(
+            "[red]Error:[/red] dnspython is required for DNS enumeration.\n"
+            "Install with: [yellow]pip install dnspython[/yellow]"
+        )
+        sys.exit(1)
+    
+    print_logo()
+    console.print(f"\n[bold]DNS Enumeration: {target}[/bold]\n")
+    
+    # Parse nameservers
+    ns_list = None
+    if nameservers:
+        ns_list = [ns.strip() for ns in nameservers.split(",")]
+    
+    # Parse record types
+    rtypes = None
+    if record_types:
+        rtypes = []
+        for rt in record_types.upper().split(","):
+            rt = rt.strip()
+            try:
+                rtypes.append(DNSRecordType(rt))
+            except ValueError:
+                console.print(f"[yellow]Warning:[/yellow] Unknown record type '{rt}', skipping")
+    
+    # Determine wordlist path
+    wordlist_path = wordlist
+    if subdomains and not wordlist:
+        from pathlib import Path
+        data_dir = Path(__file__).parent.parent / "data"
+        built_in = data_dir / f"subdomains-{wordlist_size}.txt"
+        if built_in.exists():
+            wordlist_path = built_in
+    
+    # Create enumerator
+    enumerator = DNSEnumerator(
+        timeout=timeout,
+        threads=threads,
+        nameservers=ns_list,
+    )
+    
+    # Progress callback
+    def progress_callback(event_type: str, data):
+        if event_type == "status":
+            console.print(f"[cyan]>[/cyan] {data}")
+        elif event_type == "records" and verbose:
+            console.print(f"  Found {data['count']} {data['type']} records")
+        elif event_type == "subdomain":
+            ips = ", ".join(data['ip_addresses']) if data['ip_addresses'] else "N/A"
+            console.print(f"[green]✓[/green] {data['full_domain']} -> {ips}")
+        elif event_type == "zone_transfer":
+            if data['success']:
+                console.print(f"[green]✓[/green] Zone transfer SUCCESS from {data['nameserver']} ({len(data['records'])} records)")
+            elif verbose:
+                console.print(f"[yellow]![/yellow] Zone transfer failed from {data['nameserver']}: {data['error_message']}")
+        elif event_type == "wildcard":
+            if data['detected']:
+                console.print(f"[yellow]![/yellow] Wildcard DNS detected! IPs: {', '.join(data['ips'])}")
+        elif event_type == "wordlist":
+            console.print(f"  Loaded {data['count']} subdomain words")
+        elif event_type == "progress" and verbose:
+            console.print(f"  Progress: {data['completed']}/{data['total']} (found: {data['found']})")
+    
+    # Run enumeration
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+        transient=True
+    ) as progress:
+        task = progress.add_task("Enumerating...", total=None)
+        
+        result = enumerator.enumerate(
+            domain=target,
+            record_types=rtypes,
+            subdomains=subdomains,
+            wordlist=wordlist_path,
+            zone_transfer=zone_transfer,
+            reverse_lookup=reverse,
+            callback=progress_callback if verbose else None,
+        )
+    
+    # Display summary
+    console.print("\n" + "=" * 70)
+    console.print("[bold cyan]DNS ENUMERATION SUMMARY[/bold cyan]")
+    console.print("=" * 70)
+    
+    console.print(f"\n[bold]Domain:[/bold] {result.domain}")
+    console.print(f"[bold]Duration:[/bold] {result.duration:.2f} seconds")
+    console.print(f"[bold]Total Records:[/bold] {result.total_records}")
+    console.print(f"[bold]Subdomains Found:[/bold] {len(result.subdomains)}")
+    console.print(f"[bold]Unique IPs:[/bold] {len(result.unique_ips)}")
+    console.print(f"[bold]Wildcard DNS:[/bold] {'Yes' if result.has_wildcard else 'No'}")
+    
+    # DNS Records table
+    if result.records:
+        console.print("\n[bold]DNS Records:[/bold]")
+        records_table = Table(show_header=True, header_style="bold magenta")
+        records_table.add_column("Type")
+        records_table.add_column("Name")
+        records_table.add_column("Value")
+        records_table.add_column("TTL")
+        
+        for rtype, records in sorted(result.records.items()):
+            for record in records:
+                priority_prefix = f"{record.priority} " if record.priority is not None else ""
+                records_table.add_row(
+                    rtype,
+                    record.name,
+                    f"{priority_prefix}{record.value}",
+                    str(record.ttl)
+                )
+        
+        console.print(records_table)
+    
+    # Nameservers
+    if result.nameservers:
+        console.print(f"\n[bold]Nameservers:[/bold]")
+        for ns in result.nameservers:
+            console.print(f"  - {ns}")
+    
+    # Mail servers
+    if result.mail_servers:
+        console.print(f"\n[bold]Mail Servers:[/bold]")
+        for mx in result.mail_servers:
+            console.print(f"  - {mx}")
+    
+    # Zone transfers
+    if result.zone_transfers:
+        console.print(f"\n[bold]Zone Transfer Attempts:[/bold]")
+        for zt in result.zone_transfers:
+            status = "[green]SUCCESS[/green]" if zt.success else "[red]FAILED[/red]"
+            console.print(f"  {zt.nameserver}: {status}")
+            if zt.success:
+                console.print(f"    Records obtained: {len(zt.records)}")
+            elif verbose and zt.error_message:
+                console.print(f"    [dim]{zt.error_message}[/dim]")
+    
+    # Subdomains
+    if result.subdomains:
+        console.print(f"\n[bold]Discovered Subdomains ({len(result.subdomains)}):[/bold]")
+        subdomain_table = Table(show_header=True, header_style="bold magenta")
+        subdomain_table.add_column("Subdomain")
+        subdomain_table.add_column("IP Addresses")
+        subdomain_table.add_column("CNAME")
+        
+        for sub in sorted(result.subdomains, key=lambda x: x.subdomain)[:50]:  # Limit to 50
+            ips = ", ".join(sub.ip_addresses) if sub.ip_addresses else "-"
+            cname = sub.cname or "-"
+            subdomain_table.add_row(sub.full_domain, ips, cname)
+        
+        console.print(subdomain_table)
+        
+        if len(result.subdomains) > 50:
+            console.print(f"[dim]... and {len(result.subdomains) - 50} more (see JSON output for full list)[/dim]")
+    
+    # Unique IPs
+    if result.unique_ips and verbose:
+        console.print(f"\n[bold]Unique IP Addresses ({len(result.unique_ips)}):[/bold]")
+        for ip in sorted(result.unique_ips):
+            console.print(f"  - {ip}")
+    
+    # Errors
+    if result.errors:
+        console.print(f"\n[yellow]Errors:[/yellow]")
+        for error in result.errors:
+            console.print(f"  [red]-[/red] {error}")
+    
+    # Save output
+    if json_output:
+        import json
+        with open(json_output, 'w') as f:
+            json.dump(result.to_dict(), f, indent=2, default=str)
+        console.print(f"\n[green]✓[/green] DNS enumeration saved to: {json_output}")
+    
+    console.print("\n" + "=" * 70)
 
 
 @app.command(name="version")
@@ -381,6 +1142,122 @@ def launch_tui(
     """Launch terminal user interface."""
     from spectrescan.tui.app import run_tui
     run_tui(target, ports)
+
+
+@app.command(name="api")
+def api_server(
+    host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind to"),
+    port: int = typer.Option(8000, "--port", "-p", help="Port to bind to"),
+    reload: bool = typer.Option(False, "--reload", help="Enable auto-reload (development mode)"),
+    workers: int = typer.Option(1, "--workers", "-w", help="Number of worker processes"),
+    cors_origins: Optional[str] = typer.Option(None, "--cors", help="Comma-separated CORS origins (default: all)"),
+    create_key: bool = typer.Option(False, "--create-key", help="Create initial API key and exit"),
+    key_name: str = typer.Option("default", "--key-name", help="Name for the initial API key"),
+):
+    """
+    Start the REST API server.
+    
+    The API server provides HTTP endpoints for scan operations, profile management,
+    history access, and WebSocket support for real-time updates.
+    
+    Examples:
+    
+      # Start server on default port 8000
+      spectrescan api
+      
+      # Start on custom port
+      spectrescan api --port 9000
+      
+      # Start with auto-reload for development
+      spectrescan api --reload
+      
+      # Create an API key before starting
+      spectrescan api --create-key --key-name "my-app"
+      
+      # Restrict CORS origins
+      spectrescan api --cors "http://localhost:3000,https://myapp.com"
+    
+    API Documentation:
+      After starting, visit http://localhost:8000/docs for Swagger UI
+      or http://localhost:8000/redoc for ReDoc documentation.
+    
+    Authentication:
+      Use X-API-Key header with an API key, or Authorization: Bearer <token>
+      with a JWT token obtained from POST /auth/token.
+    """
+    try:
+        import uvicorn
+    except ImportError:
+        console.print(
+            "[red]Error:[/red] uvicorn is required for the API server.\n"
+            "Install with: [cyan]pip install uvicorn[standard][/cyan]"
+        )
+        sys.exit(1)
+    
+    # Check FastAPI availability
+    try:
+        from spectrescan.api.main import create_app, FASTAPI_AVAILABLE
+        if not FASTAPI_AVAILABLE:
+            raise ImportError("FastAPI not available")
+    except ImportError:
+        console.print(
+            "[red]Error:[/red] FastAPI is required for the API server.\n"
+            "Install with: [cyan]pip install fastapi uvicorn[standard][/cyan]"
+        )
+        sys.exit(1)
+    
+    # Create initial API key if requested
+    if create_key:
+        from spectrescan.api.auth import APIKeyAuth
+        
+        auth = APIKeyAuth()
+        api_key, key_obj = auth.create_key(
+            name=key_name,
+            scopes=["*"],  # Full access for initial key
+        )
+        
+        console.print("\n[bold green]API Key Created Successfully[/bold green]\n")
+        console.print(f"[yellow]Key ID:[/yellow] {key_obj.key_id}")
+        console.print(f"[yellow]Name:[/yellow] {key_obj.name}")
+        console.print(f"[yellow]Scopes:[/yellow] {', '.join(key_obj.scopes)}")
+        console.print(f"\n[bold cyan]API Key (save this - shown only once!):[/bold cyan]")
+        console.print(f"[bold white]{api_key}[/bold white]\n")
+        console.print("[dim]Use this key in the X-API-Key header for API requests.[/dim]")
+        return
+    
+    print_logo()
+    
+    # Parse CORS origins
+    origins = None
+    if cors_origins:
+        origins = [o.strip() for o in cors_origins.split(",")]
+    
+    console.print("\n[bold cyan]Starting SpectreScan REST API Server...[/bold cyan]\n")
+    console.print(f"[green]Host:[/green] {host}")
+    console.print(f"[green]Port:[/green] {port}")
+    console.print(f"[green]Workers:[/green] {workers}")
+    console.print(f"[green]Auto-reload:[/green] {'Yes' if reload else 'No'}")
+    console.print(f"[green]CORS Origins:[/green] {origins if origins else 'All (*)'}")
+    console.print(f"\n[cyan]API Documentation:[/cyan] http://{host if host != '0.0.0.0' else 'localhost'}:{port}/docs")
+    console.print(f"[cyan]ReDoc:[/cyan] http://{host if host != '0.0.0.0' else 'localhost'}:{port}/redoc")
+    console.print(f"[cyan]Health Check:[/cyan] http://{host if host != '0.0.0.0' else 'localhost'}:{port}/health\n")
+    
+    # Create app with settings
+    if origins:
+        # Need to pass config to create_app
+        app_instance = create_app(cors_origins=origins)
+    else:
+        app_instance = create_app()
+    
+    # Run server
+    uvicorn.run(
+        app_instance,
+        host=host,
+        port=port,
+        reload=reload,
+        workers=workers if not reload else 1,
+        access_log=True,
+    )
 
 
 @app.command(name="profile")
@@ -711,12 +1588,495 @@ def compare_scans(
         sys.exit(1)
 
 
+@app.command(name="resume")
+def resume_scan(
+    checkpoint_id: str = typer.Argument(..., help="Checkpoint ID or file path"),
+    threads: Optional[int] = typer.Option(None, "--threads", "-t", help="Override thread count"),
+    timeout: Optional[float] = typer.Option(None, "--timeout", help="Override timeout"),
+    json_output: Optional[Path] = typer.Option(None, "--json", "-j", help="Save results to JSON"),
+    html_output: Optional[Path] = typer.Option(None, "--html", help="Save HTML report"),
+):
+    """
+    Resume an interrupted scan from a checkpoint.
+    
+    Examples:
+    
+      spectrescan resume abc123def456
+      
+      spectrescan resume abc123 --threads 200
+      
+      spectrescan resume checkpoint.json --json results.json
+    """
+    from spectrescan.core.checkpoint import (
+        CheckpointManager, CheckpointState, can_resume_scan, get_resume_summary
+    )
+    
+    manager = CheckpointManager()
+    
+    try:
+        checkpoint = manager.load_checkpoint(checkpoint_id)
+    except FileNotFoundError:
+        console.print(f"[red]Error:[/red] Checkpoint '{checkpoint_id}' not found")
+        sys.exit(1)
+    
+    if not can_resume_scan(checkpoint):
+        console.print(f"[yellow]Cannot resume scan - state is '{checkpoint.state.value}'[/yellow]")
+        console.print("Only running, paused, or interrupted scans can be resumed.")
+        sys.exit(1)
+    
+    # Show resume summary
+    summary = get_resume_summary(checkpoint)
+    
+    console.print("\n[bold cyan]Resuming Scan[/bold cyan]\n")
+    console.print(f"[bold]Checkpoint ID:[/bold] {summary['checkpoint_id']}")
+    console.print(f"[bold]Scan Type:[/bold] {summary['scan_type']}")
+    console.print(f"[bold]Remaining Targets:[/bold] {summary['remaining_targets']} / {summary['total_targets']}")
+    console.print(f"[bold]Remaining Ports:[/bold] {summary['remaining_ports']} / {summary['total_ports']}")
+    console.print(f"[bold]Results Collected:[/bold] {summary['results_collected']}")
+    console.print(f"[bold]Elapsed Time:[/bold] {summary['elapsed_time']:.1f}s")
+    console.print("")
+    
+    # Get remaining work
+    remaining_targets = checkpoint.get_remaining_targets()
+    if not remaining_targets:
+        console.print("[green]Scan already complete - no remaining work[/green]")
+        return
+    
+    # Override settings if provided
+    scan_threads = threads or checkpoint.threads
+    scan_timeout = timeout or checkpoint.timeout
+    
+    # Create scanner
+    scanner = PortScanner(
+        threads=scan_threads,
+        timeout=scan_timeout,
+        rate_limit=checkpoint.rate_limit,
+        randomize=checkpoint.randomize,
+    )
+    
+    # Resume scanning
+    checkpoint.state = CheckpointState.RUNNING
+    all_results = list(checkpoint.results)  # Include existing results
+    
+    print_logo()
+    console.print(f"\n[bold cyan]Resuming scan of {len(remaining_targets)} target(s)...[/bold cyan]\n")
+    
+    try:
+        for target in remaining_targets:
+            remaining_ports = checkpoint.get_remaining_ports(target)
+            if not remaining_ports:
+                checkpoint.mark_target_complete(target)
+                continue
+            
+            checkpoint.progress.current_target = target
+            console.print(f"[cyan]Scanning:[/cyan] {target} ({len(remaining_ports)} ports remaining)")
+            
+            results = scanner.scan(target, remaining_ports, callback=result_callback)
+            
+            for result in results:
+                result_dict = {
+                    "host": result.host,
+                    "port": result.port,
+                    "state": result.state,
+                    "service": result.service,
+                    "banner": result.banner,
+                    "protocol": result.protocol,
+                }
+                checkpoint.add_result(result_dict)
+                all_results.append(result_dict)
+            
+            checkpoint.mark_target_complete(target)
+            manager.save_checkpoint()
+        
+        # Mark complete
+        manager.mark_complete()
+        console.print("\n[green]✓[/green] Scan resumed and completed successfully!")
+        
+        # Save outputs
+        if json_output:
+            import json
+            with open(json_output, "w") as f:
+                json.dump(all_results, f, indent=2)
+            console.print(f"[green]✓[/green] Results saved to: {json_output}")
+        
+        if html_output:
+            # Convert dicts to ScanResult objects
+            scan_results = [
+                ScanResult(
+                    host=r["host"],
+                    port=r["port"],
+                    state=r["state"],
+                    service=r.get("service"),
+                    banner=r.get("banner"),
+                    protocol=r.get("protocol", "tcp"),
+                )
+                for r in all_results
+            ]
+            generate_html_report(scan_results, html_output, {})
+            console.print(f"[green]✓[/green] HTML report saved to: {html_output}")
+    
+    except KeyboardInterrupt:
+        manager.mark_interrupted()
+        console.print("\n[yellow]Scan interrupted - checkpoint saved[/yellow]")
+        console.print(f"Resume with: spectrescan resume {checkpoint.checkpoint_id}")
+        sys.exit(130)
+    except Exception as e:
+        manager.mark_failed(str(e))
+        console.print(f"\n[red]Scan failed:[/red] {e}")
+        console.print(f"Resume with: spectrescan resume {checkpoint.checkpoint_id}")
+        sys.exit(1)
+
+
+@app.command(name="checkpoint")
+def manage_checkpoints(
+    action: str = typer.Argument(..., help="Action: list, show, delete, cleanup"),
+    checkpoint_id: Optional[str] = typer.Argument(None, help="Checkpoint ID"),
+    force: bool = typer.Option(False, "--force", "-f", help="Force delete running checkpoints"),
+    days: int = typer.Option(7, "--days", "-d", help="Days to keep for cleanup"),
+):
+    """
+    Manage scan checkpoints.
+    
+    Examples:
+    
+      spectrescan checkpoint list
+      
+      spectrescan checkpoint show abc123def456
+      
+      spectrescan checkpoint delete abc123
+      
+      spectrescan checkpoint cleanup --days 7
+    """
+    from spectrescan.core.checkpoint import CheckpointManager, CheckpointState
+    
+    manager = CheckpointManager()
+    
+    if action == "list":
+        checkpoints = manager.list_checkpoints()
+        
+        if not checkpoints:
+            console.print("[yellow]No checkpoints found[/yellow]")
+            return
+        
+        table = Table(title="Scan Checkpoints", show_header=True, header_style="bold cyan")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("State", style="white")
+        table.add_column("Targets", justify="right")
+        table.add_column("Ports", justify="right")
+        table.add_column("Progress", justify="right")
+        table.add_column("Type", style="yellow")
+        table.add_column("Updated", style="dim")
+        
+        for cp in checkpoints:
+            # Color state
+            state = cp["state"]
+            if state == "completed":
+                state_str = "[green]completed[/green]"
+            elif state == "running":
+                state_str = "[cyan]running[/cyan]"
+            elif state == "interrupted":
+                state_str = "[yellow]interrupted[/yellow]"
+            elif state == "failed":
+                state_str = "[red]failed[/red]"
+            else:
+                state_str = state
+            
+            from datetime import datetime
+            updated = datetime.fromisoformat(cp["updated_at"]).strftime("%Y-%m-%d %H:%M") if cp["updated_at"] else ""
+            
+            table.add_row(
+                cp["id"][:12],
+                state_str,
+                str(cp["target_count"]),
+                str(cp["port_count"]),
+                f"{cp['progress_percent']:.1f}%",
+                cp["scan_type"],
+                updated
+            )
+        
+        console.print(table)
+    
+    elif action == "show":
+        if not checkpoint_id:
+            console.print("[red]Error:[/red] Checkpoint ID required")
+            sys.exit(1)
+        
+        try:
+            cp = manager.load_checkpoint(checkpoint_id)
+            from spectrescan.core.checkpoint import get_resume_summary
+            summary = get_resume_summary(cp)
+            
+            console.print(f"\n[bold cyan]Checkpoint Details[/bold cyan]\n")
+            console.print(f"[bold]ID:[/bold] {summary['checkpoint_id']}")
+            console.print(f"[bold]State:[/bold] {summary['state']}")
+            console.print(f"[bold]Scan Type:[/bold] {summary['scan_type']}")
+            console.print(f"[bold]Total Targets:[/bold] {summary['total_targets']}")
+            console.print(f"[bold]Remaining Targets:[/bold] {summary['remaining_targets']}")
+            console.print(f"[bold]Total Ports:[/bold] {summary['total_ports']}")
+            console.print(f"[bold]Completed Ports:[/bold] {summary['completed_ports']}")
+            console.print(f"[bold]Remaining Ports:[/bold] {summary['remaining_ports']}")
+            console.print(f"[bold]Results Collected:[/bold] {summary['results_collected']}")
+            console.print(f"[bold]Errors:[/bold] {summary['errors_encountered']}")
+            console.print(f"[bold]Elapsed Time:[/bold] {summary['elapsed_time']:.1f}s")
+            console.print(f"[bold]Created:[/bold] {summary['created_at']}")
+            console.print(f"[bold]Last Update:[/bold] {summary['last_update']}")
+            
+            if cp.targets:
+                console.print(f"\n[bold]Targets:[/bold]")
+                for t in cp.targets[:5]:
+                    status = "[green]done[/green]" if t in cp.completed_targets else "[cyan]pending[/cyan]"
+                    console.print(f"  • {t} {status}")
+                if len(cp.targets) > 5:
+                    console.print(f"  ... and {len(cp.targets) - 5} more")
+        
+        except FileNotFoundError:
+            console.print(f"[red]Error:[/red] Checkpoint '{checkpoint_id}' not found")
+            sys.exit(1)
+    
+    elif action == "delete":
+        if not checkpoint_id:
+            console.print("[red]Error:[/red] Checkpoint ID required")
+            sys.exit(1)
+        
+        deleted = manager.delete_checkpoint(checkpoint_id, force=force)
+        if deleted:
+            console.print(f"[green]✓[/green] Checkpoint '{checkpoint_id}' deleted")
+        else:
+            if not force:
+                console.print(f"[yellow]Cannot delete running checkpoint. Use --force to override.[/yellow]")
+            else:
+                console.print(f"[red]Error:[/red] Checkpoint '{checkpoint_id}' not found")
+            sys.exit(1)
+    
+    elif action == "cleanup":
+        deleted = manager.cleanup_completed(keep_days=days)
+        console.print(f"[green]✓[/green] Cleaned up {deleted} old checkpoint(s)")
+    
+    else:
+        console.print(f"[red]Error:[/red] Unknown action '{action}'")
+        console.print("Valid actions: list, show, delete, cleanup")
+        sys.exit(1)
+
+
+@app.command(name="config")
+def manage_config(
+    action: str = typer.Argument(..., help="Action: show, init, get, set, validate"),
+    key: Optional[str] = typer.Argument(None, help="Config key (e.g., scan.threads)"),
+    value: Optional[str] = typer.Argument(None, help="Value to set"),
+    section: Optional[str] = typer.Option(None, "--section", "-s", help="Show specific section"),
+    file_path: Optional[Path] = typer.Option(None, "--file", "-f", help="Config file path"),
+    project: bool = typer.Option(False, "--project", "-p", help="Create/use project-level config"),
+):
+    """
+    Manage SpectreScan configuration.
+    
+    Configuration priority (highest to lowest):
+      1. CLI arguments
+      2. Environment variables (SPECTRESCAN_*)
+      3. Project config (.spectrescan.toml)
+      4. User config (~/.spectrescan/config.toml)
+      5. Built-in defaults
+    
+    Examples:
+    
+      spectrescan config show
+      
+      spectrescan config show --section scan
+      
+      spectrescan config init
+      
+      spectrescan config get scan.threads
+      
+      spectrescan config set scan.threads 200
+      
+      spectrescan config validate
+    """
+    from spectrescan.core.config import ConfigManager, ConfigError, SpectrescanConfig
+    
+    manager = ConfigManager()
+    
+    if action == "show":
+        try:
+            manager.load()
+            output = manager.show_config(section=section)
+            
+            # Show loaded sources
+            sources = manager.get_loaded_sources()
+            console.print(f"[dim]Loaded from: {', '.join(sources)}[/dim]\n")
+            
+            console.print(output)
+        except ConfigError as e:
+            console.print(f"[red]Error:[/red] {e}")
+            sys.exit(1)
+    
+    elif action == "init":
+        config_path = file_path
+        if not config_path:
+            if project:
+                config_path = Path.cwd() / ".spectrescan.toml"
+            else:
+                config_path = manager.user_config_path
+        
+        try:
+            path = manager.init_config(path=config_path)
+            console.print(f"[green]✓[/green] Configuration file created: {path}")
+            console.print("\nEdit the file to customize your settings.")
+        except ConfigError as e:
+            console.print(f"[red]Error:[/red] {e}")
+            sys.exit(1)
+    
+    elif action == "get":
+        if not key:
+            console.print("[red]Error:[/red] Key required (e.g., scan.threads)")
+            sys.exit(1)
+        
+        try:
+            manager.load()
+            value_result = manager.get_value(key)
+            console.print(f"{key} = {value_result}")
+        except (ConfigError, KeyError) as e:
+            console.print(f"[red]Error:[/red] {e}")
+            sys.exit(1)
+    
+    elif action == "set":
+        if not key or value is None:
+            console.print("[red]Error:[/red] Key and value required")
+            sys.exit(1)
+        
+        try:
+            manager.load()
+            manager.set_value(key, value)
+            manager.save_user_config()
+            console.print(f"[green]✓[/green] Set {key} = {value}")
+        except (ConfigError, KeyError, ValueError) as e:
+            console.print(f"[red]Error:[/red] {e}")
+            sys.exit(1)
+    
+    elif action == "validate":
+        try:
+            manager.load()
+            errors = manager.validate()
+            
+            if errors:
+                console.print("[red]Configuration validation failed:[/red]\n")
+                for error in errors:
+                    console.print(f"  • {error}")
+                sys.exit(1)
+            else:
+                console.print("[green]✓[/green] Configuration is valid")
+                sources = manager.get_loaded_sources()
+                console.print(f"[dim]Loaded from: {', '.join(sources)}[/dim]")
+        except ConfigError as e:
+            console.print(f"[red]Error:[/red] {e}")
+            sys.exit(1)
+    
+    else:
+        console.print(f"[red]Error:[/red] Unknown action '{action}'")
+        console.print("Valid actions: show, init, get, set, validate")
+        sys.exit(1)
+
+
+@app.command(name="completion")
+def completion_cmd(
+    action: str = typer.Argument(..., help="Action: install, show, bash, zsh, powershell, fish"),
+    shell: Optional[str] = typer.Argument(None, help="Shell type (for install/show actions)"),
+):
+    """
+    Shell completion utilities.
+    
+    Examples:
+    
+      # Show completion script for bash
+      spectrescan completion bash
+      
+      # Show completion script for your shell
+      spectrescan completion show bash
+      
+      # Install completion for bash
+      spectrescan completion install bash
+      
+      # Install completion for PowerShell
+      spectrescan completion install powershell
+      
+      # Show installation instructions
+      spectrescan completion install --help
+    """
+    from spectrescan.cli.completions import (
+        get_completion_script,
+        install_completion,
+        get_install_instructions,
+        SUPPORTED_SHELLS
+    )
+    
+    action = action.lower()
+    
+    # Direct shell name generates completion script
+    if action in SUPPORTED_SHELLS:
+        script = get_completion_script(action)
+        print(script)
+        return
+    
+    if action == "show":
+        if not shell:
+            console.print("[red]Error:[/red] Please specify a shell type")
+            console.print(f"Supported shells: {', '.join(SUPPORTED_SHELLS)}")
+            sys.exit(1)
+        
+        if shell.lower() not in SUPPORTED_SHELLS:
+            console.print(f"[red]Error:[/red] Unsupported shell: {shell}")
+            console.print(f"Supported shells: {', '.join(SUPPORTED_SHELLS)}")
+            sys.exit(1)
+        
+        script = get_completion_script(shell)
+        print(script)
+    
+    elif action == "install":
+        if not shell:
+            # Show available shells and instructions
+            console.print("[bold cyan]Shell Completion Installation[/bold cyan]\n")
+            console.print(f"Supported shells: {', '.join(SUPPORTED_SHELLS)}\n")
+            console.print("Usage:")
+            console.print("  spectrescan completion install bash")
+            console.print("  spectrescan completion install zsh")
+            console.print("  spectrescan completion install powershell")
+            console.print("  spectrescan completion install fish")
+            return
+        
+        if shell.lower() not in SUPPORTED_SHELLS:
+            console.print(f"[red]Error:[/red] Unsupported shell: {shell}")
+            console.print(f"Supported shells: {', '.join(SUPPORTED_SHELLS)}")
+            sys.exit(1)
+        
+        console.print(f"[cyan]Installing completion for {shell}...[/cyan]")
+        success, message = install_completion(shell)
+        
+        if success:
+            console.print(f"[green]Success![/green] {message}")
+        else:
+            console.print(f"[red]Error:[/red] {message}")
+            sys.exit(1)
+    
+    elif action == "instructions":
+        if not shell:
+            # Show all instructions
+            for sh in SUPPORTED_SHELLS:
+                console.print(get_install_instructions(sh))
+                console.print("-" * 60)
+        else:
+            console.print(get_install_instructions(shell))
+    
+    else:
+        console.print(f"[red]Error:[/red] Unknown action '{action}'")
+        console.print("Valid actions: install, show, bash, zsh, powershell, fish, instructions")
+        sys.exit(1)
+
+
 def main():
     """Main entry point."""
     import sys
     
     # If no command provided but there's a target-like argument, inject 'scan'
-    if len(sys.argv) > 1 and not sys.argv[1] in ['scan', 'presets', 'version', 'gui', 'tui', 'profile', 'history', 'compare', '--help', '-h']:
+    if len(sys.argv) > 1 and not sys.argv[1] in ['scan', 'presets', 'version', 'gui', 'tui', 'profile', 'history', 'compare', 'ssl', 'cve', 'dns', 'api', 'resume', 'checkpoint', 'config', 'completion', '--help', '-h']:
         # Check if first arg looks like a target (IP, hostname, or flag)
         first_arg = sys.argv[1]
         if not first_arg.startswith('--') or first_arg in ['--gui', '--tui']:
