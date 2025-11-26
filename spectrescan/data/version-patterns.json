@@ -1,8 +1,8 @@
 {
-  "version": "2.0.0",
-  "updated": "2025-11-26",
-  "total_patterns": 100,
-  "description": "Comprehensive version extraction regex patterns for 100+ services and applications",
+  "version": "2.1.0",
+  "updated": "2025-01-16",
+  "total_patterns": 145,
+  "description": "Comprehensive version extraction regex patterns for 145+ services and applications",
   "patterns": {
     "apache": [
       "Apache/(\\d+\\.\\d+\\.\\d+)",
@@ -479,6 +479,155 @@
     "dotnet": [
       "\\.NET (\\d+\\.\\d+\\.\\d+)",
       "dotnet/(\\d+\\.\\d+)"
+    ],
+    "splunk": [
+      "Splunk/(\\d+\\.\\d+\\.\\d+)",
+      "X-Splunk-Version: (\\d+\\.\\d+\\.\\d+)",
+      "splunk (\\d+\\.\\d+)"
+    ],
+    "datadog": [
+      "Datadog Agent/(\\d+\\.\\d+\\.\\d+)",
+      "datadog (\\d+\\.\\d+)"
+    ],
+    "newrelic": [
+      "New Relic (\\d+\\.\\d+\\.\\d+)",
+      "newrelic/(\\d+\\.\\d+)"
+    ],
+    "dynatrace": [
+      "Dynatrace/(\\d+\\.\\d+\\.\\d+)",
+      "dynatrace (\\d+\\.\\d+)"
+    ],
+    "sentry": [
+      "sentry/(\\d+\\.\\d+\\.\\d+)",
+      "Sentry (\\d+\\.\\d+)"
+    ],
+    "pagerduty": [
+      "PagerDuty/(\\d+\\.\\d+)",
+      "pagerduty (\\d+\\.\\d+)"
+    ],
+    "opsgenie": [
+      "OpsGenie/(\\d+\\.\\d+\\.\\d+)",
+      "opsgenie (\\d+\\.\\d+)"
+    ],
+    "envoy": [
+      "envoy/(\\d+\\.\\d+\\.\\d+)",
+      "x-envoy-upstream-service-time.*?envoy/(\\d+\\.\\d+)"
+    ],
+    "istio": [
+      "istio/(\\d+\\.\\d+\\.\\d+)",
+      "Istio (\\d+\\.\\d+)"
+    ],
+    "linkerd": [
+      "linkerd/(\\d+\\.\\d+\\.\\d+)",
+      "Linkerd (\\d+\\.\\d+)"
+    ],
+    "consul": [
+      "Consul/(\\d+\\.\\d+\\.\\d+)",
+      "consul (\\d+\\.\\d+)"
+    ],
+    "vault": [
+      "Vault/(\\d+\\.\\d+\\.\\d+)",
+      "vault (\\d+\\.\\d+)"
+    ],
+    "etcd": [
+      "etcd/(\\d+\\.\\d+\\.\\d+)",
+      "etcd (\\d+\\.\\d+)"
+    ],
+    "terraform": [
+      "Terraform/(\\d+\\.\\d+\\.\\d+)",
+      "terraform (\\d+\\.\\d+)"
+    ],
+    "ansible": [
+      "Ansible/(\\d+\\.\\d+\\.\\d+)",
+      "ansible (\\d+\\.\\d+)"
+    ],
+    "puppet": [
+      "Puppet/(\\d+\\.\\d+\\.\\d+)",
+      "puppet (\\d+\\.\\d+)"
+    ],
+    "chef": [
+      "Chef/(\\d+\\.\\d+\\.\\d+)",
+      "chef (\\d+\\.\\d+)"
+    ],
+    "saltstack": [
+      "Salt/(\\d+\\.\\d+\\.\\d+)",
+      "saltstack (\\d+\\.\\d+)"
+    ],
+    "argocd": [
+      "ArgoCD/(\\d+\\.\\d+\\.\\d+)",
+      "argo-cd (\\d+\\.\\d+)"
+    ],
+    "tekton": [
+      "Tekton/(\\d+\\.\\d+\\.\\d+)",
+      "tekton (\\d+\\.\\d+)"
+    ],
+    "harbor": [
+      "Harbor/(\\d+\\.\\d+\\.\\d+)",
+      "harbor (\\d+\\.\\d+)"
+    ],
+    "nexus": [
+      "Nexus/(\\d+\\.\\d+\\.\\d+)",
+      "nexus (\\d+\\.\\d+)"
+    ],
+    "artifactory": [
+      "Artifactory/(\\d+\\.\\d+\\.\\d+)",
+      "jfrog-artifactory (\\d+\\.\\d+)"
+    ],
+    "sonarqube": [
+      "SonarQube/(\\d+\\.\\d+)",
+      "sonarqube (\\d+\\.\\d+)"
+    ],
+    "awx": [
+      "AWX/(\\d+\\.\\d+\\.\\d+)",
+      "awx (\\d+\\.\\d+)"
+    ],
+    "keycloak": [
+      "Keycloak (\\d+\\.\\d+\\.\\d+)",
+      "keycloak/(\\d+\\.\\d+)"
+    ],
+    "authentik": [
+      "authentik/(\\d+\\.\\d+\\.\\d+)",
+      "Authentik (\\d+\\.\\d+)"
+    ],
+    "minio": [
+      "MinIO/(\\d+\\.\\d+\\.\\d+)",
+      "minio (\\d+\\.\\d+)"
+    ],
+    "ceph": [
+      "ceph/(\\d+\\.\\d+\\.\\d+)",
+      "Ceph (\\d+\\.\\d+)"
+    ],
+    "glusterfs": [
+      "GlusterFS/(\\d+\\.\\d+\\.\\d+)",
+      "glusterfs (\\d+\\.\\d+)"
+    ],
+    "snort": [
+      "Snort (\\d+\\.\\d+\\.\\d+)",
+      "snort/(\\d+\\.\\d+)"
+    ],
+    "suricata": [
+      "Suricata/(\\d+\\.\\d+\\.\\d+)",
+      "suricata (\\d+\\.\\d+)"
+    ],
+    "wazuh": [
+      "Wazuh/(\\d+\\.\\d+\\.\\d+)",
+      "wazuh (\\d+\\.\\d+)"
+    ],
+    "openvas": [
+      "OpenVAS/(\\d+\\.\\d+\\.\\d+)",
+      "openvas (\\d+\\.\\d+)"
+    ],
+    "nessus": [
+      "Nessus/(\\d+\\.\\d+\\.\\d+)",
+      "nessus (\\d+\\.\\d+)"
+    ],
+    "burpsuite": [
+      "Burp Suite/(\\d+\\.\\d+\\.\\d+)",
+      "burp (\\d+\\.\\d+)"
+    ],
+    "owasp_zap": [
+      "ZAP/(\\d+\\.\\d+\\.\\d+)",
+      "owasp-zap (\\d+\\.\\d+)"
     ]
   },
   "generic_patterns": [
@@ -514,13 +663,39 @@
       "Alpine Linux v(\\d+\\.\\d+)",
       "alpine:(\\d+\\.\\d+)"
     ],
+    "fedora": [
+      "Fedora (\\d+)",
+      "fedora:(\\d+)"
+    ],
+    "amazon_linux": [
+      "Amazon Linux (\\d+)",
+      "amzn:(\\d+)"
+    ],
+    "suse": [
+      "SUSE Linux Enterprise (\\d+)",
+      "sles:(\\d+)"
+    ],
+    "arch": [
+      "Arch Linux",
+      "archlinux"
+    ],
+    "freebsd": [
+      "FreeBSD (\\d+\\.\\d+)",
+      "freebsd:(\\d+)"
+    ],
+    "openbsd": [
+      "OpenBSD (\\d+\\.\\d+)",
+      "openbsd:(\\d+)"
+    ],
     "windows": [
       "Windows (\\d+)",
-      "Microsoft Windows.*?(\\d+\\.\\d+)"
+      "Microsoft Windows.*?(\\d+\\.\\d+)",
+      "Windows Server (\\d{4})"
     ],
     "macos": [
       "Mac OS X (\\d+\\.\\d+)",
-      "macOS (\\d+\\.\\d+)"
+      "macOS (\\d+\\.\\d+)",
+      "Darwin/(\\d+\\.\\d+)"
     ]
   }
 }

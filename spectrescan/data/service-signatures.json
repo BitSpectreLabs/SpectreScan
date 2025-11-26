@@ -1,9 +1,9 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "updated": "2025-11-26",
-  "total_signatures": 150,
-  "categories": ["container", "orchestration", "database", "web_server", "app_server", "monitoring", "ci_cd", "messaging", "cache", "proxy", "security", "storage"],
-  "description": "Comprehensive service signature database for modern applications and infrastructure - 150+ signatures",
+  "total_signatures": 143,
+  "categories": ["container", "orchestration", "database", "web_server", "app_server", "monitoring", "ci_cd", "messaging", "cache", "proxy", "security", "storage", "framework", "version_control", "artifact_repo", "auth", "logging", "tracing", "gitops", "cd", "code_analysis", "vpn", "alerting", "realtime", "graphql"],
+  "description": "Comprehensive service signature database for modern applications and infrastructure - 143 signatures",
   "signatures": [
     {
       "name": "docker",
@@ -1080,6 +1080,738 @@
       "cpe": "cpe:/a:nodejs:node.js",
       "confidence": 80,
       "category": "runtime"
+    },
+    {
+      "name": "express",
+      "ports": [3000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Express",
+        "X-Powered-By: Express"
+      ],
+      "version_pattern": "Express/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:expressjs:express",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "django",
+      "ports": [8000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Django",
+        "csrftoken"
+      ],
+      "version_pattern": "Django/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:djangoproject:django",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "flask",
+      "ports": [5000],
+      "protocol": "tcp",
+      "patterns": [
+        "Werkzeug",
+        "Flask"
+      ],
+      "version_pattern": "Werkzeug/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:palletsprojects:flask",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "rails",
+      "ports": [3000],
+      "protocol": "tcp",
+      "patterns": [
+        "Ruby on Rails",
+        "X-Runtime"
+      ],
+      "version_pattern": "Rails (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:rubyonrails:ruby_on_rails",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "laravel",
+      "ports": [80, 8000],
+      "protocol": "tcp",
+      "patterns": [
+        "laravel_session",
+        "Laravel"
+      ],
+      "version_pattern": "Laravel/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:laravel:laravel",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "spring-boot",
+      "ports": [8080, 8443],
+      "protocol": "tcp",
+      "patterns": [
+        "Spring Boot",
+        "Whitelabel Error Page"
+      ],
+      "version_pattern": "Spring Boot (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:vmware:spring_boot",
+      "confidence": 85,
+      "category": "framework"
+    },
+    {
+      "name": "asp.net",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "X-AspNet-Version",
+        "ASP.NET"
+      ],
+      "version_pattern": "X-AspNet-Version: (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:microsoft:asp.net",
+      "confidence": 90,
+      "category": "framework"
+    },
+    {
+      "name": "svn",
+      "ports": [3690],
+      "protocol": "tcp",
+      "patterns": [
+        "Subversion",
+        "svn"
+      ],
+      "version_pattern": "Subversion (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:apache:subversion",
+      "confidence": 85,
+      "category": "version_control"
+    },
+    {
+      "name": "mercurial",
+      "ports": [8000],
+      "protocol": "tcp",
+      "patterns": [
+        "Mercurial",
+        "hgweb"
+      ],
+      "version_pattern": "Mercurial (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:mercurial:mercurial",
+      "confidence": 80,
+      "category": "version_control"
+    },
+    {
+      "name": "artifactory",
+      "ports": [8081],
+      "protocol": "tcp",
+      "patterns": [
+        "Artifactory",
+        "JFrog"
+      ],
+      "version_pattern": "Artifactory/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:jfrog:artifactory",
+      "confidence": 85,
+      "category": "artifact_repo"
+    },
+    {
+      "name": "nexus",
+      "ports": [8081],
+      "protocol": "tcp",
+      "patterns": [
+        "Nexus",
+        "Sonatype"
+      ],
+      "version_pattern": "Nexus/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:sonatype:nexus",
+      "confidence": 85,
+      "category": "artifact_repo"
+    },
+    {
+      "name": "harbor",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Harbor",
+        "harbor"
+      ],
+      "version_pattern": "Harbor/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:vmware:harbor",
+      "confidence": 85,
+      "category": "container_registry"
+    },
+    {
+      "name": "keycloak",
+      "ports": [8080, 8443],
+      "protocol": "tcp",
+      "patterns": [
+        "Keycloak",
+        "keycloak"
+      ],
+      "version_pattern": "Keycloak (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:redhat:keycloak",
+      "confidence": 85,
+      "category": "auth"
+    },
+    {
+      "name": "oauth2-proxy",
+      "ports": [4180],
+      "protocol": "tcp",
+      "patterns": [
+        "oauth2_proxy",
+        "OAuth2 Proxy"
+      ],
+      "version_pattern": "oauth2_proxy/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:oauth2_proxy:oauth2_proxy",
+      "confidence": 80,
+      "category": "auth"
+    },
+    {
+      "name": "dex",
+      "ports": [5556],
+      "protocol": "tcp",
+      "patterns": [
+        "Dex",
+        "dex"
+      ],
+      "version_pattern": "dex/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:dexidp:dex",
+      "confidence": 80,
+      "category": "auth"
+    },
+    {
+      "name": "minio",
+      "ports": [9000, 9001],
+      "protocol": "tcp",
+      "patterns": [
+        "MinIO",
+        "minio"
+      ],
+      "version_pattern": "MinIO/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:minio:minio",
+      "confidence": 85,
+      "category": "storage"
+    },
+    {
+      "name": "ceph",
+      "ports": [6789, 3300],
+      "protocol": "tcp",
+      "patterns": [
+        "Ceph",
+        "ceph"
+      ],
+      "version_pattern": "ceph version (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:redhat:ceph",
+      "confidence": 85,
+      "category": "storage"
+    },
+    {
+      "name": "glusterfs",
+      "ports": [24007],
+      "protocol": "tcp",
+      "patterns": [
+        "GlusterFS",
+        "gluster"
+      ],
+      "version_pattern": "glusterfs-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:redhat:glusterfs",
+      "confidence": 85,
+      "category": "storage"
+    },
+    {
+      "name": "nfs",
+      "ports": [2049],
+      "protocol": "tcp",
+      "patterns": [
+        "NFS"
+      ],
+      "version_pattern": "NFS version (\\d+)",
+      "cpe": "cpe:/a:linux:nfs",
+      "confidence": 80,
+      "category": "storage"
+    },
+    {
+      "name": "iscsi",
+      "ports": [3260],
+      "protocol": "tcp",
+      "patterns": [
+        "iSCSI"
+      ],
+      "version_pattern": "iSCSI (\\d+\\.\\d+)",
+      "cpe": "cpe:/a:linux:iscsi",
+      "confidence": 80,
+      "category": "storage"
+    },
+    {
+      "name": "fluentd",
+      "ports": [24224],
+      "protocol": "tcp",
+      "patterns": [
+        "Fluentd",
+        "fluentd"
+      ],
+      "version_pattern": "fluentd-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:fluentd:fluentd",
+      "confidence": 85,
+      "category": "logging"
+    },
+    {
+      "name": "fluent-bit",
+      "ports": [2020],
+      "protocol": "tcp",
+      "patterns": [
+        "Fluent Bit",
+        "fluent-bit"
+      ],
+      "version_pattern": "fluent-bit (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:fluentbit:fluent_bit",
+      "confidence": 85,
+      "category": "logging"
+    },
+    {
+      "name": "vector",
+      "ports": [8686],
+      "protocol": "tcp",
+      "patterns": [
+        "Vector",
+        "vector"
+      ],
+      "version_pattern": "vector/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:datadog:vector",
+      "confidence": 80,
+      "category": "logging"
+    },
+    {
+      "name": "loki",
+      "ports": [3100],
+      "protocol": "tcp",
+      "patterns": [
+        "Loki",
+        "loki"
+      ],
+      "version_pattern": "loki/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:grafana:loki",
+      "confidence": 85,
+      "category": "logging"
+    },
+    {
+      "name": "tempo",
+      "ports": [3200, 14268],
+      "protocol": "tcp",
+      "patterns": [
+        "Tempo",
+        "tempo"
+      ],
+      "version_pattern": "tempo/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:grafana:tempo",
+      "confidence": 80,
+      "category": "tracing"
+    },
+    {
+      "name": "jaeger",
+      "ports": [16686, 14268],
+      "protocol": "tcp",
+      "patterns": [
+        "Jaeger",
+        "jaeger"
+      ],
+      "version_pattern": "jaeger-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:jaegertracing:jaeger",
+      "confidence": 85,
+      "category": "tracing"
+    },
+    {
+      "name": "zipkin",
+      "ports": [9411],
+      "protocol": "tcp",
+      "patterns": [
+        "Zipkin",
+        "zipkin"
+      ],
+      "version_pattern": "zipkin-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:openzipkin:zipkin",
+      "confidence": 85,
+      "category": "tracing"
+    },
+    {
+      "name": "argocd",
+      "ports": [443, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Argo CD",
+        "argocd"
+      ],
+      "version_pattern": "argocd-server (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:argoproj:argo-cd",
+      "confidence": 85,
+      "category": "gitops"
+    },
+    {
+      "name": "flux",
+      "ports": [9292],
+      "protocol": "tcp",
+      "patterns": [
+        "Flux",
+        "flux"
+      ],
+      "version_pattern": "flux/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:fluxcd:flux",
+      "confidence": 80,
+      "category": "gitops"
+    },
+    {
+      "name": "spinnaker",
+      "ports": [9000, 8084],
+      "protocol": "tcp",
+      "patterns": [
+        "Spinnaker",
+        "spinnaker"
+      ],
+      "version_pattern": "spinnaker-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:netflix:spinnaker",
+      "confidence": 85,
+      "category": "cd"
+    },
+    {
+      "name": "tekton",
+      "ports": [8008, 9090],
+      "protocol": "tcp",
+      "patterns": [
+        "Tekton",
+        "tekton"
+      ],
+      "version_pattern": "tekton/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:tektoncd:tekton",
+      "confidence": 80,
+      "category": "ci_cd"
+    },
+    {
+      "name": "drone",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Drone",
+        "drone"
+      ],
+      "version_pattern": "drone/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:drone:drone",
+      "confidence": 80,
+      "category": "ci_cd"
+    },
+    {
+      "name": "concourse",
+      "ports": [8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Concourse",
+        "concourse"
+      ],
+      "version_pattern": "concourse/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:pivotal:concourse",
+      "confidence": 80,
+      "category": "ci_cd"
+    },
+    {
+      "name": "buildkite",
+      "ports": [443],
+      "protocol": "tcp",
+      "patterns": [
+        "Buildkite",
+        "buildkite"
+      ],
+      "version_pattern": "buildkite/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:buildkite:buildkite",
+      "confidence": 75,
+      "category": "ci_cd"
+    },
+    {
+      "name": "sonarqube",
+      "ports": [9000],
+      "protocol": "tcp",
+      "patterns": [
+        "SonarQube",
+        "sonar"
+      ],
+      "version_pattern": "SonarQube (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:sonarsource:sonarqube",
+      "confidence": 85,
+      "category": "code_analysis"
+    },
+    {
+      "name": "snyk",
+      "ports": [443],
+      "protocol": "tcp",
+      "patterns": [
+        "Snyk",
+        "snyk"
+      ],
+      "version_pattern": "snyk/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:snyk:snyk",
+      "confidence": 75,
+      "category": "security"
+    },
+    {
+      "name": "trivy",
+      "ports": [4954],
+      "protocol": "tcp",
+      "patterns": [
+        "Trivy",
+        "trivy"
+      ],
+      "version_pattern": "trivy-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:aquasecurity:trivy",
+      "confidence": 80,
+      "category": "security"
+    },
+    {
+      "name": "falco",
+      "ports": [8765],
+      "protocol": "tcp",
+      "patterns": [
+        "Falco",
+        "falco"
+      ],
+      "version_pattern": "falco-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:sysdig:falco",
+      "confidence": 80,
+      "category": "security"
+    },
+    {
+      "name": "openvpn",
+      "ports": [1194],
+      "protocol": "udp",
+      "patterns": [
+        "OpenVPN"
+      ],
+      "version_pattern": "OpenVPN (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:openvpn:openvpn",
+      "confidence": 85,
+      "category": "vpn"
+    },
+    {
+      "name": "wireguard",
+      "ports": [51820],
+      "protocol": "udp",
+      "patterns": [
+        "WireGuard"
+      ],
+      "version_pattern": "wireguard-(\\d+\\.\\d+)",
+      "cpe": "cpe:/a:wireguard:wireguard",
+      "confidence": 85,
+      "category": "vpn"
+    },
+    {
+      "name": "strongswan",
+      "ports": [500, 4500],
+      "protocol": "udp",
+      "patterns": [
+        "strongSwan"
+      ],
+      "version_pattern": "strongSwan (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:strongswan:strongswan",
+      "confidence": 85,
+      "category": "vpn"
+    },
+    {
+      "name": "zerotier",
+      "ports": [9993],
+      "protocol": "udp",
+      "patterns": [
+        "ZeroTier"
+      ],
+      "version_pattern": "zerotier-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:zerotier:zerotier",
+      "confidence": 80,
+      "category": "vpn"
+    },
+    {
+      "name": "tailscale",
+      "ports": [41641],
+      "protocol": "udp",
+      "patterns": [
+        "Tailscale"
+      ],
+      "version_pattern": "tailscale-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:tailscale:tailscale",
+      "confidence": 80,
+      "category": "vpn"
+    },
+    {
+      "name": "sentry",
+      "ports": [9000],
+      "protocol": "tcp",
+      "patterns": [
+        "Sentry",
+        "sentry"
+      ],
+      "version_pattern": "sentry-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:sentry:sentry",
+      "confidence": 85,
+      "category": "monitoring"
+    },
+    {
+      "name": "pagerduty",
+      "ports": [443],
+      "protocol": "tcp",
+      "patterns": [
+        "PagerDuty"
+      ],
+      "version_pattern": "pagerduty/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:pagerduty:pagerduty",
+      "confidence": 75,
+      "category": "alerting"
+    },
+    {
+      "name": "opsgenie",
+      "ports": [443],
+      "protocol": "tcp",
+      "patterns": [
+        "OpsGenie"
+      ],
+      "version_pattern": "opsgenie/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:atlassian:opsgenie",
+      "confidence": 75,
+      "category": "alerting"
+    },
+    {
+      "name": "alertmanager",
+      "ports": [9093],
+      "protocol": "tcp",
+      "patterns": [
+        "Alertmanager",
+        "alertmanager"
+      ],
+      "version_pattern": "alertmanager/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:prometheus:alertmanager",
+      "confidence": 85,
+      "category": "alerting"
+    },
+    {
+      "name": "victoriametrics",
+      "ports": [8428],
+      "protocol": "tcp",
+      "patterns": [
+        "VictoriaMetrics",
+        "victoriametrics"
+      ],
+      "version_pattern": "victoriametrics-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:victoriametrics:victoriametrics",
+      "confidence": 85,
+      "category": "monitoring"
+    },
+    {
+      "name": "thanos",
+      "ports": [10901, 10902],
+      "protocol": "tcp",
+      "patterns": [
+        "Thanos",
+        "thanos"
+      ],
+      "version_pattern": "thanos-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:thanos:thanos",
+      "confidence": 85,
+      "category": "monitoring"
+    },
+    {
+      "name": "cortex",
+      "ports": [9009],
+      "protocol": "tcp",
+      "patterns": [
+        "Cortex",
+        "cortex"
+      ],
+      "version_pattern": "cortex-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:cortexproject:cortex",
+      "confidence": 80,
+      "category": "monitoring"
+    },
+    {
+      "name": "mimir",
+      "ports": [8080, 9009],
+      "protocol": "tcp",
+      "patterns": [
+        "Mimir",
+        "mimir"
+      ],
+      "version_pattern": "mimir-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:grafana:mimir",
+      "confidence": 80,
+      "category": "monitoring"
+    },
+    {
+      "name": "pulsar",
+      "ports": [6650, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Pulsar",
+        "pulsar"
+      ],
+      "version_pattern": "pulsar-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:apache:pulsar",
+      "confidence": 85,
+      "category": "messaging"
+    },
+    {
+      "name": "nats-streaming",
+      "ports": [4222, 8222],
+      "protocol": "tcp",
+      "patterns": [
+        "NATS Streaming",
+        "stan"
+      ],
+      "version_pattern": "stan-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:nats:nats_streaming",
+      "confidence": 80,
+      "category": "messaging"
+    },
+    {
+      "name": "centrifugo",
+      "ports": [8000],
+      "protocol": "tcp",
+      "patterns": [
+        "Centrifugo",
+        "centrifugo"
+      ],
+      "version_pattern": "centrifugo/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:centrifugal:centrifugo",
+      "confidence": 80,
+      "category": "realtime"
+    },
+    {
+      "name": "socket.io",
+      "ports": [3000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "socket.io",
+        "Socket.IO"
+      ],
+      "version_pattern": "socket.io/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:socketio:socket.io",
+      "confidence": 75,
+      "category": "realtime"
+    },
+    {
+      "name": "hasura",
+      "ports": [8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Hasura",
+        "hasura"
+      ],
+      "version_pattern": "hasura/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:hasura:hasura",
+      "confidence": 80,
+      "category": "graphql"
+    },
+    {
+      "name": "apollo",
+      "ports": [4000],
+      "protocol": "tcp",
+      "patterns": [
+        "Apollo",
+        "apollo-server"
+      ],
+      "version_pattern": "apollo-server/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:apollographql:apollo",
+      "confidence": 75,
+      "category": "graphql"
     }
   ]
 }

@@ -706,6 +706,226 @@
       "product": "nessus",
       "cpe_base": "cpe:/a:tenable:nessus",
       "category": "security"
+    },
+    "_comment_frameworks": "===== FRAMEWORKS =====",
+    "express": {
+      "vendor": "expressjs",
+      "product": "express",
+      "cpe_base": "cpe:/a:expressjs:express",
+      "category": "framework"
+    },
+    "django": {
+      "vendor": "djangoproject",
+      "product": "django",
+      "cpe_base": "cpe:/a:djangoproject:django",
+      "category": "framework"
+    },
+    "flask": {
+      "vendor": "palletsprojects",
+      "product": "flask",
+      "cpe_base": "cpe:/a:palletsprojects:flask",
+      "category": "framework"
+    },
+    "rails": {
+      "vendor": "rubyonrails",
+      "product": "ruby_on_rails",
+      "cpe_base": "cpe:/a:rubyonrails:ruby_on_rails",
+      "category": "framework"
+    },
+    "laravel": {
+      "vendor": "laravel",
+      "product": "laravel",
+      "cpe_base": "cpe:/a:laravel:laravel",
+      "category": "framework"
+    },
+    "spring-boot": {
+      "vendor": "vmware",
+      "product": "spring_boot",
+      "cpe_base": "cpe:/a:vmware:spring_boot",
+      "category": "framework"
+    },
+    "aspnet": {
+      "vendor": "microsoft",
+      "product": "asp.net",
+      "cpe_base": "cpe:/a:microsoft:asp.net",
+      "category": "framework"
+    },
+    "_comment_auth": "===== AUTHENTICATION =====",
+    "keycloak": {
+      "vendor": "redhat",
+      "product": "keycloak",
+      "cpe_base": "cpe:/a:redhat:keycloak",
+      "category": "auth"
+    },
+    "oauth2-proxy": {
+      "vendor": "oauth2_proxy",
+      "product": "oauth2_proxy",
+      "cpe_base": "cpe:/a:oauth2_proxy:oauth2_proxy",
+      "category": "auth"
+    },
+    "dex": {
+      "vendor": "dexidp",
+      "product": "dex",
+      "cpe_base": "cpe:/a:dexidp:dex",
+      "category": "auth"
+    },
+    "_comment_logging": "===== LOGGING =====",
+    "fluentd": {
+      "vendor": "fluentd",
+      "product": "fluentd",
+      "cpe_base": "cpe:/a:fluentd:fluentd",
+      "category": "logging"
+    },
+    "fluent-bit": {
+      "vendor": "fluentbit",
+      "product": "fluent_bit",
+      "cpe_base": "cpe:/a:fluentbit:fluent_bit",
+      "category": "logging"
+    },
+    "vector": {
+      "vendor": "datadog",
+      "product": "vector",
+      "cpe_base": "cpe:/a:datadog:vector",
+      "category": "logging"
+    },
+    "loki": {
+      "vendor": "grafana",
+      "product": "loki",
+      "cpe_base": "cpe:/a:grafana:loki",
+      "category": "logging"
+    },
+    "_comment_tracing": "===== TRACING =====",
+    "tempo": {
+      "vendor": "grafana",
+      "product": "tempo",
+      "cpe_base": "cpe:/a:grafana:tempo",
+      "category": "tracing"
+    },
+    "jaeger": {
+      "vendor": "jaegertracing",
+      "product": "jaeger",
+      "cpe_base": "cpe:/a:jaegertracing:jaeger",
+      "category": "tracing"
+    },
+    "zipkin": {
+      "vendor": "openzipkin",
+      "product": "zipkin",
+      "cpe_base": "cpe:/a:openzipkin:zipkin",
+      "category": "tracing"
+    },
+    "_comment_gitops": "===== GITOPS =====",
+    "argocd": {
+      "vendor": "argoproj",
+      "product": "argo-cd",
+      "cpe_base": "cpe:/a:argoproj:argo-cd",
+      "category": "gitops"
+    },
+    "flux": {
+      "vendor": "fluxcd",
+      "product": "flux",
+      "cpe_base": "cpe:/a:fluxcd:flux",
+      "category": "gitops"
+    },
+    "_comment_vpn": "===== VPN =====",
+    "openvpn": {
+      "vendor": "openvpn",
+      "product": "openvpn",
+      "cpe_base": "cpe:/a:openvpn:openvpn",
+      "category": "vpn"
+    },
+    "wireguard": {
+      "vendor": "wireguard",
+      "product": "wireguard",
+      "cpe_base": "cpe:/a:wireguard:wireguard",
+      "category": "vpn"
+    },
+    "strongswan": {
+      "vendor": "strongswan",
+      "product": "strongswan",
+      "cpe_base": "cpe:/a:strongswan:strongswan",
+      "category": "vpn"
+    },
+    "_comment_artifact": "===== ARTIFACT REPOS =====",
+    "artifactory": {
+      "vendor": "jfrog",
+      "product": "artifactory",
+      "cpe_base": "cpe:/a:jfrog:artifactory",
+      "category": "artifact_repo"
+    },
+    "nexus": {
+      "vendor": "sonatype",
+      "product": "nexus",
+      "cpe_base": "cpe:/a:sonatype:nexus",
+      "category": "artifact_repo"
+    },
+    "harbor": {
+      "vendor": "vmware",
+      "product": "harbor",
+      "cpe_base": "cpe:/a:vmware:harbor",
+      "category": "container_registry"
+    },
+    "_comment_code_analysis": "===== CODE ANALYSIS =====",
+    "sonarqube": {
+      "vendor": "sonarsource",
+      "product": "sonarqube",
+      "cpe_base": "cpe:/a:sonarsource:sonarqube",
+      "category": "code_analysis"
+    },
+    "snyk": {
+      "vendor": "snyk",
+      "product": "snyk",
+      "cpe_base": "cpe:/a:snyk:snyk",
+      "category": "security"
+    },
+    "trivy": {
+      "vendor": "aquasecurity",
+      "product": "trivy",
+      "cpe_base": "cpe:/a:aquasecurity:trivy",
+      "category": "security"
+    },
+    "falco": {
+      "vendor": "sysdig",
+      "product": "falco",
+      "cpe_base": "cpe:/a:sysdig:falco",
+      "category": "security"
+    },
+    "_comment_alerting": "===== ALERTING =====",
+    "alertmanager": {
+      "vendor": "prometheus",
+      "product": "alertmanager",
+      "cpe_base": "cpe:/a:prometheus:alertmanager",
+      "category": "alerting"
+    },
+    "sentry": {
+      "vendor": "sentry",
+      "product": "sentry",
+      "cpe_base": "cpe:/a:sentry:sentry",
+      "category": "monitoring"
+    },
+    "_comment_metrics": "===== METRICS =====",
+    "victoriametrics": {
+      "vendor": "victoriametrics",
+      "product": "victoriametrics",
+      "cpe_base": "cpe:/a:victoriametrics:victoriametrics",
+      "category": "monitoring"
+    },
+    "thanos": {
+      "vendor": "thanos",
+      "product": "thanos",
+      "cpe_base": "cpe:/a:thanos:thanos",
+      "category": "monitoring"
+    },
+    "cortex": {
+      "vendor": "cortexproject",
+      "product": "cortex",
+      "cpe_base": "cpe:/a:cortexproject:cortex",
+      "category": "monitoring"
+    },
+    "mimir": {
+      "vendor": "grafana",
+      "product": "mimir",
+      "cpe_base": "cpe:/a:grafana:mimir",
+      "category": "monitoring"
     }
   },
   "os_cpe": {
@@ -714,6 +934,10 @@
     "centos": "cpe:/o:centos:centos",
     "rhel": "cpe:/o:redhat:enterprise_linux",
     "windows": "cpe:/o:microsoft:windows",
-    "macos": "cpe:/o:apple:macos"
+    "macos": "cpe:/o:apple:macos",
+    "alpine": "cpe:/o:alpinelinux:alpine_linux",
+    "fedora": "cpe:/o:fedoraproject:fedora",
+    "suse": "cpe:/o:suse:suse_linux",
+    "arch": "cpe:/o:archlinux:arch_linux"
   }
 }

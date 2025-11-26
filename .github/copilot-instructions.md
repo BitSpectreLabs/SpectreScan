@@ -243,11 +243,37 @@ self.add_row(host, port, state_text)
 
 4. **Widget refresh**: Call `self.refresh()` after modifying widget content to ensure visibility.
 
-5. **Async scanning**: Run scans in executor to avoid blocking:
+5. **Thread-safe UI updates with Messages**: Use custom Message classes and `post_message()` for thread-safe UI updates from background workers:
 ```python
-await asyncio.get_event_loop().run_in_executor(
-    None, self.scanner.scan, target, None, callback
-)
+from textual.message import Message
+
+class ScanResultMessage(Message):
+    def __init__(self, result: ScanResult) -> None:
+        self.result = result
+        super().__init__()
+
+# In worker thread:
+self.post_message(ScanResultMessage(result))
+
+# Message handler (runs in main thread):
+def on_scan_result_message(self, message: ScanResultMessage) -> None:
+    self.results_table.add_result(message.result)
+```
+
+6. **CSS Layout for TabbedContent**: Use `height: 1fr` (fractional units) instead of `height: 100%` for proper space distribution in nested containers:
+```css
+TabbedContent {
+    height: 1fr;
+}
+
+TabPane {
+    height: 1fr;
+}
+
+ResultsTable {
+    height: 1fr;
+    width: 100%;
+}
 ```
 
 ### Common TUI Issues
@@ -255,8 +281,10 @@ await asyncio.get_event_loop().run_in_executor(
 | Issue | Solution |
 |-------|----------|
 | RowKey not subscriptable | Access `.value` property |
-| Results not visible | Add `self.refresh()` after `add_row()` |
-| UI freezing | Use `call_from_thread()` for thread-safe updates |
+| Results not visible | Use `height: 1fr` in CSS, remove large logos |
+| UI not updating from thread | Use `post_message()` with custom Message classes |
+| DataTable empty | Ensure columns added in `on_mount()` |
+| Progress works but results don't | Use Message-based pattern instead of `call_from_thread` for complex widgets |
 
 ---
 

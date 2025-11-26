@@ -5,9 +5,14 @@ Author: BitSpectreLabs
 License: MIT
 """
 
+import sys
 import pytest
 import tempfile
 from pathlib import Path
+
+# Skip if psutil is not available
+psutil = pytest.importorskip("psutil", reason="psutil not installed")
+
 from spectrescan.core.memory_optimizer import (
     MemoryMonitor,
     StreamingResultWriter,

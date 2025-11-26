@@ -6,6 +6,10 @@ License: MIT
 """
 
 import pytest
+import sys
+
+# The `resource` module is not available on Windows. Skip these tests on Windows.
+pytest.skip("Skipping resource_limiter tests on Windows (resource module not available)", allow_module_level=True) if sys.platform == "win32" else None
 import asyncio
 from spectrescan.core.resource_limiter import (
     ResourceLimits,

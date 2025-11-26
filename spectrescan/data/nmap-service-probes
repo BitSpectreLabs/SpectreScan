@@ -1,8 +1,8 @@
-# SpectreScan Service Probes Database v2.0
-# Comprehensive service detection probes - 100+ services
+# SpectreScan Service Probes Database v2.1
+# Comprehensive service detection probes - 150+ services
 # Based on Nmap service-probes format (GPLv2 compatible)
-# Updated: 2025-11-26
-# Services: Web, Database, Container, DevOps, Security, IoT, Enterprise
+# Updated: 2025-01-16
+# Services: Web, Database, Container, DevOps, Security, IoT, Enterprise, ML/AI, Data
 #
 # Format:
 # Probe <protocol> <probename> q|<probe string>|
@@ -681,5 +681,325 @@ rarity 8
 totalwaitms 3000
 
 match unifi m|"up":true| p/UniFi Controller/
+
+# HashiCorp Consul probe
+Probe TCP ConsulAPI q|GET /v1/status/leader HTTP/1.0\r\n\r\n|
+ports 8500
+rarity 7
+totalwaitms 3000
+
+match consul m|"| p/HashiCorp Consul/
+
+# HashiCorp Vault probe
+Probe TCP VaultAPI q|GET /v1/sys/health HTTP/1.0\r\n\r\n|
+ports 8200
+rarity 7
+totalwaitms 3000
+
+match vault m|"initialized"| p/HashiCorp Vault/
+match vault m|"version":\s*"(\d+\.\d+\.\d+)"| p/HashiCorp Vault/ v/$1/
+
+# HashiCorp Nomad probe
+Probe TCP NomadAPI q|GET /v1/agent/health HTTP/1.0\r\n\r\n|
+ports 4646
+rarity 7
+totalwaitms 3000
+
+match nomad m|"client"| p/HashiCorp Nomad/
+
+# etcd probe
+Probe TCP EtcdAPI q|GET /version HTTP/1.0\r\n\r\n|
+ports 2379,4001
+rarity 7
+totalwaitms 3000
+
+match etcd m|"etcdserver":\s*"(\d+\.\d+\.\d+)"| p/etcd/ v/$1/
+match etcd m|"etcdcluster"| p/etcd/
+
+# MinIO probe
+Probe TCP MinIOAPI q|GET /minio/health/live HTTP/1.0\r\n\r\n|
+ports 9000
+rarity 7
+totalwaitms 3000
+
+match minio m|minio| p/MinIO/
+match minio m|Server: MinIO| p/MinIO/
+
+# Ceph probe
+Probe TCP CephAPI q|GET /api/summary HTTP/1.0\r\n\r\n|
+ports 8443,8080
+rarity 8
+totalwaitms 3000
+
+match ceph m|ceph| p/Ceph/
+
+# Envoy proxy probe
+Probe TCP EnvoyAdmin q|GET /server_info HTTP/1.0\r\n\r\n|
+ports 9901
+rarity 7
+totalwaitms 3000
+
+match envoy m|"version":\s*"(\d+\\.\\d+\\.\\d+)"| p/Envoy Proxy/ v/$1/
+match envoy m|envoy| p/Envoy Proxy/
+
+# Traefik probe
+Probe TCP TraefikAPI q|GET /api/rawdata HTTP/1.0\r\n\r\n|
+ports 8080
+rarity 7
+totalwaitms 3000
+
+match traefik m|traefik| p/Traefik/
+
+# Linkerd probe
+Probe TCP LinkerdAPI q|GET /api/v1/namespaces HTTP/1.0\r\n\r\n|
+ports 8084
+rarity 8
+totalwaitms 3000
+
+match linkerd m|linkerd| p/Linkerd/
+
+# ArgoCD probe
+Probe TCP ArgoCDAPI q|GET /api/version HTTP/1.0\r\n\r\n|
+ports 8080,443
+rarity 7
+totalwaitms 3000
+
+match argocd m|"Version":\s*"v?(\d+\\.\\d+\\.\\d+)"| p/ArgoCD/ v/$1/
+
+# Tekton probe
+Probe TCP TektonAPI q|GET /apis/tekton.dev/v1 HTTP/1.0\r\n\r\n|
+ports 8080
+rarity 8
+totalwaitms 3000
+
+match tekton m|tekton| p/Tekton/
+
+# Harbor registry probe
+Probe TCP HarborAPI q|GET /api/v2.0/health HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 7
+totalwaitms 3000
+
+match harbor m|"status":"healthy"| p/Harbor/
+match harbor m|Harbor| p/Harbor/
+
+# Nexus repository probe
+Probe TCP NexusAPI q|GET /service/rest/v1/status HTTP/1.0\r\n\r\n|
+ports 8081
+rarity 7
+totalwaitms 3000
+
+match nexus m|Nexus| p/Sonatype Nexus/
+match nexus m|"version":\s*"(\d+\\.\\d+\\.\\d+)"| p/Sonatype Nexus/ v/$1/
+
+# Artifactory probe
+Probe TCP ArtifactoryAPI q|GET /api/system/ping HTTP/1.0\r\n\r\n|
+ports 8081,8082
+rarity 7
+totalwaitms 3000
+
+match artifactory m|OK| p/JFrog Artifactory/
+
+# SonarQube probe
+Probe TCP SonarQubeAPI q|GET /api/system/status HTTP/1.0\r\n\r\n|
+ports 9000
+rarity 7
+totalwaitms 3000
+
+match sonarqube m|"status":"UP"| p/SonarQube/
+match sonarqube m|"version":\s*"(\d+\\.\\d+)"| p/SonarQube/ v/$1/
+
+# Keycloak probe
+Probe TCP KeycloakAPI q|GET /auth/ HTTP/1.0\r\n\r\n|
+ports 8080,8443
+rarity 7
+totalwaitms 3000
+
+match keycloak m|Keycloak| p/Keycloak/
+
+# Authelia probe
+Probe TCP AutheliaAPI q|GET /api/health HTTP/1.0\r\n\r\n|
+ports 9091
+rarity 8
+totalwaitms 3000
+
+match authelia m|authelia| p/Authelia/
+
+# Authentik probe
+Probe TCP AuthentikAPI q|GET /api/v3/flows/instances/ HTTP/1.0\r\n\r\n|
+ports 9000,9443
+rarity 8
+totalwaitms 3000
+
+match authentik m|authentik| p/Authentik/
+
+# Wazuh probe
+Probe TCP WazuhAPI q|GET /swagger.json HTTP/1.0\r\n\r\n|
+ports 55000
+rarity 8
+totalwaitms 3000
+
+match wazuh m|wazuh| p/Wazuh/
+
+# OpenVAS probe
+Probe TCP OpenVASAPI q|GET /omp?cmd=get_version HTTP/1.0\r\n\r\n|
+ports 9390,9392
+rarity 8
+totalwaitms 3000
+
+match openvas m|OpenVAS| p/OpenVAS/
+
+# Snort probe
+Probe TCP SnortStats q||
+ports 4747
+rarity 9
+totalwaitms 3000
+
+match snort m|snort| p/Snort/
+
+# Suricata probe
+Probe TCP SuricataStats q||
+ports 4748
+rarity 9
+totalwaitms 3000
+
+match suricata m|suricata| p/Suricata/
+
+# TeamCity probe
+Probe TCP TeamCityAPI q|GET /app/rest/server HTTP/1.0\r\n\r\n|
+ports 8111
+rarity 7
+totalwaitms 3000
+
+match teamcity m|TeamCity| p/TeamCity/
+match teamcity m|"version":\s*"(\d+\\.\\d+)"| p/TeamCity/ v/$1/
+
+# Bamboo probe
+Probe TCP BambooAPI q|GET /rest/api/latest/info HTTP/1.0\r\n\r\n|
+ports 8085
+rarity 7
+totalwaitms 3000
+
+match bamboo m|"version":\s*"(\d+\\.\\d+\\.\\d+)"| p/Atlassian Bamboo/ v/$1/
+
+# Bitbucket Server probe
+Probe TCP BitbucketAPI q|GET /rest/api/latest/application-properties HTTP/1.0\r\n\r\n|
+ports 7990
+rarity 7
+totalwaitms 3000
+
+match bitbucket m|"version":\s*"(\d+\\.\\d+\\.\\d+)"| p/Atlassian Bitbucket Server/ v/$1/
+
+# Datadog Agent probe
+Probe TCP DatadogAgentAPI q|GET /api/v1/status HTTP/1.0\r\n\r\n|
+ports 5000
+rarity 8
+totalwaitms 3000
+
+match datadog m|datadog| p/Datadog Agent/
+
+# New Relic Agent probe
+Probe TCP NewRelicAPI q||
+ports 443
+rarity 9
+totalwaitms 3000
+
+match newrelic m|newrelic| p/New Relic/
+
+# Airflow probe
+Probe TCP AirflowAPI q|GET /api/v1/health HTTP/1.0\r\n\r\n|
+ports 8080
+rarity 7
+totalwaitms 3000
+
+match airflow m|"scheduler"| p/Apache Airflow/
+
+# Prefect probe
+Probe TCP PrefectAPI q|GET /api/health HTTP/1.0\r\n\r\n|
+ports 4200
+rarity 8
+totalwaitms 3000
+
+match prefect m|prefect| p/Prefect/
+
+# Dagster probe
+Probe TCP DagsterAPI q|GET /dagit_info HTTP/1.0\r\n\r\n|
+ports 3000
+rarity 8
+totalwaitms 3000
+
+match dagster m|dagster| p/Dagster/
+
+# MLflow probe
+Probe TCP MLflowAPI q|GET /api/2.0/mlflow/experiments/list HTTP/1.0\r\n\r\n|
+ports 5000
+rarity 8
+totalwaitms 3000
+
+match mlflow m|experiments| p/MLflow/
+
+# Kubeflow probe
+Probe TCP KubeflowAPI q|GET /pipeline/apis/v1beta1/pipelines HTTP/1.0\r\n\r\n|
+ports 8080
+rarity 8
+totalwaitms 3000
+
+match kubeflow m|pipelines| p/Kubeflow/
+
+# JupyterHub probe
+Probe TCP JupyterHubAPI q|GET /hub/api/ HTTP/1.0\r\n\r\n|
+ports 8000
+rarity 7
+totalwaitms 3000
+
+match jupyterhub m|"version":\s*"(\d+\\.\\d+\\.\\d+)"| p/JupyterHub/ v/$1/
+
+# Jupyter Notebook probe
+Probe TCP JupyterNotebook q|GET /api HTTP/1.0\r\n\r\n|
+ports 8888
+rarity 7
+totalwaitms 3000
+
+match jupyter m|"version"| p/Jupyter Notebook/
+
+# Apache Superset probe
+Probe TCP SupersetAPI q|GET /health HTTP/1.0\r\n\r\n|
+ports 8088
+rarity 7
+totalwaitms 3000
+
+match superset m|"OK"| p/Apache Superset/
+
+# Metabase probe
+Probe TCP MetabaseAPI q|GET /api/health HTTP/1.0\r\n\r\n|
+ports 3000
+rarity 7
+totalwaitms 3000
+
+match metabase m|"status":"ok"| p/Metabase/
+
+# Redash probe
+Probe TCP RedashAPI q|GET /status.json HTTP/1.0\r\n\r\n|
+ports 5000
+rarity 8
+totalwaitms 3000
+
+match redash m|"version"| p/Redash/
+
+# Apache Kafka Connect probe
+Probe TCP KafkaConnectAPI q|GET /connectors HTTP/1.0\r\n\r\n|
+ports 8083
+rarity 7
+totalwaitms 3000
+
+match kafka-connect m|\[| p/Kafka Connect/
+
+# Confluent Schema Registry probe
+Probe TCP SchemaRegistryAPI q|GET /subjects HTTP/1.0\r\n\r\n|
+ports 8081
+rarity 7
+totalwaitms 3000
+
+match schema-registry m|\[| p/Confluent Schema Registry/
 
 ##############################END OF PROBES##############################
