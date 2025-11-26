@@ -24,7 +24,7 @@ if requirements_file.exists():
 
 setup(
     name="spectrescan",
-    version="1.1.0",
+    version="1.2.0",
     author="BitSpectreLabs",
     description="Professional-grade port scanner with CLI, TUI, and GUI interfaces",
     long_description=long_description,

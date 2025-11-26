@@ -7,6 +7,7 @@ from enum import Enum
 from dataclasses import dataclass
 from typing import List, Optional
 from spectrescan.core.utils import get_common_ports
+from spectrescan.core.timing_engine import TimingTemplate, TimingLevel, get_timing_template
 
 
 class ScanPreset(Enum):
@@ -34,7 +35,22 @@ class ScanConfig:
     enable_os_detection: bool
     enable_banner_grabbing: bool
     randomize: bool
-    timing_template: int  # 0-5 (paranoid to insane)
+    timing_template: Optional[TimingTemplate] = None  # Timing template object
+    timing_level: int = 3  # 0-5 (paranoid to insane) - legacy support
+    
+    def __post_init__(self):
+        """Initialize timing template if not set."""
+        if self.timing_template is None:
+            # Map legacy timing_level to TimingLevel enum
+            level_map = {
+                0: TimingLevel.PARANOID,
+                1: TimingLevel.SNEAKY,
+                2: TimingLevel.POLITE,
+                3: TimingLevel.NORMAL,
+                4: TimingLevel.AGGRESSIVE,
+                5: TimingLevel.INSANE
+            }
+            self.timing_template = get_timing_template(level_map.get(self.timing_level, TimingLevel.NORMAL))
     
     def __str__(self) -> str:
         return f"{self.name}: {self.description}"
@@ -63,7 +79,7 @@ def get_preset_config(preset: ScanPreset) -> ScanConfig:
             enable_os_detection=False,
             enable_banner_grabbing=True,
             randomize=False,
-            timing_template=4  # Aggressive
+            timing_level=4  # Aggressive
         ),
         
         ScanPreset.TOP_PORTS: ScanConfig(
@@ -78,7 +94,7 @@ def get_preset_config(preset: ScanPreset) -> ScanConfig:
             enable_os_detection=True,
             enable_banner_grabbing=True,
             randomize=False,
-            timing_template=3  # Normal
+            timing_level=3  # Normal
         ),
         
         ScanPreset.FULL: ScanConfig(
@@ -93,7 +109,7 @@ def get_preset_config(preset: ScanPreset) -> ScanConfig:
             enable_os_detection=True,
             enable_banner_grabbing=True,
             randomize=False,
-            timing_template=3  # Normal
+            timing_level=3  # Normal
         ),
         
         ScanPreset.STEALTH: ScanConfig(
@@ -108,7 +124,7 @@ def get_preset_config(preset: ScanPreset) -> ScanConfig:
             enable_os_detection=False,
             enable_banner_grabbing=False,
             randomize=True,
-            timing_template=1  # Sneaky
+            timing_level=1  # Sneaky
         ),
         
         ScanPreset.SAFE: ScanConfig(
@@ -123,7 +139,7 @@ def get_preset_config(preset: ScanPreset) -> ScanConfig:
             enable_os_detection=False,
             enable_banner_grabbing=True,
             randomize=False,
-            timing_template=2  # Polite
+            timing_level=2  # Polite
         ),
         
         ScanPreset.AGGRESSIVE: ScanConfig(
@@ -138,7 +154,7 @@ def get_preset_config(preset: ScanPreset) -> ScanConfig:
             enable_os_detection=True,
             enable_banner_grabbing=True,
             randomize=False,
-            timing_template=5  # Insane
+            timing_level=5  # Insane
         ),
         
         ScanPreset.CUSTOM: ScanConfig(
@@ -153,7 +169,7 @@ def get_preset_config(preset: ScanPreset) -> ScanConfig:
             enable_os_detection=True,
             enable_banner_grabbing=True,
             randomize=False,
-            timing_template=3  # Normal
+            timing_level=3  # Normal
         ),
     }
     

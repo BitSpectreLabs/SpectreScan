@@ -1,0 +1,685 @@
+# SpectreScan Service Probes Database v2.0
+# Comprehensive service detection probes - 100+ services
+# Based on Nmap service-probes format (GPLv2 compatible)
+# Updated: 2025-11-26
+# Services: Web, Database, Container, DevOps, Security, IoT, Enterprise
+#
+# Format:
+# Probe <protocol> <probename> q|<probe string>|
+# ports <port list>
+# rarity <1-9>
+# totalwaitms <milliseconds>
+# match <service> m|<regex>| [p/<product>/] [v/<version>/] [i/<info>/] [cpe:<cpe>]
+
+# Exclude directive - ports to skip (printer and UPnP ports)
+Exclude T 9100-9107
+Exclude T 1900
+Exclude U 1900
+
+##############################PROBES##############################
+
+# NULL probe - just connect and read banner
+Probe TCP NULL q||
+ports 21,22,23,25,80,110,143,443,993,995,3306,5432,6379,8080,27017
+rarity 1
+totalwaitms 6000
+
+match ftp m|^220.*FTP| p/vsftpd/ v/$1/ cpe:/a:vsftpd:vsftpd:$1/
+match ftp m|^220 .*FileZilla Server|
+match ssh m|^SSH-(\d+\.\d+)-OpenSSH[_/](\d+\.\d+p?\d*)| p/OpenSSH/ v/$2/ i/protocol $1/ cpe:/a:openbsd:openssh:$2/
+match ssh m|^SSH-(\d+\.\d+)-|
+match smtp m|^220.*ESMTP| p/SMTP/
+match http m|^HTTP/1\.[01] \d\d\d| p/HTTP/
+match pop3 m|^\+OK.*POP3| p/POP3/
+match imap m|^\* OK.*IMAP4| p/IMAP/
+match mysql m|.\x00\x00\x00\n(\d+\.\d+\.\d+)|s p/MySQL/ v/$1/ cpe:/a:mysql:mysql:$1/
+match postgresql m|^E| p/PostgreSQL/
+match redis m|^-ERR|s p/Redis/
+match mongodb m|....\x00\x00\x00|s p/MongoDB/
+
+# HTTP GET probe
+Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
+ports 80,443,8080,8443,3000,5000,8000,8888
+rarity 2
+totalwaitms 5000
+
+match http m|^HTTP/1\.[01] \d\d\d|
+match http m|Server: nginx/(\d+\.\d+\.\d+)| p/nginx/ v/$1/ cpe:/a:nginx:nginx:$1/
+match http m|Server: Apache/(\d+\.\d+\.\d+)| p/Apache httpd/ v/$1/ cpe:/a:apache:http_server:$1/
+match http m|Server: Microsoft-IIS/(\d+\.\d+)| p/Microsoft IIS httpd/ v/$1/ cpe:/a:microsoft:iis:$1/
+match http m|X-Powered-By: PHP/(\d+\.\d+\.\d+)| p/PHP/ v/$1/ cpe:/a:php:php:$1/
+match http m|X-Powered-By: Express| p/Express.js/
+match http m|X-AspNet-Version: (\d+\.\d+\.\d+)| p/ASP.NET/ v/$1/
+
+# SSL probe
+Probe TCP SSLSessionReq q|\x16\x03\x00\x00S\x01\x00\x00O\x03\x00|
+ports 443,993,995,8443
+ssl yes
+rarity 3
+totalwaitms 5000
+
+match ssl m|^\x16\x03[\x00\x01\x02\x03]| p/SSL/TLS/
+softmatch ssl m|^\x15\x03| p/TLS alert/
+
+# FTP probe
+Probe TCP FTPHelp q|HELP\r\n|
+ports 21
+rarity 2
+totalwaitms 5000
+
+match ftp m|^214.*FTP| p/FTP/
+match ftp m|ProFTPD (\d+\.\d+\.\d+)| p/ProFTPD/ v/$1/ cpe:/a:proftpd:proftpd:$1/
+match ftp m|Pure-FTPd| p/Pure-FTPd/
+
+# SSH probe  
+Probe TCP SSHVersion q|SSH-2.0-OpenSSH_7.4\r\n|
+ports 22,2222
+rarity 3
+totalwaitms 5000
+
+match ssh m|^SSH-(\d+\.\d+)-OpenSSH[_/](\d+\.\d+p?\d*)| p/OpenSSH/ v/$2/ i/protocol $1/ cpe:/a:openbsd:openssh:$2/
+match ssh m|^SSH-(\d+\.\d+)-dropbear[_/](\d+\.\d+)| p/Dropbear sshd/ v/$2/ i/protocol $1/
+
+# SMTP probe
+Probe TCP SMTPHelp q|HELP\r\n|
+ports 25,587,465
+rarity 2
+totalwaitms 5000
+
+match smtp m|^214.*SMTP| p/SMTP/
+match smtp m|Postfix| p/Postfix smtpd/
+match smtp m|Exim (\d+\.\d+)| p/Exim smtpd/ v/$1/
+
+# MySQL probe
+Probe TCP MySQLVersion q|\x3f\x00\x00\x00\x0a\x35\x2e\x37\x2e\x31\x34|
+ports 3306
+rarity 4
+totalwaitms 5000
+
+match mysql m|.\x00\x00\x00\n(\d+\.\d+\.\d+)|s p/MySQL/ v/$1/ cpe:/a:mysql:mysql:$1/
+match mysql m|MariaDB| p/MariaDB/
+
+# PostgreSQL probe
+Probe TCP PostgreSQLVersion q|\x00\x00\x00\x08\x04\xd2\x16\x2f|
+ports 5432
+rarity 4
+totalwaitms 5000
+
+match postgresql m|^E\x00\x00\x00| p/PostgreSQL/
+
+# Redis probe
+Probe TCP RedisInfo q|INFO\r\n|
+ports 6379
+rarity 3
+totalwaitms 3000
+
+match redis m|redis_version:(\d+\.\d+\.\d+)| p/Redis key-value store/ v/$1/ cpe:/a:redis:redis:$1/
+match redis m|^-ERR|s p/Redis key-value store/
+
+# MongoDB probe
+Probe TCP MongoDBStatus q|\x3f\x00\x00\x00\x3e\x00\x00\x00\x00\x00\x00\x00\xd4\x07\x00\x00|
+ports 27017,27018,27019
+rarity 4
+totalwaitms 5000
+
+match mongodb m|version":\s*"(\d+\.\d+\.\d+)"| p/MongoDB/ v/$1/ cpe:/a:mongodb:mongodb:$1/
+softmatch mongodb m|....\x00\x00\x00|s p/MongoDB/
+
+# Elasticsearch probe
+Probe TCP ElasticsearchInfo q|GET / HTTP/1.0\r\n\r\n|
+ports 9200,9300
+rarity 5
+totalwaitms 5000
+
+match elasticsearch m|"version"\s*:\s*"(\d+\.\d+\.\d+)"| p/Elasticsearch/ v/$1/ cpe:/a:elastic:elasticsearch:$1/
+
+# Docker API probe
+Probe TCP DockerVersion q|GET /version HTTP/1.0\r\n\r\n|
+ports 2375,2376
+rarity 6
+totalwaitms 3000
+
+match docker m|"Version":"(\d+\.\d+\.\d+)"| p/Docker Engine/ v/$1/
+
+# Kubernetes API probe
+Probe TCP K8sVersion q|GET /version HTTP/1.0\r\n\r\n|
+ports 6443,8080,10250
+rarity 6
+totalwaitms 3000
+
+match kubernetes m|"gitVersion":"v(\d+\.\d+\.\d+)"| p/Kubernetes API/ v/$1/
+
+# VNC probe
+Probe TCP VNCVersion q|RFB 003.008\n|
+ports 5900-5910
+rarity 3
+totalwaitms 5000
+
+match vnc m|^RFB (\d{3}\.\d{3})| p/VNC/ i/protocol $1/
+
+# RDP probe
+Probe TCP RDPNegotiation q|\x03\x00\x00\x13\x0e\xe0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00|
+ports 3389
+rarity 4
+totalwaitms 5000
+
+match rdp m|^\x03\x00| p/Microsoft Terminal Services/
+
+# Telnet probe
+Probe TCP Telnet q|\xff\xfb\x01\xff\xfb\x03\xff\xfd\x03|
+ports 23
+rarity 3
+totalwaitms 5000
+
+match telnet m|Telnet| p/Telnet/
+softmatch telnet m|^\xff\xf[bd]| p/Telnet/
+
+# RTSP probe
+Probe TCP RTSP q|OPTIONS * RTSP/1.0\r\n\r\n|
+ports 554,8554
+rarity 5
+totalwaitms 3000
+
+match rtsp m|^RTSP/1\.0 200 OK| p/RTSP/
+
+# SIP probe
+Probe UDP SIP q|OPTIONS sip:nm SIP/2.0\r\n|
+ports 5060,5061
+rarity 5
+totalwaitms 3000
+
+match sip m|^SIP/2\.0| p/SIP/
+
+# DNS probe
+Probe UDP DNSVersionBindReq q|\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00|
+ports 53
+rarity 2
+totalwaitms 3000
+
+match domain m|^\x00\x00| p/ISC BIND/
+softmatch domain m|^..[\x80-\xff]| p/DNS/
+
+# SNMP probe
+Probe UDP SNMPv3GetRequest q|\x30\x3a\x02\x01\x03|
+ports 161
+rarity 4
+totalwaitms 3000
+
+match snmp m|^\x30| p/SNMP/
+
+# NTP probe
+Probe UDP NTPRequest q|\xe3\x00\x04\xfa\x00\x01\x00\x00|
+ports 161
+rarity 3
+totalwaitms 3000
+
+match ntp m|^[\x1c\x1d\x1e\x1f\x24]| p/NTP/
+
+# Grafana probe
+Probe TCP GrafanaAPI q|GET /api/health HTTP/1.0\r\n\r\n|
+ports 3000
+rarity 5
+totalwaitms 3000
+
+match grafana m|"database":\s*"ok"| p/Grafana/
+match grafana m|X-Grafana-| p/Grafana/
+
+# Prometheus probe
+Probe TCP PrometheusAPI q|GET /api/v1/status/buildinfo HTTP/1.0\r\n\r\n|
+ports 9090
+rarity 5
+totalwaitms 3000
+
+match prometheus m|"version":\s*"(\d+\.\d+\.\d+)"| p/Prometheus/ v/$1/
+
+# Jenkins probe
+Probe TCP JenkinsAPI q|GET /api/json HTTP/1.0\r\n\r\n|
+ports 8080,8443
+rarity 5
+totalwaitms 3000
+
+match jenkins m|X-Jenkins:\s*(\d+\.\d+)| p/Jenkins/ v/$1/
+match jenkins m|"mode":\s*"NORMAL"| p/Jenkins/
+
+# GitLab probe
+Probe TCP GitLabAPI q|GET /api/v4/version HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 6
+totalwaitms 3000
+
+match gitlab m|"version":\s*"(\d+\.\d+\.\d+)"| p/GitLab/ v/$1/
+match gitlab m|X-GitLab-| p/GitLab/
+
+# RabbitMQ Management probe
+Probe TCP RabbitMQAPI q|GET /api/overview HTTP/1.0\r\n\r\n|
+ports 15672
+rarity 5
+totalwaitms 3000
+
+match rabbitmq m|"rabbitmq_version":\s*"(\d+\.\d+\.\d+)"| p/RabbitMQ/ v/$1/
+
+# RabbitMQ AMQP probe
+Probe TCP RabbitMQAMQP q|AMQP\x00\x00\x09\x01|
+ports 5672
+rarity 4
+totalwaitms 3000
+
+match rabbitmq m|^AMQP| p/RabbitMQ AMQP/
+
+# Kafka probe
+Probe TCP KafkaAPI q|\x00\x00\x00\x13\x00\x12\x00\x00|
+ports 9092
+rarity 5
+totalwaitms 3000
+
+softmatch kafka m|^\x00\x00\x00| p/Apache Kafka/
+
+# Memcached probe
+Probe TCP MemcachedStats q|stats\r\n|
+ports 11211
+rarity 3
+totalwaitms 3000
+
+match memcached m|STAT version (\d+\.\d+\.\d+)| p/Memcached/ v/$1/
+match memcached m|^STAT| p/Memcached/
+
+# Cassandra probe
+Probe TCP CassandraCQL q|\x04\x00\x00\x00\x00\x00\x00\x00\x00|
+ports 9042
+rarity 5
+totalwaitms 3000
+
+softmatch cassandra m|^\x84| p/Apache Cassandra CQL/
+
+# CouchDB probe
+Probe TCP CouchDBInfo q|GET / HTTP/1.0\r\n\r\n|
+ports 5984
+rarity 5
+totalwaitms 3000
+
+match couchdb m|"couchdb":\s*"Welcome"| p/Apache CouchDB/
+match couchdb m|"version":\s*"(\d+\.\d+\.\d+)"| p/Apache CouchDB/ v/$1/
+
+# InfluxDB probe
+Probe TCP InfluxDBPing q|GET /ping HTTP/1.0\r\n\r\n|
+ports 8086
+rarity 5
+totalwaitms 3000
+
+match influxdb m|X-Influxdb-Version:\s*(\d+\.\d+\.\d+)| p/InfluxDB/ v/$1/
+
+# Neo4j probe
+Probe TCP Neo4jBolt q|\x60\x60\xB0\x17|
+ports 7687
+rarity 5
+totalwaitms 3000
+
+softmatch neo4j m|^\x00\x00\x00\x04| p/Neo4j Bolt/
+
+# Neo4j HTTP probe
+Probe TCP Neo4jHTTP q|GET /db/neo4j HTTP/1.0\r\n\r\n|
+ports 7474
+rarity 5
+totalwaitms 3000
+
+match neo4j m|"neo4j_version":\s*"(\d+\.\d+\.\d+)"| p/Neo4j/ v/$1/
+
+# Consul probe
+Probe TCP ConsulAPI q|GET /v1/agent/self HTTP/1.0\r\n\r\n|
+ports 8500
+rarity 6
+totalwaitms 3000
+
+match consul m|"Version":\s*"(\d+\\.\ d+\\.\\d+)"| p/HashiCorp Consul/ v/$1/
+
+# Vault probe
+Probe TCP VaultAPI q|GET /v1/sys/health HTTP/1.0\r\n\r\n|
+ports 8200
+rarity 6
+totalwaitms 3000
+
+match vault m|"version":\s*"(\d+\\.\ d+\\.\\d+)"| p/HashiCorp Vault/ v/$1/
+
+# etcd probe
+Probe TCP EtcdAPI q|GET /version HTTP/1.0\r\n\r\n|
+ports 2379
+rarity 6
+totalwaitms 3000
+
+match etcd m|"etcdserver":\s*"(\d+\.\d+\.\d+)"| p/etcd/ v/$1/
+
+# MinIO probe
+Probe TCP MinIOAPI q|GET / HTTP/1.0\r\n\r\n|
+ports 9000
+rarity 6
+totalwaitms 3000
+
+match minio m|Server:\s*MinIO| p/MinIO/
+match minio m|MinIO/([\w\-]+)| p/MinIO/ v/$1/
+
+# Traefik probe
+Probe TCP TraefikAPI q|GET /api/version HTTP/1.0\r\n\r\n|
+ports 8080
+rarity 6
+totalwaitms 3000
+
+match traefik m|"Version":\s*"(\d+\.\d+\.\d+)"| p/Traefik/ v/$1/
+
+# HAProxy probe
+Probe TCP HAProxyStats q|GET /stats HTTP/1.0\r\n\r\n|
+ports 8404
+rarity 6
+totalwaitms 3000
+
+match haproxy m|Server:\s*HAProxy/(\d+\.\d+\.\d+)| p/HAProxy/ v/$1/
+softmatch haproxy m|HAProxy| p/HAProxy/
+
+# Squid probe
+Probe TCP SquidCacheManager q|GET cache_object://localhost/info HTTP/1.0\r\n\r\n|
+ports 3128
+rarity 5
+totalwaitms 3000
+
+match squid m|squid/(\d+\.\d+)| p/Squid proxy/ v/$1/
+match squid m|X-Squid-Error| p/Squid proxy/
+
+# Varnish probe
+Probe TCP VarnishHTTP q|GET / HTTP/1.0\r\n\r\n|
+ports 6081
+rarity 6
+totalwaitms 3000
+
+match varnish m|Via:.*varnish| p/Varnish Cache/
+match varnish m|X-Varnish:| p/Varnish Cache/
+
+# LDAP probe
+Probe TCP LDAPBindReq q|\x30\x0c\x02\x01\x01\x60\x07\x02\x01\x03\x04\x00\x80\x00|
+ports 389,636
+rarity 4
+totalwaitms 3000
+
+match ldap m|^\x30| p/LDAP/
+softmatch ldap m|objectClass| p/LDAP/
+
+# Samba/SMB probe
+Probe TCP SMBNegotiate q|\x00\x00\x00\x85\xff\x53\x4d\x42\x72\x00\x00\x00\x00\x18\x53\xc8|
+ports 139,445
+rarity 3
+totalwaitms 3000
+
+match smb m|\xffSMB| p/Samba/
+match smb m|Samba (\d+\.\d+\.\d+)| p/Samba/ v/$1/
+
+# MSSQL probe
+Probe TCP MSSQLPreLogin q|\x12\x01\x00\x34\x00\x00\x00\x00|
+ports 1433
+rarity 4
+totalwaitms 3000
+
+match mssql m|Microsoft SQL Server| p/Microsoft SQL Server/
+softmatch mssql m|^\x04\x01| p/Microsoft SQL Server/
+
+# Oracle TNS probe
+Probe TCP OracleTNS q|(CONNECT_DATA=(COMMAND=version))|
+ports 1521,1522
+rarity 5
+totalwaitms 3000
+
+match oracle m|DESCRIPTION=| p/Oracle Database/
+match oracle m|VERSION=(\d+\.\d+\.\d+)| p/Oracle Database/ v/$1/
+
+# Zabbix probe
+Probe TCP ZabbixAgent q|agent.version\n|
+ports 10050
+rarity 5
+totalwaitms 3000
+
+match zabbix m|^(\d+\.\d+\.\d+)| p/Zabbix Agent/ v/$1/
+
+# Nagios NRPE probe
+Probe TCP NagiosNRPE q|\x00\x01\x00\x00\x00\x00\x00\x00|
+ports 5666
+rarity 5
+totalwaitms 3000
+
+match nagios-nrpe m|^\x00\x01| p/Nagios NRPE/
+
+# Splunk probe
+Probe TCP SplunkAPI q|GET /services/server/info HTTP/1.0\r\n\r\n|
+ports 8089
+rarity 6
+totalwaitms 3000
+
+match splunk m|<s:key name="version">(\d+\.\d+\.\d+)| p/Splunk/ v/$1/
+match splunk m|Server:\s*Splunkd| p/Splunk/
+
+# Logstash probe
+Probe TCP LogstashAPI q|GET / HTTP/1.0\r\n\r\n|
+ports 9600
+rarity 6
+totalwaitms 3000
+
+match logstash m|"version":\s*"(\d+\.\d+\.\d+)"| p/Logstash/ v/$1/
+
+# Kibana probe
+Probe TCP KibanaAPI q|GET /api/status HTTP/1.0\r\n\r\n|
+ports 5601
+rarity 5
+totalwaitms 3000
+
+match kibana m|kbn-version:\s*(\d+\.\d+\.\d+)| p/Kibana/ v/$1/
+match kibana m|"version":\s*{\s*"number":\s*"(\d+\.\d+\.\d+)"| p/Kibana/ v/$1/
+
+# ActiveMQ probe
+Probe TCP ActiveMQOpenwire q|\x00\x00\x00|
+ports 61616
+rarity 5
+totalwaitms 3000
+
+match activemq m|ActiveMQ| p/Apache ActiveMQ/
+
+# MQTT/Mosquitto probe
+Probe TCP MQTTConnect q|\x10\x1f\x00\x04MQTT\x04\x02\x00\x3c|
+ports 1883,8883
+rarity 5
+totalwaitms 3000
+
+match mqtt m|^\x20\x02| p/MQTT broker/
+softmatch mqtt m|mosquitto| p/Eclipse Mosquitto/
+
+# NATS probe
+Probe TCP NATSInfo q||
+ports 4222
+rarity 5
+totalwaitms 3000
+
+match nats m|INFO\s*{| p/NATS/
+match nats m|"version":\s*"(\d+\.\d+\.\d+)"| p/NATS/ v/$1/
+
+# TeamViewer probe
+Probe TCP TeamViewerPing q|\x17\x24\x00\x01|
+ports 5938
+rarity 7
+totalwaitms 3000
+
+softmatch teamviewer m|^\x17\x24| p/TeamViewer/
+
+# Nextcloud/ownCloud probe
+Probe TCP NextcloudStatus q|GET /status.php HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 6
+totalwaitms 3000
+
+match nextcloud m|"productname":\s*"Nextcloud"| p/Nextcloud/
+match nextcloud m|"version":\s*"(\d+\.\d+\.\d+)"| p/Nextcloud/ v/$1/
+match owncloud m|"productname":\s*"ownCloud"| p/ownCloud/
+
+# WordPress probe
+Probe TCP WordPressAPI q|GET /wp-json/wp/v2 HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 6
+totalwaitms 3000
+
+match wordpress m|X-WP-JSON| p/WordPress/
+match wordpress m|wp-json| p/WordPress/
+
+# Drupal probe
+Probe TCP DrupalAPI q|GET /core/install.php HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 7
+totalwaitms 3000
+
+match drupal m|Drupal| p/Drupal/
+match drupal m|X-Generator:\s*Drupal\s*(\d+)| p/Drupal/ v/$1/
+
+# Joomla probe
+Probe TCP JoomlaAPI q|GET /administrator/ HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 7
+totalwaitms 3000
+
+match joomla m|/media/jui/| p/Joomla!/
+match joomla m|Joomla!| p/Joomla!/
+
+# Magento probe
+Probe TCP MagentoAPI q|GET /magento_version HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 7
+totalwaitms 3000
+
+match magento m|Magento| p/Magento/
+match magento m|Mage\.Cookies| p/Magento/
+
+# Tomcat Manager probe
+Probe TCP TomcatManager q|GET /manager/html HTTP/1.0\r\n\r\n|
+ports 8080,8443
+rarity 6
+totalwaitms 3000
+
+match tomcat m|Apache Tomcat/(\d+\.\d+\.\d+)| p/Apache Tomcat/ v/$1/
+match tomcat m|Server:\s*Apache-Coyote| p/Apache Tomcat/
+
+# WebLogic probe
+Probe TCP WebLogicConsole q|GET /console HTTP/1.0\r\n\r\n|
+ports 7001,7002
+rarity 7
+totalwaitms 3000
+
+match weblogic m|WebLogic| p/Oracle WebLogic Server/
+
+# WebSphere probe
+Probe TCP WebSphereConsole q|GET /ibm/console HTTP/1.0\r\n\r\n|
+ports 9060,9043
+rarity 7
+totalwaitms 3000
+
+match websphere m|WebSphere| p/IBM WebSphere Application Server/
+
+# WildFly/JBoss probe
+Probe TCP WildFlyConsole q|GET /console HTTP/1.0\r\n\r\n|
+ports 9990
+rarity 6
+totalwaitms 3000
+
+match wildfly m|WildFly| p/WildFly/
+match wildfly m|JBoss| p/JBoss/
+
+# Containerd probe
+Probe TCP ContainerdAPI q|GET /v1.41/version HTTP/1.0\r\n\r\n|
+ports 2375,2376
+rarity 7
+totalwaitms 3000
+
+match containerd m|"Name":\s*"containerd"| p/containerd/
+
+# Rancher probe
+Probe TCP RancherAPI q|GET /v3 HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 7
+totalwaitms 3000
+
+match rancher m|X-Rancher-| p/Rancher/
+match rancher m|rancher| p/Rancher/
+
+# OpenShift probe
+Probe TCP OpenShiftAPI q|GET /version/openshift HTTP/1.0\r\n\r\n|
+ports 8443
+rarity 7
+totalwaitms 3000
+
+match openshift m|"gitVersion":\s*"v(\d+\.\d+\.\d+)"| p/OpenShift/ v/$1/
+
+# Ansible Tower/AWX probe
+Probe TCP AnsibleTowerAPI q|GET /api/v2/ping/ HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 7
+totalwaitms 3000
+
+match ansible-tower m|"version":\s*"(\d+\.\d+\.\d+)"| p/Ansible Tower/ v/$1/
+match ansible-awx m|AWX| p/Ansible AWX/
+
+# GitLab Runner probe
+Probe TCP GitLabRunnerAPI q|GET /api/v4/runners HTTP/1.0\r\n\r\n|
+ports 8093
+rarity 7
+totalwaitms 3000
+
+match gitlab-runner m|gitlab-runner| p/GitLab Runner/
+
+# Portainer probe
+Probe TCP PortainerAPI q|GET /api/status HTTP/1.0\r\n\r\n|
+ports 9000
+rarity 7
+totalwaitms 3000
+
+match portainer m|"Version":\s*"(\d+\.\d+\.\d+)"| p/Portainer/ v/$1/
+
+# Home Assistant probe
+Probe TCP HomeAssistantAPI q|GET /api/ HTTP/1.0\r\n\r\n|
+ports 8123
+rarity 8
+totalwaitms 3000
+
+match home-assistant m|"message":\s*"API running"| p/Home Assistant/
+
+# Node-RED probe
+Probe TCP NodeREDAPI q|GET /settings HTTP/1.0\r\n\r\n|
+ports 1880
+rarity 8
+totalwaitms 3000
+
+match node-red m|"version":\s*"(\d+\.\d+\.\d+)"| p/Node-RED/ v/$1/
+
+# PiHole probe
+Probe TCP PiHoleAPI q|GET /admin/api.php HTTP/1.0\r\n\r\n|
+ports 80
+rarity 8
+totalwaitms 3000
+
+match pihole m|"gravity_last_updated"| p/Pi-hole/
+
+# pfSense probe
+Probe TCP pfSenseAPI q|GET /api/v1/system/version HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 8
+totalwaitms 3000
+
+match pfsense m|pfSense| p/pfSense/
+
+# OPNsense probe
+Probe TCP OPNsenseAPI q|GET /api/core/firmware/status HTTP/1.0\r\n\r\n|
+ports 80,443
+rarity 8
+totalwaitms 3000
+
+match opnsense m|OPNsense| p/OPNsense/
+
+# Ubiquiti UniFi Controller probe
+Probe TCP UniFiAPI q|GET /status HTTP/1.0\r\n\r\n|
+ports 8443
+rarity 8
+totalwaitms 3000
+
+match unifi m|"up":true| p/UniFi Controller/
+
+##############################END OF PROBES##############################

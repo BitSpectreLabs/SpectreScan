@@ -345,7 +345,9 @@ class HistorySelectionScreen(Screen):
             return
         
         row_key = list(table.rows.keys())[table.cursor_row]
-        entry = self.manager.get_entry(row_key)
+        # RowKey.value contains the actual key string
+        entry_id = row_key.value if hasattr(row_key, 'value') else str(row_key)
+        entry = self.manager.get_entry(entry_id)
         
         if entry:
             # Show details in notification
@@ -389,9 +391,11 @@ class HistorySelectionScreen(Screen):
             return
         
         row_key = list(table.rows.keys())[table.cursor_row]
+        # RowKey.value contains the actual key string
+        entry_id = row_key.value if hasattr(row_key, 'value') else str(row_key)
         
-        if self.manager.delete_entry(row_key):
-            self.notify(f"Scan {row_key[:8]} deleted", severity="information")
+        if self.manager.delete_entry(entry_id):
+            self.notify(f"Scan {entry_id[:8]} deleted", severity="information")
             self._refresh_table()
         else:
             self.notify("Failed to delete entry", severity="error")

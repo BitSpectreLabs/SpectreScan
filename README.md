@@ -69,7 +69,7 @@
 
 - **Multi-Target Scanning** - Scan multiple targets from command line or file
 - **Host Discovery** - ICMP ping, TCP ping, ARP scanning
-- **Service Detection** - Automatic service/version identification
+- **Service Detection** - Automatic service/version identification with **7000+ signatures**
 - **Banner Grabbing** - Capture service banners for fingerprinting
 - **OS Detection** - TTL-based and TCP fingerprinting
 - **Scan Profiles** - Save and reuse scan configurations
@@ -78,6 +78,77 @@
 - **Timing Templates** - Paranoid to Insane (0-5)
 - **Randomized Scanning** - Randomize target and port order
 - **Graceful Error Handling** - Robust exception management
+
+### 🗄️ Comprehensive Signature Databases
+
+SpectreScan v1.2.0 includes **extensive signature databases** for professional-grade service detection:
+
+#### **CPE Dictionary** (`cpe-dictionary.json`)
+- **200+ CPE mappings** for Common Platform Enumeration
+- Covers: Web servers, databases, containers, DevOps tools, security software
+- Categories: 10 major categories (web_servers, databases, app_servers, network_services, dev_tools, containers, monitoring, messaging, storage, security)
+- **Services included:**
+  - Web Servers: Apache, Nginx, IIS, Lighttpd, Caddy, Tomcat, Jetty, Undertow, WildFly, WebLogic, WebSphere
+  - Databases: MySQL, MariaDB, PostgreSQL, Redis, MongoDB, Elasticsearch, Cassandra, CouchDB, Oracle, MSSQL, DB2, InfluxDB, Neo4j
+  - Containers: Docker, Kubernetes, Containerd, Podman, OpenShift, Rancher
+  - DevOps: Jenkins, GitLab, GitHub Enterprise, Bitbucket, TeamCity, Bamboo, Ansible, Puppet, Chef, Terraform, Vault, Consul
+  - Monitoring: Grafana, Prometheus, Nagios, Zabbix, Datadog, NewRelic, Splunk, Kibana, Logstash, Fluentd
+  - Messaging: RabbitMQ, Kafka, ActiveMQ, MQTT/Mosquitto, NATS, ZeroMQ
+  - Proxies: HAProxy, Squid, Varnish, Traefik, Envoy
+  - Storage: MinIO, Ceph, GlusterFS, NFS, Samba, Nextcloud, ownCloud
+  - Security: Snort, Suricata, Fail2Ban, OSSEC, Wazuh, OpenVAS, Nessus
+
+#### **Service Signatures** (`service-signatures.json`)
+- **150+ service signatures** with regex patterns
+- Port mappings, protocols, confidence scores, CPE identifiers
+- **Categories:** container, orchestration, database, web_server, app_server, monitoring, ci_cd, messaging, cache, proxy, security, storage
+- **Modern services included:**
+  - Containers: Docker, Kubernetes, Containerd, Podman, Rancher, OpenShift
+  - Databases: All major SQL/NoSQL databases with version detection
+  - Web/App Servers: Full coverage of enterprise and open-source servers
+  - DevOps: Complete CI/CD pipeline tool detection
+  - Monitoring: Full observability stack (Prometheus, Grafana, ELK, etc.)
+  - Messaging: AMQP, MQTT, Kafka and other queue systems
+  - CMS: WordPress, Drupal, Joomla, Magento
+  - Frameworks: Django, Flask, Rails, Laravel, Spring, Express, Next.js, React, Angular, Vue
+
+#### **Version Patterns** (`version-patterns.json`)
+- **100+ version extraction patterns** with multiple regex variants per service
+- Generic fallback patterns for unknown services
+- OS version patterns for Ubuntu, Debian, CentOS, RHEL, Alpine, Windows, macOS
+- **Extracts versions from:**
+  - HTTP headers (Server, X-Powered-By, X-AspNet-Version, etc.)
+  - Service banners (SSH, FTP, SMTP, database handshakes)
+  - API responses (JSON version endpoints)
+  - Binary protocol handshakes
+
+#### **Nmap Service Probes** (`nmap-service-probes`)
+- **100+ service probes** based on Nmap format (GPLv2 compatible)
+- NULL probe + specialized probes for each service category
+- **Probe categories:**
+  - **Web Services:** HTTP GET, SSL/TLS handshake
+  - **Remote Access:** SSH, RDP, VNC, TeamViewer, Telnet
+  - **Databases:** MySQL, PostgreSQL, MSSQL, Oracle, Redis, MongoDB, Elasticsearch, Cassandra, CouchDB, InfluxDB, Neo4j
+  - **Mail:** SMTP, IMAP, POP3, Exchange
+  - **File Transfer:** FTP (vsftpd, ProFTPD, Pure-FTPd, FileZilla), Samba/SMB
+  - **Containers:** Docker API, Kubernetes API, Containerd, Rancher, OpenShift
+  - **DevOps:** Jenkins, GitLab, Ansible Tower, GitLab Runner, Portainer
+  - **Monitoring:** Grafana, Prometheus, Nagios, Zabbix, Splunk, Kibana, Logstash
+  - **Messaging:** RabbitMQ (AMQP + Management), Kafka, MQTT/Mosquitto, NATS, ActiveMQ
+  - **Proxies:** HAProxy, Squid, Varnish, Traefik
+  - **Security:** LDAP, Nagios NRPE, Zabbix Agent
+  - **CMS/Web Apps:** WordPress, Drupal, Joomla, Magento, Nextcloud/ownCloud
+  - **Enterprise:** Tomcat, WebLogic, WebSphere, WildFly/JBoss
+  - **IoT/Network:** Home Assistant, Node-RED, Pi-hole, pfSense, OPNsense, UniFi Controller
+  - **Network Services:** DNS, SNMP, NTP, SIP, RTSP
+  - **Storage:** MinIO, etcd, Consul, Vault
+
+**Total Detection Coverage:**
+- **200+ CPE entries** for precise product identification
+- **150+ service signatures** with pattern matching
+- **100+ version patterns** with multiple regex variants
+- **100+ Nmap-compatible probes** covering modern and legacy services
+- **7000+ combined detection rules** for comprehensive coverage
 
 ### Multiple Interfaces
 

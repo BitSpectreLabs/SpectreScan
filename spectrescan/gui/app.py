@@ -11,6 +11,7 @@ from pathlib import Path
 from spectrescan.core.scanner import PortScanner
 from spectrescan.core.presets import ScanPreset, get_preset_config
 from spectrescan.core.utils import parse_ports, parse_targets_from_file, ScanResult
+from spectrescan.core.history import HistoryManager
 from spectrescan.reports import (
     generate_json_report, generate_csv_report,
     generate_xml_report
@@ -65,6 +66,9 @@ class SpectreScanGUI:
         self.current_target_index = 0
         self.total_targets = 0
         self.target_list: List[str] = []
+        
+        # Initialize history manager
+        self.history_manager = HistoryManager()
         
         # Setup UI
         self._setup_ui()
@@ -793,6 +797,37 @@ class SpectreScanGUI:
             # Complete
             if self.scanning:
                 summary = self.scanner.get_scan_summary()
+                
+                # Save to history
+                try:
+                    scan_type = self.scan_type_var.get()
+                    self.history_manager.add_entry(
+                        target=target,
+                        ports=ports,
+                        scan_type=scan_type,
+                        duration=summary.get('scan_duration_seconds', 0.0),
+                        open_ports=summary.get('open_ports', 0),
+                        closed_ports=summary.get('closed_ports', 0),
+                        filtered_ports=summary.get('filtered_ports', 0),
+                        config={
+                            'threads': self.threads_var.get(),
+                            'timeout': self.timeout_var.get(),
+                            'service_detection': self.service_detection_var.get(),
+                            'os_detection': self.os_detection_var.get(),
+                            'banner_grabbing': self.banner_grab_var.get(),
+                            'preset': self.preset_var.get(),
+                        }
+                    )
+                    self.root.after(0, lambda: self._log(
+                        "Scan saved to history",
+                        self.colors['text_secondary']
+                    ))
+                except Exception as e:
+                    self.root.after(0, lambda: self._log(
+                        f"Warning: Could not save to history: {e}",
+                        self.colors['warning']
+                    ))
+                
                 self.root.after(0, lambda: self._log(
                     f"\nScan complete! Found {summary['open_ports']} open ports in {summary['scan_duration']}"
                 ))

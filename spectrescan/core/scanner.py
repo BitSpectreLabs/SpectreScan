@@ -6,6 +6,7 @@ by BitSpectreLabs
 import socket
 import random
 import logging
+import asyncio
 from typing import List, Optional, Callable, Dict
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -20,43 +21,68 @@ from spectrescan.core.async_scan import AsyncScanner
 from spectrescan.core.banners import BannerGrabber
 from spectrescan.core.os_detect import OSDetector
 from spectrescan.core.host_discovery import HostDiscovery
+from spectrescan.core.timing_engine import TimingTemplate, TimingLevel, get_timing_template
+from spectrescan.core.connection_pool import ConnectionPool
 
 
 logger = logging.getLogger(__name__)
 
 
 class PortScanner:
-    """Main port scanning engine."""
+    """Main port scanning engine with async-first architecture."""
     
-    def __init__(self, config: Optional[ScanConfig] = None):
+    def __init__(
+        self, 
+        config: Optional[ScanConfig] = None,
+        timing_template: Optional[TimingTemplate] = None,
+        use_async: bool = True
+    ):
         """
         Initialize port scanner.
         
         Args:
             config: Scan configuration (default: normal scan)
+            timing_template: Timing template (T0-T5) for speed control
+            use_async: Use async scanner by default (recommended)
         """
         if config is None:
             config = get_preset_config(ScanPreset.TOP_PORTS)
         
+        # Use timing template if provided
+        if timing_template:
+            self.timing_template = timing_template
+        else:
+            # Default to T3 (Normal) if timing_template not in config
+            self.timing_template = getattr(config, 'timing_template', None) or get_timing_template(TimingLevel.NORMAL)
+        
         self.config = config
+        self.use_async = use_async
         self.results: List[ScanResult] = []
         self.host_info: Dict[str, HostInfo] = {}
         self.start_time: Optional[datetime] = None
         self.end_time: Optional[datetime] = None
         
-        # Initialize subsystems
-        self.syn_scanner = SynScanner(timeout=config.timeout)
-        self.udp_scanner = UdpScanner(timeout=config.timeout)
-        self.async_scanner = AsyncScanner(
-            timeout=config.timeout,
-            max_concurrent=config.threads,
-            rate_limit=config.rate_limit
+        # Connection pool for async scanner
+        self.connection_pool = ConnectionPool(
+            max_connections=self.timing_template.max_concurrent,
+            max_connections_per_host=min(50, self.timing_template.max_concurrent // 10),
+            max_age=30.0,
+            idle_timeout=5.0
         )
-        self.banner_grabber = BannerGrabber(timeout=config.timeout)
-        self.os_detector = OSDetector(timeout=config.timeout)
+        
+        # Initialize subsystems
+        self.syn_scanner = SynScanner(timeout=self.timing_template.timeout)
+        self.udp_scanner = UdpScanner(timeout=self.timing_template.timeout)
+        self.async_scanner = AsyncScanner(
+            timing_template=self.timing_template,
+            connection_pool=self.connection_pool,
+            enable_rtt_adjustment=True
+        )
+        self.banner_grabber = BannerGrabber(timeout=self.timing_template.timeout)
+        self.os_detector = OSDetector(timeout=self.timing_template.timeout)
         self.host_discovery = HostDiscovery(
-            timeout=config.timeout,
-            threads=config.threads
+            timeout=self.timing_template.host_timeout,
+            threads=min(100, self.timing_template.max_concurrent)
         )
     
     def scan(
@@ -126,9 +152,14 @@ class PortScanner:
             if target_callback:
                 target_callback(target_ip, idx, total_targets)
             
-            # Determine scan method
+            # Determine scan method (prefer async for TCP)
             if "tcp" in self.config.scan_types:
-                results = self._tcp_scan(target_ip, ports, callback)
+                if self.use_async:
+                    # Use high-speed async scanner with integrated banner grabbing
+                    results = self._async_tcp_scan(target_ip, ports, callback)
+                else:
+                    # Fallback to threaded scanner
+                    results = self._tcp_scan(target_ip, ports, callback)
                 self.results.extend(results)
             
             if "syn" in self.config.scan_types:
@@ -139,11 +170,12 @@ class PortScanner:
                 results = self._udp_scan(target_ip, ports, callback)
                 self.results.extend(results)
             
-            # Additional detection for open ports
+            # Additional detection for open ports (only if not already done by async scanner)
             open_ports = [r for r in self.results if r.state == "open" and r.host == target_ip]
             
             if open_ports:
-                if self.config.enable_banner_grabbing:
+                # Banner grabbing (skip if async scanner already did it)
+                if self.config.enable_banner_grabbing and not (self.use_async and "tcp" in self.config.scan_types):
                     self._grab_banners(open_ports)
                 
                 if self.config.enable_service_detection:
@@ -153,9 +185,49 @@ class PortScanner:
                     self._detect_os(target_ip, open_ports)
         
         self.end_time = datetime.now()
-        logger.info(f"Scan complete in {calculate_scan_time(self.start_time, self.end_time)}")
+        duration = calculate_scan_time(self.start_time, self.end_time)
+        logger.info(f"Scan complete in {duration}")
+        
+        # Log performance stats
+        stats = self.async_scanner.get_stats()
+        if stats.get("ports_scanned", 0) > 0:
+            logger.info(f"Async scanner stats: {stats['ports_scanned']} ports, "
+                       f"{stats['open_ports']} open, {stats['retries']} retries")
         
         return self.results
+    
+    def _async_tcp_scan(
+        self,
+        host: str,
+        ports: List[int],
+        callback: Optional[Callable[[ScanResult], None]] = None
+    ) -> List[ScanResult]:
+        """
+        Perform high-speed async TCP scan with integrated banner grabbing.
+        
+        Args:
+            host: Target host
+            ports: List of ports
+            callback: Optional callback
+            
+        Returns:
+            List of results
+        """
+        # Run async scan
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            results = loop.run_until_complete(
+                self.async_scanner.scan_ports(
+                    host, 
+                    ports, 
+                    callback,
+                    grab_banners=self.config.enable_banner_grabbing
+                )
+            )
+            return results
+        finally:
+            loop.close()
     
     def _tcp_scan(
         self,
@@ -164,7 +236,7 @@ class PortScanner:
         callback: Optional[Callable[[ScanResult], None]] = None
     ) -> List[ScanResult]:
         """
-        Perform TCP connect scan.
+        Perform TCP connect scan (legacy threaded method).
         
         Args:
             host: Target host
@@ -176,7 +248,10 @@ class PortScanner:
         """
         results = []
         
-        with ThreadPoolExecutor(max_workers=self.config.threads) as executor:
+        # Use timing template settings for thread count
+        max_workers = min(self.timing_template.max_concurrent, len(ports))
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {executor.submit(self._tcp_connect, host, port): port for port in ports}
             
             for future in as_completed(futures):
@@ -190,7 +265,7 @@ class PortScanner:
     
     def _tcp_connect(self, host: str, port: int) -> ScanResult:
         """
-        Perform single TCP connect.
+        Perform single TCP connect (legacy method).
         
         Args:
             host: Target host
@@ -201,7 +276,7 @@ class PortScanner:
         """
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(self.config.timeout)
+            sock.settimeout(self.timing_template.timeout)
             result = sock.connect_ex((host, port))
             sock.close()
             
@@ -296,15 +371,38 @@ class PortScanner:
     
     def _detect_services(self, results: List[ScanResult]) -> None:
         """
-        Detect services for open ports.
+        Detect services for open ports using enhanced signature matching.
         
         Args:
             results: List of scan results
         """
+        # Import signature cache only when needed (lazy loading)
+        from spectrescan.core.signature_cache import get_signature_cache
+        
+        cache = get_signature_cache()
+        
         for result in results:
-            if result.state == "open" and not result.service:
-                service = get_service_name(result.port, result.protocol)
-                result.service = service
+            if result.state == "open":
+                # Try signature matching if we have a banner
+                if result.banner and not result.service:
+                    sig_match = cache.match_service_signature(
+                        result.banner, 
+                        result.port, 
+                        result.protocol
+                    )
+                    if sig_match:
+                        result.service = sig_match.get('name')
+                        
+                        # Extract version if we can
+                        if result.banner:
+                            version = cache.extract_version(result.banner, result.service)
+                            if version:
+                                result.service = f"{result.service}/{version}"
+                
+                # Fallback to port-based detection
+                if not result.service:
+                    service = get_service_name(result.port, result.protocol)
+                    result.service = service
     
     def _detect_os(self, host: str, results: List[ScanResult]) -> None:
         """
@@ -367,8 +465,10 @@ class PortScanner:
         filtered_count = len([r for r in self.results if "filtered" in r.state])
         
         duration = "N/A"
+        duration_seconds = 0.0
         if self.start_time and self.end_time:
             duration = calculate_scan_time(self.start_time, self.end_time)
+            duration_seconds = (self.end_time - self.start_time).total_seconds()
         
         return {
             "total_ports": len(self.results),
@@ -377,6 +477,7 @@ class PortScanner:
             "filtered_ports": filtered_count,
             "hosts_scanned": len(set(r.host for r in self.results)),
             "scan_duration": duration,
+            "scan_duration_seconds": duration_seconds,
             "start_time": self.start_time,
             "end_time": self.end_time,
         }

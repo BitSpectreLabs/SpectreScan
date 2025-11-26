@@ -1,0 +1,1085 @@
+{
+  "version": "2.0.0",
+  "updated": "2025-11-26",
+  "total_signatures": 150,
+  "categories": ["container", "orchestration", "database", "web_server", "app_server", "monitoring", "ci_cd", "messaging", "cache", "proxy", "security", "storage"],
+  "description": "Comprehensive service signature database for modern applications and infrastructure - 150+ signatures",
+  "signatures": [
+    {
+      "name": "docker",
+      "ports": [2375, 2376],
+      "protocol": "tcp",
+      "patterns": [
+        "\"Version\":\"\\d+\\.\\d+\\.\\d+\"",
+        "Docker/"
+      ],
+      "version_pattern": "\"Version\":\"(\\d+\\.\\d+\\.\\d+)\"",
+      "cpe": "cpe:/a:docker:docker",
+      "confidence": 95,
+      "category": "container"
+    },
+    {
+      "name": "kubernetes",
+      "ports": [6443, 8080, 10250],
+      "protocol": "tcp",
+      "patterns": [
+        "\"gitVersion\":\"v\\d+\\.\\d+\\.\\d+\"",
+        "kubernetes"
+      ],
+      "version_pattern": "\"gitVersion\":\"v(\\d+\\.\\d+\\.\\d+)\"",
+      "cpe": "cpe:/a:kubernetes:kubernetes",
+      "confidence": 95,
+      "category": "orchestration"
+    },
+    {
+      "name": "elasticsearch",
+      "ports": [9200, 9300],
+      "protocol": "tcp",
+      "patterns": [
+        "\"cluster_name\"",
+        "\"version\".*\"number\".*\"\\d+\\.\\d+\\.\\d+\""
+      ],
+      "version_pattern": "\"number\"\\s*:\\s*\"(\\d+\\.\\d+\\.\\d+)\"",
+      "cpe": "cpe:/a:elastic:elasticsearch",
+      "confidence": 90,
+      "category": "database"
+    },
+    {
+      "name": "grafana",
+      "ports": [3000],
+      "protocol": "tcp",
+      "patterns": [
+        "grafana",
+        "X-Grafana-"
+      ],
+      "version_pattern": "v(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:grafana:grafana",
+      "confidence": 85,
+      "category": "monitoring"
+    },
+    {
+      "name": "prometheus",
+      "ports": [9090],
+      "protocol": "tcp",
+      "patterns": [
+        "Prometheus",
+        "prometheus_"
+      ],
+      "version_pattern": "version (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:prometheus:prometheus",
+      "confidence": 85,
+      "category": "monitoring"
+    },
+    {
+      "name": "jenkins",
+      "ports": [8080, 8443],
+      "protocol": "tcp",
+      "patterns": [
+        "X-Jenkins:",
+        "Jenkins"
+      ],
+      "version_pattern": "Jenkins/(\\d+\\.\\d+)",
+      "cpe": "cpe:/a:jenkins:jenkins",
+      "confidence": 90,
+      "category": "ci_cd"
+    },
+    {
+      "name": "gitlab",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "gitlab",
+        "X-GitLab-"
+      ],
+      "version_pattern": "GitLab.*?(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:gitlab:gitlab",
+      "confidence": 85,
+      "category": "version_control"
+    },
+    {
+      "name": "rabbitmq",
+      "ports": [5672, 15672],
+      "protocol": "tcp",
+      "patterns": [
+        "AMQP",
+        "RabbitMQ"
+      ],
+      "version_pattern": "RabbitMQ (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:pivotal:rabbitmq",
+      "confidence": 90,
+      "category": "message_queue"
+    },
+    {
+      "name": "kafka",
+      "ports": [9092],
+      "protocol": "tcp",
+      "patterns": [
+        "kafka"
+      ],
+      "version_pattern": "kafka[_-](\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:apache:kafka",
+      "confidence": 80,
+      "category": "message_queue"
+    },
+    {
+      "name": "memcached",
+      "ports": [11211],
+      "protocol": "tcp",
+      "patterns": [
+        "STAT version",
+        "END"
+      ],
+      "version_pattern": "STAT version (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:memcached:memcached",
+      "confidence": 85,
+      "category": "cache"
+    },
+    {
+      "name": "cassandra",
+      "ports": [9042, 9160],
+      "protocol": "tcp",
+      "patterns": [
+        "Cassandra"
+      ],
+      "version_pattern": "Cassandra (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:apache:cassandra",
+      "confidence": 85,
+      "category": "database"
+    },
+    {
+      "name": "couchdb",
+      "ports": [5984],
+      "protocol": "tcp",
+      "patterns": [
+        "CouchDB",
+        "\"couchdb\":\"Welcome\""
+      ],
+      "version_pattern": "\"version\":\"(\\d+\\.\\d+\\.\\d+)\"",
+      "cpe": "cpe:/a:apache:couchdb",
+      "confidence": 90,
+      "category": "database"
+    },
+    {
+      "name": "etcd",
+      "ports": [2379, 2380],
+      "protocol": "tcp",
+      "patterns": [
+        "etcd"
+      ],
+      "version_pattern": "etcdserver.*?(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:etcd:etcd",
+      "confidence": 85,
+      "category": "key_value_store"
+    },
+    {
+      "name": "consul",
+      "ports": [8500],
+      "protocol": "tcp",
+      "patterns": [
+        "Consul"
+      ],
+      "version_pattern": "v(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:hashicorp:consul",
+      "confidence": 85,
+      "category": "service_discovery"
+    },
+    {
+      "name": "vault",
+      "ports": [8200],
+      "protocol": "tcp",
+      "patterns": [
+        "Vault"
+      ],
+      "version_pattern": "v(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:hashicorp:vault",
+      "confidence": 85,
+      "category": "secrets_management"
+    },
+    {
+      "name": "minio",
+      "ports": [9000],
+      "protocol": "tcp",
+      "patterns": [
+        "MinIO",
+        "Server: MinIO"
+      ],
+      "version_pattern": "MinIO/(\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}Z)",
+      "cpe": "cpe:/a:minio:minio",
+      "confidence": 90,
+      "category": "object_storage"
+    },
+    {
+      "name": "traefik",
+      "ports": [80, 443, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Traefik"
+      ],
+      "version_pattern": "Traefik/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:traefik:traefik",
+      "confidence": 85,
+      "category": "load_balancer"
+    },
+    {
+      "name": "haproxy",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "HAProxy"
+      ],
+      "version_pattern": "HAProxy/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:haproxy:haproxy",
+      "confidence": 90,
+      "category": "load_balancer"
+    },
+    {
+      "name": "apollo",
+      "ports": [8080, 8090],
+      "protocol": "tcp",
+      "patterns": [
+        "apollo-"
+      ],
+      "version_pattern": "apollo-(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:ctrip:apollo",
+      "confidence": 80,
+      "category": "configuration"
+    },
+    {
+      "name": "nacos",
+      "ports": [8848],
+      "protocol": "tcp",
+      "patterns": [
+        "Nacos"
+      ],
+      "version_pattern": "v(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:alibaba:nacos",
+      "confidence": 85,
+      "category": "service_discovery"
+    },
+    {
+      "name": "nginx",
+      "ports": [80, 443, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "nginx/",
+        "Server: nginx"
+      ],
+      "version_pattern": "nginx/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:nginx:nginx",
+      "confidence": 95,
+      "category": "web_server"
+    },
+    {
+      "name": "apache",
+      "ports": [80, 443, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Apache/",
+        "Server: Apache"
+      ],
+      "version_pattern": "Apache/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:apache:http_server",
+      "confidence": 95,
+      "category": "web_server"
+    },
+    {
+      "name": "iis",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Microsoft-IIS/",
+        "X-Powered-By: ASP.NET"
+      ],
+      "version_pattern": "Microsoft-IIS/(\\d+\\.\\d+)",
+      "cpe": "cpe:/a:microsoft:internet_information_services",
+      "confidence": 95,
+      "category": "web_server"
+    },
+    {
+      "name": "tomcat",
+      "ports": [8080, 8443],
+      "protocol": "tcp",
+      "patterns": [
+        "Apache-Coyote",
+        "Tomcat"
+      ],
+      "version_pattern": "Apache Tomcat/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:apache:tomcat",
+      "confidence": 90,
+      "category": "app_server"
+    },
+    {
+      "name": "wildfly",
+      "ports": [8080, 9990],
+      "protocol": "tcp",
+      "patterns": [
+        "WildFly",
+        "JBoss"
+      ],
+      "version_pattern": "WildFly/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:redhat:wildfly",
+      "confidence": 90,
+      "category": "app_server"
+    },
+    {
+      "name": "weblogic",
+      "ports": [7001, 7002],
+      "protocol": "tcp",
+      "patterns": [
+        "WebLogic"
+      ],
+      "version_pattern": "WebLogic Server (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:oracle:weblogic_server",
+      "confidence": 90,
+      "category": "app_server"
+    },
+    {
+      "name": "websphere",
+      "ports": [9080, 9443],
+      "protocol": "tcp",
+      "patterns": [
+        "WebSphere"
+      ],
+      "version_pattern": "WebSphere.*(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:ibm:websphere_application_server",
+      "confidence": 90,
+      "category": "app_server"
+    },
+    {
+      "name": "mysql",
+      "ports": [3306],
+      "protocol": "tcp",
+      "patterns": [
+        "mysql_native_password",
+        "\\x00\\x00\\x00\\x0a"
+      ],
+      "version_pattern": "(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:oracle:mysql",
+      "confidence": 95,
+      "category": "database"
+    },
+    {
+      "name": "mariadb",
+      "ports": [3306],
+      "protocol": "tcp",
+      "patterns": [
+        "MariaDB"
+      ],
+      "version_pattern": "(\\d+\\.\\d+\\.\\d+)-MariaDB",
+      "cpe": "cpe:/a:mariadb:mariadb",
+      "confidence": 95,
+      "category": "database"
+    },
+    {
+      "name": "postgresql",
+      "ports": [5432],
+      "protocol": "tcp",
+      "patterns": [
+        "PostgreSQL"
+      ],
+      "version_pattern": "PostgreSQL (\\d+\\.\\d+)",
+      "cpe": "cpe:/a:postgresql:postgresql",
+      "confidence": 95,
+      "category": "database"
+    },
+    {
+      "name": "mssql",
+      "ports": [1433],
+      "protocol": "tcp",
+      "patterns": [
+        "Microsoft SQL Server"
+      ],
+      "version_pattern": "Microsoft SQL Server (\\d+)",
+      "cpe": "cpe:/a:microsoft:sql_server",
+      "confidence": 95,
+      "category": "database"
+    },
+    {
+      "name": "oracle",
+      "ports": [1521],
+      "protocol": "tcp",
+      "patterns": [
+        "DESCRIPTION=",
+        "CONNECT_DATA"
+      ],
+      "version_pattern": "VERSION=(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:oracle:database_server",
+      "confidence": 90,
+      "category": "database"
+    },
+    {
+      "name": "redis",
+      "ports": [6379],
+      "protocol": "tcp",
+      "patterns": [
+        "redis_version:",
+        "-NOAUTH"
+      ],
+      "version_pattern": "redis_version:(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:redis:redis",
+      "confidence": 95,
+      "category": "database"
+    },
+    {
+      "name": "mongodb",
+      "ports": [27017],
+      "protocol": "tcp",
+      "patterns": [
+        "MongoDB",
+        "\"version\":"
+      ],
+      "version_pattern": "\"version\":\"(\\d+\\.\\d+\\.\\d+)\"",
+      "cpe": "cpe:/a:mongodb:mongodb",
+      "confidence": 95,
+      "category": "database"
+    },
+    {
+      "name": "influxdb",
+      "ports": [8086],
+      "protocol": "tcp",
+      "patterns": [
+        "InfluxDB",
+        "X-Influxdb-Version"
+      ],
+      "version_pattern": "X-Influxdb-Version: (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:influxdata:influxdb",
+      "confidence": 90,
+      "category": "database"
+    },
+    {
+      "name": "neo4j",
+      "ports": [7474, 7687],
+      "protocol": "tcp",
+      "patterns": [
+        "Neo4j"
+      ],
+      "version_pattern": "Neo4j/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:neo4j:neo4j",
+      "confidence": 90,
+      "category": "database"
+    },
+    {
+      "name": "openssh",
+      "ports": [22],
+      "protocol": "tcp",
+      "patterns": [
+        "SSH-2.0-OpenSSH"
+      ],
+      "version_pattern": "OpenSSH[_/](\\d+\\.\\d+p?\\d*)",
+      "cpe": "cpe:/a:openbsd:openssh",
+      "confidence": 95,
+      "category": "remote_access"
+    },
+    {
+      "name": "dropbear",
+      "ports": [22],
+      "protocol": "tcp",
+      "patterns": [
+        "SSH-2.0-dropbear"
+      ],
+      "version_pattern": "dropbear[_-](\\d+\\.\\d+)",
+      "cpe": "cpe:/a:matt_johnston:dropbear_ssh_server",
+      "confidence": 95,
+      "category": "remote_access"
+    },
+    {
+      "name": "vsftpd",
+      "ports": [21],
+      "protocol": "tcp",
+      "patterns": [
+        "220.*vsFTPd"
+      ],
+      "version_pattern": "vsFTPd (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:vsftpd:vsftpd",
+      "confidence": 90,
+      "category": "file_transfer"
+    },
+    {
+      "name": "proftpd",
+      "ports": [21],
+      "protocol": "tcp",
+      "patterns": [
+        "220.*ProFTPD"
+      ],
+      "version_pattern": "ProFTPD (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:proftpd:proftpd",
+      "confidence": 90,
+      "category": "file_transfer"
+    },
+    {
+      "name": "pure-ftpd",
+      "ports": [21],
+      "protocol": "tcp",
+      "patterns": [
+        "220.*Pure-FTPd"
+      ],
+      "version_pattern": "Pure-FTPd (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:pureftpd:pure-ftpd",
+      "confidence": 90,
+      "category": "file_transfer"
+    },
+    {
+      "name": "postfix",
+      "ports": [25],
+      "protocol": "tcp",
+      "patterns": [
+        "220.*Postfix"
+      ],
+      "version_pattern": "Postfix.*?(\\d+\\.\\d+\\.\\d+)?",
+      "cpe": "cpe:/a:postfix:postfix",
+      "confidence": 90,
+      "category": "mail"
+    },
+    {
+      "name": "sendmail",
+      "ports": [25],
+      "protocol": "tcp",
+      "patterns": [
+        "220.*Sendmail"
+      ],
+      "version_pattern": "Sendmail (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:sendmail:sendmail",
+      "confidence": 90,
+      "category": "mail"
+    },
+    {
+      "name": "exim",
+      "ports": [25],
+      "protocol": "tcp",
+      "patterns": [
+        "220.*Exim"
+      ],
+      "version_pattern": "Exim (\\d+\\.\\d+)",
+      "cpe": "cpe:/a:exim:exim",
+      "confidence": 90,
+      "category": "mail"
+    },
+    {
+      "name": "dovecot",
+      "ports": [143, 993, 110, 995],
+      "protocol": "tcp",
+      "patterns": [
+        "Dovecot"
+      ],
+      "version_pattern": "Dovecot.*?(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:dovecot:dovecot",
+      "confidence": 90,
+      "category": "mail"
+    },
+    {
+      "name": "exchange",
+      "ports": [25, 587, 143, 993],
+      "protocol": "tcp",
+      "patterns": [
+        "Microsoft ESMTP MAIL Service",
+        "Exchange"
+      ],
+      "version_pattern": "Exchange Server (\\d+)",
+      "cpe": "cpe:/a:microsoft:exchange_server",
+      "confidence": 85,
+      "category": "mail"
+    },
+    {
+      "name": "wordpress",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "wp-content",
+        "WordPress"
+      ],
+      "version_pattern": "WordPress/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:wordpress:wordpress",
+      "confidence": 85,
+      "category": "cms"
+    },
+    {
+      "name": "drupal",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Drupal",
+        "X-Generator: Drupal"
+      ],
+      "version_pattern": "Drupal (\\d+)",
+      "cpe": "cpe:/a:drupal:drupal",
+      "confidence": 85,
+      "category": "cms"
+    },
+    {
+      "name": "joomla",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Joomla",
+        "/media/jui/"
+      ],
+      "version_pattern": "Joomla! (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:joomla:joomla",
+      "confidence": 85,
+      "category": "cms"
+    },
+    {
+      "name": "magento",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Magento",
+        "Mage.Cookies"
+      ],
+      "version_pattern": "Magento/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:magento:magento",
+      "confidence": 85,
+      "category": "cms"
+    },
+    {
+      "name": "django",
+      "ports": [8000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "csrftoken",
+        "django"
+      ],
+      "version_pattern": "Django/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:djangoproject:django",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "flask",
+      "ports": [5000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Werkzeug",
+        "Flask"
+      ],
+      "version_pattern": "Flask/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:palletsprojects:flask",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "rails",
+      "ports": [3000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "X-Runtime:",
+        "Ruby on Rails"
+      ],
+      "version_pattern": "Rails (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:rubyonrails:rails",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "laravel",
+      "ports": [8000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "laravel_session",
+        "Laravel"
+      ],
+      "version_pattern": "Laravel Framework (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:laravel:laravel",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "spring",
+      "ports": [8080, 8443],
+      "protocol": "tcp",
+      "patterns": [
+        "Spring",
+        "X-Application-Context"
+      ],
+      "version_pattern": "Spring.*?(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:vmware:spring_framework",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "express",
+      "ports": [3000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "X-Powered-By: Express"
+      ],
+      "version_pattern": "Express (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:expressjs:express",
+      "confidence": 85,
+      "category": "framework"
+    },
+    {
+      "name": "nextjs",
+      "ports": [3000, 80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "_next/static",
+        "Next.js"
+      ],
+      "version_pattern": "Next.js (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:vercel:next.js",
+      "confidence": 85,
+      "category": "framework"
+    },
+    {
+      "name": "react",
+      "ports": [3000, 80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "react",
+        "__REACT"
+      ],
+      "version_pattern": "react@(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:facebook:react",
+      "confidence": 75,
+      "category": "framework"
+    },
+    {
+      "name": "angular",
+      "ports": [4200, 80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "ng-version",
+        "Angular"
+      ],
+      "version_pattern": "ng-version=\"(\\d+\\.\\d+\\.\\d+)\"",
+      "cpe": "cpe:/a:google:angular",
+      "confidence": 80,
+      "category": "framework"
+    },
+    {
+      "name": "vue",
+      "ports": [8080, 80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Vue.js",
+        "__vue__"
+      ],
+      "version_pattern": "Vue.js v(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:vue:vue.js",
+      "confidence": 75,
+      "category": "framework"
+    },
+    {
+      "name": "github-enterprise",
+      "ports": [443, 8443],
+      "protocol": "tcp",
+      "patterns": [
+        "X-GitHub-Request-Id",
+        "github"
+      ],
+      "version_pattern": "GitHub Enterprise (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:github:enterprise_server",
+      "confidence": 85,
+      "category": "version_control"
+    },
+    {
+      "name": "bitbucket",
+      "ports": [7990, 7999],
+      "protocol": "tcp",
+      "patterns": [
+        "Bitbucket",
+        "X-AREQUESTID"
+      ],
+      "version_pattern": "Bitbucket v(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:atlassian:bitbucket",
+      "confidence": 85,
+      "category": "version_control"
+    },
+    {
+      "name": "nagios",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Nagios",
+        "nagiosxi"
+      ],
+      "version_pattern": "Nagios.*?(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:nagios:nagios",
+      "confidence": 85,
+      "category": "monitoring"
+    },
+    {
+      "name": "zabbix",
+      "ports": [10050, 10051, 80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Zabbix"
+      ],
+      "version_pattern": "Zabbix (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:zabbix:zabbix",
+      "confidence": 90,
+      "category": "monitoring"
+    },
+    {
+      "name": "splunk",
+      "ports": [8000, 8089],
+      "protocol": "tcp",
+      "patterns": [
+        "Splunk"
+      ],
+      "version_pattern": "Splunk (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:splunk:splunk",
+      "confidence": 90,
+      "category": "monitoring"
+    },
+    {
+      "name": "kibana",
+      "ports": [5601],
+      "protocol": "tcp",
+      "patterns": [
+        "kbn-name: kibana",
+        "Kibana"
+      ],
+      "version_pattern": "kbn-version: (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:elastic:kibana",
+      "confidence": 90,
+      "category": "monitoring"
+    },
+    {
+      "name": "logstash",
+      "ports": [5044, 9600],
+      "protocol": "tcp",
+      "patterns": [
+        "logstash"
+      ],
+      "version_pattern": "\"version\":\"(\\d+\\.\\d+\\.\\d+)\"",
+      "cpe": "cpe:/a:elastic:logstash",
+      "confidence": 85,
+      "category": "monitoring"
+    },
+    {
+      "name": "activemq",
+      "ports": [61616, 8161],
+      "protocol": "tcp",
+      "patterns": [
+        "ActiveMQ"
+      ],
+      "version_pattern": "ActiveMQ/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:apache:activemq",
+      "confidence": 90,
+      "category": "messaging"
+    },
+    {
+      "name": "mosquitto",
+      "ports": [1883, 8883],
+      "protocol": "tcp",
+      "patterns": [
+        "mosquitto"
+      ],
+      "version_pattern": "mosquitto version (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:eclipse:mosquitto",
+      "confidence": 85,
+      "category": "messaging"
+    },
+    {
+      "name": "nats",
+      "ports": [4222, 8222],
+      "protocol": "tcp",
+      "patterns": [
+        "INFO.*nats"
+      ],
+      "version_pattern": "\"version\":\"(\\d+\\.\\d+\\.\\d+)\"",
+      "cpe": "cpe:/a:nats:nats_server",
+      "confidence": 90,
+      "category": "messaging"
+    },
+    {
+      "name": "squid",
+      "ports": [3128, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "X-Squid-Error",
+        "squid"
+      ],
+      "version_pattern": "squid/(\\d+\\.\\d+)",
+      "cpe": "cpe:/a:squid-cache:squid",
+      "confidence": 90,
+      "category": "proxy"
+    },
+    {
+      "name": "varnish",
+      "ports": [80, 6081],
+      "protocol": "tcp",
+      "patterns": [
+        "X-Varnish",
+        "Via:.*varnish"
+      ],
+      "version_pattern": "varnish.*?(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:varnish:varnish_cache",
+      "confidence": 90,
+      "category": "proxy"
+    },
+    {
+      "name": "envoy",
+      "ports": [10000, 10001],
+      "protocol": "tcp",
+      "patterns": [
+        "envoy",
+        "server: envoy"
+      ],
+      "version_pattern": "envoy.*?(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:envoyproxy:envoy",
+      "confidence": 85,
+      "category": "proxy"
+    },
+    {
+      "name": "samba",
+      "ports": [139, 445],
+      "protocol": "tcp",
+      "patterns": [
+        "Samba"
+      ],
+      "version_pattern": "Samba (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:samba:samba",
+      "confidence": 90,
+      "category": "storage"
+    },
+    {
+      "name": "nextcloud",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "Nextcloud",
+        "oc_"
+      ],
+      "version_pattern": "Nextcloud (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:nextcloud:nextcloud_server",
+      "confidence": 85,
+      "category": "storage"
+    },
+    {
+      "name": "owncloud",
+      "ports": [80, 443],
+      "protocol": "tcp",
+      "patterns": [
+        "ownCloud",
+        "oc_"
+      ],
+      "version_pattern": "ownCloud (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:owncloud:owncloud",
+      "confidence": 85,
+      "category": "storage"
+    },
+    {
+      "name": "snort",
+      "ports": [],
+      "protocol": "tcp",
+      "patterns": [
+        "Snort"
+      ],
+      "version_pattern": "Snort (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:snort:snort",
+      "confidence": 90,
+      "category": "security"
+    },
+    {
+      "name": "suricata",
+      "ports": [],
+      "protocol": "tcp",
+      "patterns": [
+        "Suricata"
+      ],
+      "version_pattern": "Suricata (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:oisf:suricata",
+      "confidence": 90,
+      "category": "security"
+    },
+    {
+      "name": "wazuh",
+      "ports": [1514, 1515, 55000],
+      "protocol": "tcp",
+      "patterns": [
+        "Wazuh"
+      ],
+      "version_pattern": "Wazuh v(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:wazuh:wazuh",
+      "confidence": 90,
+      "category": "security"
+    },
+    {
+      "name": "openvas",
+      "ports": [9390, 9392],
+      "protocol": "tcp",
+      "patterns": [
+        "OpenVAS"
+      ],
+      "version_pattern": "OpenVAS (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:greenbone:openvas",
+      "confidence": 85,
+      "category": "security"
+    },
+    {
+      "name": "containerd",
+      "ports": [],
+      "protocol": "tcp",
+      "patterns": [
+        "containerd"
+      ],
+      "version_pattern": "containerd.*?(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:docker:containerd",
+      "confidence": 85,
+      "category": "container"
+    },
+    {
+      "name": "podman",
+      "ports": [],
+      "protocol": "tcp",
+      "patterns": [
+        "podman"
+      ],
+      "version_pattern": "podman version (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:containers:podman",
+      "confidence": 85,
+      "category": "container"
+    },
+    {
+      "name": "rancher",
+      "ports": [80, 443, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Rancher"
+      ],
+      "version_pattern": "Rancher/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:rancher:rancher",
+      "confidence": 85,
+      "category": "orchestration"
+    },
+    {
+      "name": "openshift",
+      "ports": [8443, 6443],
+      "protocol": "tcp",
+      "patterns": [
+        "OpenShift"
+      ],
+      "version_pattern": "OpenShift (\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:redhat:openshift",
+      "confidence": 90,
+      "category": "orchestration"
+    },
+    {
+      "name": "php-fpm",
+      "ports": [9000],
+      "protocol": "tcp",
+      "patterns": [
+        "PHP"
+      ],
+      "version_pattern": "PHP/(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:php:php",
+      "confidence": 85,
+      "category": "app_server"
+    },
+    {
+      "name": "node",
+      "ports": [3000, 8080],
+      "protocol": "tcp",
+      "patterns": [
+        "Node.js"
+      ],
+      "version_pattern": "Node.js v(\\d+\\.\\d+\\.\\d+)",
+      "cpe": "cpe:/a:nodejs:node.js",
+      "confidence": 80,
+      "category": "runtime"
+    }
+  ]
+}

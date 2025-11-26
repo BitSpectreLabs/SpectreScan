@@ -4,18 +4,44 @@ by BitSpectreLabs
 """
 
 import asyncio
-from typing import Optional
+from typing import Optional, List
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Header, Footer, Input, Button, Static, TabbedContent, TabPane
 from textual.binding import Binding
+from textual.message import Message
+from textual import work
+from textual.worker import Worker, get_current_worker
 from spectrescan.core.scanner import PortScanner
 from spectrescan.core.presets import ScanPreset, get_preset_config
 from spectrescan.core.utils import parse_ports, parse_targets_from_file, ScanResult
+from spectrescan.core.history import HistoryManager
 from pathlib import Path
 from spectrescan.tui.widgets.results_table import ResultsTable
 from spectrescan.tui.widgets.progress import ProgressWidget
 from spectrescan.tui.widgets.logs import LogsWidget
+
+
+# Custom messages for thread-safe UI updates
+class ScanResultMessage(Message):
+    """Message sent when a scan result is available."""
+    def __init__(self, result: ScanResult) -> None:
+        self.result = result
+        super().__init__()
+
+
+class ScanCompleteMessage(Message):
+    """Message sent when scan completes."""
+    def __init__(self, summary: dict) -> None:
+        self.summary = summary
+        super().__init__()
+
+
+class ScanErrorMessage(Message):
+    """Message sent when scan has an error."""
+    def __init__(self, error: str) -> None:
+        self.error = error
+        super().__init__()
 
 
 LOGO = r"""
@@ -45,6 +71,12 @@ class SpectreScanTUI(App):
         background: $surface;
     }
     
+    #main-container {
+        height: 100%;
+        width: 100%;
+        overflow: auto;
+    }
+    
     #logo {
         height: auto;
         width: 100%;
@@ -70,17 +102,79 @@ class SpectreScanTUI(App):
         margin-left: 1;
     }
     
+    #import-button {
+        width: 20;
+        margin-left: 1;
+    }
+    
     #results-container {
+        height: 1fr;
+        min-height: 10;
+    }
+    
+    TabbedContent {
+        height: 1fr;
+    }
+    
+    ContentSwitcher {
+        height: 1fr;
+    }
+    
+    TabPane {
+        height: 1fr;
+        padding: 0;
+    }
+    
+    #results-tab {
         height: 1fr;
     }
     
     ResultsTable {
         height: 1fr;
+        width: 100%;
+    }
+    
+    DataTable {
+        height: 1fr;
+    }
+    
+    #logs-tab {
+        height: 1fr;
     }
     
     LogsWidget {
-        height: 10;
+        height: 1fr;
+        width: 100%;
+    }
+    
+    #stats-tab {
+        height: 1fr;
+    }
+    
+    LogsWidget {
+        height: 100%;
+        width: 100%;
+    }
+    
+    #stats-display {
+        height: 100%;
+        width: 100%;
+        padding: 2;
+    }
+    
+    #progress {
+        height: auto;
+        padding: 1;
+        background: $panel;
         border: solid $primary;
+    }
+    
+    #progress-label {
+        margin-bottom: 1;
+    }
+    
+    #progress-stats {
+        margin-top: 1;
     }
     
     #status-bar {
@@ -88,6 +182,10 @@ class SpectreScanTUI(App):
         background: $panel;
         padding: 1;
         border: solid $primary;
+    }
+    
+    Footer {
+        background: $panel;
     }
     """
     
@@ -113,15 +211,17 @@ class SpectreScanTUI(App):
         self.scan_task = None
         self.current_target_index = 0
         self.total_targets = 0
+        self._port_list: List[int] = []
+        self._scan_config = None
+        
+        # Initialize history manager
+        self.history_manager = HistoryManager()
     
     def compose(self) -> ComposeResult:
         """Compose TUI layout."""
         yield Header(show_clock=True)
         
         with Container(id="main-container"):
-            # Logo
-            yield Static(LOGO, id="logo")
-            
             # Input container
             with Horizontal(id="input-container"):
                 yield Input(placeholder="Target (IP/hostname/CIDR)", value=self.target, id="target-input")
@@ -151,8 +251,24 @@ class SpectreScanTUI(App):
     
     def on_mount(self) -> None:
         """Handle mount event."""
-        self.logs.log_info("SpectreScan TUI initialized")
-        self.logs.log_info("Press 's' to start scan, 'q' to quit")
+        # Ensure all widgets are visible and initialized
+        try:
+            self.logs.log_info("SpectreScan TUI initialized")
+            self.logs.log_info("Press 's' to start scan, 'q' to quit")
+            self.logs.log_info("Use Tab to switch between Results, Logs, and Stats")
+            
+            # Initialize results table
+            self.results_table.zebra_stripes = True
+            
+            # Set initial progress
+            self.progress.reset()
+            
+            # Focus on target input
+            target_input = self.query_one("#target-input", Input)
+            target_input.focus()
+        except Exception as e:
+            # Fallback if widgets not ready yet
+            pass
     
     @property
     def logs(self) -> LogsWidget:
@@ -200,13 +316,32 @@ class SpectreScanTUI(App):
             self.logs.log_error("Please enter a target")
             return
         
+        # Parse ports
+        try:
+            self._port_list = parse_ports(self.ports)
+        except ValueError as e:
+            self.logs.log_error(f"Invalid port specification: {e}")
+            return
+        
         # Start scan
         self.scanning = True
         self.status_text.update("[yellow]Scanning...[/yellow]")
         self.logs.log_info(f"Starting scan of {self.target}")
         
-        # Run scan in background
-        self.scan_task = asyncio.create_task(self._run_scan())
+        # Setup progress
+        self.progress.set_total(len(self._port_list))
+        
+        # Create scanner with quick preset
+        config = get_preset_config(ScanPreset.QUICK)
+        config.ports = self._port_list
+        self.scanner = PortScanner(config)
+        self._scan_config = config
+        
+        # Log that we're starting
+        self.logs.log_info(f"Scanning {self.target} on {len(self._port_list)} ports...")
+        
+        # Run scan using Textual's worker system
+        self._run_scan_worker()
     
     def action_stop_scan(self) -> None:
         """Stop scan action."""
@@ -215,8 +350,8 @@ class SpectreScanTUI(App):
             return
         
         self.scanning = False
-        if self.scan_task:
-            self.scan_task.cancel()
+        # Cancel all workers
+        self.workers.cancel_all()
         
         self.status_text.update("[red]Scan stopped[/red]")
         self.logs.log_warning("Scan stopped by user")
@@ -263,78 +398,87 @@ class SpectreScanTUI(App):
         from spectrescan.tui.screens import HistorySelectionScreen
         self.push_screen(HistorySelectionScreen())
     
-    async def _run_scan(self) -> None:
-        """Run scan in background."""
-        try:
-            # Parse ports
-            try:
-                port_list = parse_ports(self.ports)
-            except ValueError as e:
-                self.logs.log_error(f"Invalid port specification: {e}")
-                self.scanning = False
-                self.status_text.update("[red]Error[/red]")
+    @work(thread=True, exclusive=True)
+    def _run_scan_worker(self) -> None:
+        """
+        Run scan in a background thread using Textual's worker system.
+        
+        Uses post_message for thread-safe UI updates since this runs in a thread.
+        post_message is explicitly documented as thread-safe in Textual.
+        """
+        worker = get_current_worker()
+        
+        def target_callback(current_target: str, idx: int, total: int):
+            self.current_target_index = idx
+            self.total_targets = total
+        
+        def callback(result: ScanResult):
+            if worker.is_cancelled or not self.scanning:
                 return
+            if result.state == "open":
+                # Use post_message which is thread-safe
+                self.post_message(ScanResultMessage(result))
+            # Update progress via thread-safe call
+            self.call_from_thread(self.progress.update_progress, result.state)
+        
+        try:
+            # Run the scan (blocking call in thread)
+            self.scanner.scan(self.target, None, callback, target_callback)
             
-            # Setup progress
-            self.progress.set_total(len(port_list))
-            
-            # Create scanner with quick preset
-            config = get_preset_config(ScanPreset.QUICK)
-            config.ports = port_list
-            self.scanner = PortScanner(config)
-            
-            # Target progress callback
-            def target_callback(current_target: str, idx: int, total: int):
-                self.current_target_index = idx
-                self.total_targets = total
-                if total > 1:
-                    # Use call_from_thread to safely update UI from thread
-                    self.call_from_thread(self.logs.log_info, f"Scanning target {idx}/{total}: {current_target}")
-                    self.call_from_thread(self.status_text.update, f"[yellow]Scanning target {idx}/{total}...[/yellow]")
-            
-            # Run scan with callback
-            def callback(result: ScanResult):
-                if not self.scanning:
-                    return
-                
-                # Use call_from_thread to safely update UI from thread
-                # Update progress
-                self.call_from_thread(self.progress.update_progress, result.state)
-                
-                # Add to table if open
-                if result.state == "open":
-                    self.call_from_thread(self.results_table.add_result, result)
-                
-                # Log result
-                self.call_from_thread(self.logs.log_port, result.host, result.port, result.state, result.service)
-            
-            # Run scan in thread pool
-            await asyncio.get_event_loop().run_in_executor(
-                None,
-                self.scanner.scan,
-                self.target,
-                None,
-                callback,
-                target_callback
-            )
-            
-            # Scan complete
-            if self.scanning:
+            # Scan complete - update UI via thread-safe message
+            if self.scanning and not worker.is_cancelled:
                 summary = self.scanner.get_scan_summary()
-                self.status_text.update("[green]Scan complete![/green]")
                 
-                if self.total_targets > 1:
-                    self.logs.log_success(
-                        f"Scan complete: {self.total_targets} targets scanned, {summary['open_ports']} open ports found in {summary['scan_duration']}"
+                # Save to history
+                try:
+                    self.history_manager.add_entry(
+                        target=self.target,
+                        ports=self._port_list,
+                        scan_type='tcp',
+                        duration=summary.get('scan_duration_seconds', 0.0),
+                        open_ports=summary.get('open_ports', 0),
+                        closed_ports=summary.get('closed_ports', 0),
+                        filtered_ports=summary.get('filtered_ports', 0),
+                        config={
+                            'threads': self._scan_config.threads,
+                            'timeout': self._scan_config.timeout,
+                            'preset': 'quick',
+                        }
                     )
-                else:
-                    self.logs.log_success(
-                        f"Scan complete: {summary['open_ports']} open ports found in {summary['scan_duration']}"
-                    )
+                except Exception:
+                    pass
                 
-                # Update stats
-                stats_display = self.query_one("#stats-display", Static)
-                stats_text = f"""
+                # Use post_message which is thread-safe
+                self.post_message(ScanCompleteMessage(summary))
+        except Exception as e:
+            self.post_message(ScanErrorMessage(str(e)))
+        finally:
+            self.scanning = False
+    
+    def on_scan_result_message(self, message: ScanResultMessage) -> None:
+        """Handle scan result message (runs in main thread)."""
+        result = message.result
+        self.results_table.add_result(result)
+        self.logs.log_port(result.host, result.port, result.state, result.service)
+    
+    def on_scan_complete_message(self, message: ScanCompleteMessage) -> None:
+        """Handle scan complete message (runs in main thread)."""
+        summary = message.summary
+        self.status_text.update("[green]Scan complete![/green]")
+        self.logs.log_info("Scan saved to history")
+        
+        if self.total_targets > 1:
+            self.logs.log_success(
+                f"Scan complete: {self.total_targets} targets scanned, {summary['open_ports']} open ports found in {summary['scan_duration']}"
+            )
+        else:
+            self.logs.log_success(
+                f"Scan complete: {summary['open_ports']} open ports found in {summary['scan_duration']}"
+            )
+        
+        # Update stats
+        stats_display = self.query_one("#stats-display", Static)
+        stats_text = f"""
 [bold]Scan Summary[/bold]
 
 Target: {self.target}
@@ -343,18 +487,18 @@ Open Ports: [green]{summary['open_ports']}[/green]
 Closed Ports: {summary['closed_ports']}
 Filtered Ports: {summary['filtered_ports']}
 Duration: {summary['scan_duration']}
-                """
-                stats_display.update(stats_text)
-            
-            self.scanning = False
-            
-        except asyncio.CancelledError:
-            self.logs.log_warning("Scan cancelled")
-            self.scanning = False
-        except Exception as e:
-            self.logs.log_error(f"Scan error: {e}")
-            self.status_text.update("[red]Scan error[/red]")
-            self.scanning = False
+        """
+        stats_display.update(stats_text)
+        
+        # Force refresh
+        self.results_table.refresh()
+        self.logs.refresh()
+    
+    def on_scan_error_message(self, message: ScanErrorMessage) -> None:
+        """Handle scan error message (runs in main thread)."""
+        self.logs.log_error(f"Scan error: {message.error}")
+        self.status_text.update("[red]Scan error[/red]")
+        self.logs.refresh()
 
 
 def run_tui(target: Optional[str] = None, ports: Optional[str] = None):

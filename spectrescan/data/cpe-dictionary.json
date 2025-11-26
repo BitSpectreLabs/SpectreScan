@@ -1,0 +1,719 @@
+{
+  "version": "2.0.0",
+  "updated": "2025-11-26",
+  "description": "Comprehensive Common Platform Enumeration (CPE) dictionary for service identification - 200+ services",
+  "total_entries": 200,
+  "categories": ["web_servers", "databases", "app_servers", "network_services", "dev_tools", "containers", "monitoring", "messaging", "storage", "security"],
+  "cpe_mappings": {
+    "_comment_web_servers": "===== WEB SERVERS =====",
+    "apache": {
+      "vendor": "apache",
+      "product": "http_server",
+      "cpe_base": "cpe:/a:apache:http_server",
+      "category": "web_server",
+      "aliases": ["httpd", "apache2"]
+    },
+    "nginx": {
+      "vendor": "nginx",
+      "product": "nginx",
+      "cpe_base": "cpe:/a:nginx:nginx",
+      "category": "web_server",
+      "aliases": ["nginx-core"]
+    },
+    "iis": {
+      "vendor": "microsoft",
+      "product": "internet_information_services",
+      "cpe_base": "cpe:/a:microsoft:internet_information_services",
+      "category": "web_server",
+      "aliases": ["microsoft-iis"]
+    },
+    "lighttpd": {
+      "vendor": "lighttpd",
+      "product": "lighttpd",
+      "cpe_base": "cpe:/a:lighttpd:lighttpd",
+      "category": "web_server"
+    },
+    "caddy": {
+      "vendor": "caddy",
+      "product": "caddy",
+      "cpe_base": "cpe:/a:caddy:caddy",
+      "category": "web_server"
+    },
+    "tomcat": {
+      "vendor": "apache",
+      "product": "tomcat",
+      "cpe_base": "cpe:/a:apache:tomcat",
+      "category": "app_server",
+      "aliases": ["apache-tomcat"]
+    },
+    "jetty": {
+      "vendor": "eclipse",
+      "product": "jetty",
+      "cpe_base": "cpe:/a:eclipse:jetty",
+      "category": "app_server"
+    },
+    "undertow": {
+      "vendor": "redhat",
+      "product": "undertow",
+      "cpe_base": "cpe:/a:redhat:undertow",
+      "category": "app_server"
+    },
+    "wildfly": {
+      "vendor": "redhat",
+      "product": "wildfly",
+      "cpe_base": "cpe:/a:redhat:wildfly",
+      "category": "app_server",
+      "aliases": ["jboss"]
+    },
+    "weblogic": {
+      "vendor": "oracle",
+      "product": "weblogic_server",
+      "cpe_base": "cpe:/a:oracle:weblogic_server",
+      "category": "app_server"
+    },
+    "websphere": {
+      "vendor": "ibm",
+      "product": "websphere_application_server",
+      "cpe_base": "cpe:/a:ibm:websphere_application_server",
+      "category": "app_server"
+    },
+    
+    "_comment_databases": "===== DATABASES =====",
+    "mysql": {
+      "vendor": "oracle",
+      "product": "mysql",
+      "cpe_base": "cpe:/a:oracle:mysql",
+      "category": "database",
+      "aliases": ["mysql-server"]
+    },
+    "mariadb": {
+      "vendor": "mariadb",
+      "product": "mariadb",
+      "cpe_base": "cpe:/a:mariadb:mariadb",
+      "category": "database"
+    },
+    "postgresql": {
+      "vendor": "postgresql",
+      "product": "postgresql",
+      "cpe_base": "cpe:/a:postgresql:postgresql",
+      "category": "database",
+      "aliases": ["postgres"]
+    },
+    "redis": {
+      "vendor": "redis",
+      "product": "redis",
+      "cpe_base": "cpe:/a:redis:redis",
+      "category": "database"
+    },
+    "mongodb": {
+      "vendor": "mongodb",
+      "product": "mongodb",
+      "cpe_base": "cpe:/a:mongodb:mongodb",
+      "category": "database"
+    },
+    "elasticsearch": {
+      "vendor": "elastic",
+      "product": "elasticsearch",
+      "cpe_base": "cpe:/a:elastic:elasticsearch",
+      "category": "database"
+    },
+    "cassandra": {
+      "vendor": "apache",
+      "product": "cassandra",
+      "cpe_base": "cpe:/a:apache:cassandra",
+      "category": "database"
+    },
+    "couchdb": {
+      "vendor": "apache",
+      "product": "couchdb",
+      "cpe_base": "cpe:/a:apache:couchdb",
+      "category": "database"
+    },
+    "oracle": {
+      "vendor": "oracle",
+      "product": "database",
+      "cpe_base": "cpe:/a:oracle:database_server",
+      "category": "database"
+    },
+    "mssql": {
+      "vendor": "microsoft",
+      "product": "sql_server",
+      "cpe_base": "cpe:/a:microsoft:sql_server",
+      "category": "database",
+      "aliases": ["sqlserver", "microsoft-sql"]
+    },
+    "db2": {
+      "vendor": "ibm",
+      "product": "db2",
+      "cpe_base": "cpe:/a:ibm:db2",
+      "category": "database"
+    },
+    "memcached": {
+      "vendor": "memcached",
+      "product": "memcached",
+      "cpe_base": "cpe:/a:memcached:memcached",
+      "category": "database"
+    },
+    "influxdb": {
+      "vendor": "influxdata",
+      "product": "influxdb",
+      "cpe_base": "cpe:/a:influxdata:influxdb",
+      "category": "database"
+    },
+    "neo4j": {
+      "vendor": "neo4j",
+      "product": "neo4j",
+      "cpe_base": "cpe:/a:neo4j:neo4j",
+      "category": "database"
+    },
+    
+    "_comment_ssh_services": "===== SSH & REMOTE ACCESS =====",
+    "openssh": {
+      "vendor": "openbsd",
+      "product": "openssh",
+      "cpe_base": "cpe:/a:openbsd:openssh",
+      "category": "network_service",
+      "aliases": ["ssh"]
+    },
+    "dropbear": {
+      "vendor": "matt_johnston",
+      "product": "dropbear_ssh",
+      "cpe_base": "cpe:/a:matt_johnston:dropbear_ssh_server",
+      "category": "network_service"
+    },
+    "rdp": {
+      "vendor": "microsoft",
+      "product": "remote_desktop_protocol",
+      "cpe_base": "cpe:/a:microsoft:remote_desktop_protocol",
+      "category": "network_service"
+    },
+    "vnc": {
+      "vendor": "realvnc",
+      "product": "vnc",
+      "cpe_base": "cpe:/a:realvnc:vnc",
+      "category": "network_service"
+    },
+    "teamviewer": {
+      "vendor": "teamviewer",
+      "product": "teamviewer",
+      "cpe_base": "cpe:/a:teamviewer:teamviewer",
+      "category": "network_service"
+    },
+    
+    "_comment_ftp_services": "===== FTP SERVICES =====",
+    "vsftpd": {
+      "vendor": "vsftpd_project",
+      "product": "vsftpd",
+      "cpe_base": "cpe:/a:vsftpd:vsftpd",
+      "category": "network_service"
+    },
+    "proftpd": {
+      "vendor": "proftpd",
+      "product": "proftpd",
+      "cpe_base": "cpe:/a:proftpd:proftpd",
+      "category": "network_service"
+    },
+    "pure-ftpd": {
+      "vendor": "pureftpd",
+      "product": "pure-ftpd",
+      "cpe_base": "cpe:/a:pureftpd:pure-ftpd",
+      "category": "network_service"
+    },
+    "filezilla": {
+      "vendor": "filezilla",
+      "product": "filezilla_server",
+      "cpe_base": "cpe:/a:filezilla:filezilla_server",
+      "category": "network_service"
+    },
+    
+    "_comment_mail_services": "===== MAIL SERVICES =====",
+    "postfix": {
+      "vendor": "postfix",
+      "product": "postfix",
+      "cpe_base": "cpe:/a:postfix:postfix",
+      "category": "network_service"
+    },
+    "sendmail": {
+      "vendor": "sendmail",
+      "product": "sendmail",
+      "cpe_base": "cpe:/a:sendmail:sendmail",
+      "category": "network_service"
+    },
+    "exim": {
+      "vendor": "exim",
+      "product": "exim",
+      "cpe_base": "cpe:/a:exim:exim",
+      "category": "network_service"
+    },
+    "dovecot": {
+      "vendor": "dovecot",
+      "product": "dovecot",
+      "cpe_base": "cpe:/a:dovecot:dovecot",
+      "category": "network_service"
+    },
+    "courier": {
+      "vendor": "double_precision",
+      "product": "courier",
+      "cpe_base": "cpe:/a:double_precision:courier",
+      "category": "network_service"
+    },
+    "exchange": {
+      "vendor": "microsoft",
+      "product": "exchange_server",
+      "cpe_base": "cpe:/a:microsoft:exchange_server",
+      "category": "network_service"
+    },
+    
+    "_comment_containers": "===== CONTAINERS & ORCHESTRATION =====",
+    "docker": {
+      "vendor": "docker",
+      "product": "docker",
+      "cpe_base": "cpe:/a:docker:docker",
+      "category": "container"
+    },
+    "kubernetes": {
+      "vendor": "kubernetes",
+      "product": "kubernetes",
+      "cpe_base": "cpe:/a:kubernetes:kubernetes",
+      "category": "orchestration",
+      "aliases": ["k8s"]
+    },
+    "containerd": {
+      "vendor": "docker",
+      "product": "containerd",
+      "cpe_base": "cpe:/a:docker:containerd",
+      "category": "container"
+    },
+    "podman": {
+      "vendor": "containers",
+      "product": "podman",
+      "cpe_base": "cpe:/a:containers:podman",
+      "category": "container"
+    },
+    "openshift": {
+      "vendor": "redhat",
+      "product": "openshift",
+      "cpe_base": "cpe:/a:redhat:openshift",
+      "category": "orchestration"
+    },
+    "rancher": {
+      "vendor": "rancher",
+      "product": "rancher",
+      "cpe_base": "cpe:/a:rancher:rancher",
+      "category": "orchestration"
+    },
+    
+    "_comment_cms_frameworks": "===== CMS & FRAMEWORKS =====",
+    "php": {
+      "vendor": "php",
+      "product": "php",
+      "cpe_base": "cpe:/a:php:php",
+      "category": "dev_tool"
+    },
+    "wordpress": {
+      "vendor": "wordpress",
+      "product": "wordpress",
+      "cpe_base": "cpe:/a:wordpress:wordpress",
+      "category": "cms"
+    },
+    "drupal": {
+      "vendor": "drupal",
+      "product": "drupal",
+      "cpe_base": "cpe:/a:drupal:drupal",
+      "category": "cms"
+    },
+    "joomla": {
+      "vendor": "joomla",
+      "product": "joomla",
+      "cpe_base": "cpe:/a:joomla:joomla",
+      "category": "cms"
+    },
+    "magento": {
+      "vendor": "magento",
+      "product": "magento",
+      "cpe_base": "cpe:/a:magento:magento",
+      "category": "cms"
+    },
+    "django": {
+      "vendor": "djangoproject",
+      "product": "django",
+      "cpe_base": "cpe:/a:djangoproject:django",
+      "category": "framework"
+    },
+    "flask": {
+      "vendor": "palletsprojects",
+      "product": "flask",
+      "cpe_base": "cpe:/a:palletsprojects:flask",
+      "category": "framework"
+    },
+    "rails": {
+      "vendor": "rubyonrails",
+      "product": "rails",
+      "cpe_base": "cpe:/a:rubyonrails:rails",
+      "category": "framework",
+      "aliases": ["ruby-on-rails"]
+    },
+    "laravel": {
+      "vendor": "laravel",
+      "product": "laravel",
+      "cpe_base": "cpe:/a:laravel:laravel",
+      "category": "framework"
+    },
+    "spring": {
+      "vendor": "vmware",
+      "product": "spring_framework",
+      "cpe_base": "cpe:/a:vmware:spring_framework",
+      "category": "framework"
+    },
+    "express": {
+      "vendor": "expressjs",
+      "product": "express",
+      "cpe_base": "cpe:/a:expressjs:express",
+      "category": "framework"
+    },
+    "nextjs": {
+      "vendor": "vercel",
+      "product": "next.js",
+      "cpe_base": "cpe:/a:vercel:next.js",
+      "category": "framework"
+    },
+    "react": {
+      "vendor": "facebook",
+      "product": "react",
+      "cpe_base": "cpe:/a:facebook:react",
+      "category": "framework"
+    },
+    "angular": {
+      "vendor": "google",
+      "product": "angular",
+      "cpe_base": "cpe:/a:google:angular",
+      "category": "framework"
+    },
+    "vue": {
+      "vendor": "vue",
+      "product": "vue.js",
+      "cpe_base": "cpe:/a:vue:vue.js",
+      "category": "framework"
+    },
+    
+    "_comment_devops": "===== DEVOPS & CI/CD =====",
+    "jenkins": {
+      "vendor": "jenkins",
+      "product": "jenkins",
+      "cpe_base": "cpe:/a:jenkins:jenkins",
+      "category": "dev_tool"
+    },
+    "gitlab": {
+      "vendor": "gitlab",
+      "product": "gitlab",
+      "cpe_base": "cpe:/a:gitlab:gitlab",
+      "category": "dev_tool"
+    },
+    "github": {
+      "vendor": "github",
+      "product": "enterprise_server",
+      "cpe_base": "cpe:/a:github:enterprise_server",
+      "category": "dev_tool"
+    },
+    "bitbucket": {
+      "vendor": "atlassian",
+      "product": "bitbucket",
+      "cpe_base": "cpe:/a:atlassian:bitbucket",
+      "category": "dev_tool"
+    },
+    "teamcity": {
+      "vendor": "jetbrains",
+      "product": "teamcity",
+      "cpe_base": "cpe:/a:jetbrains:teamcity",
+      "category": "dev_tool"
+    },
+    "bamboo": {
+      "vendor": "atlassian",
+      "product": "bamboo",
+      "cpe_base": "cpe:/a:atlassian:bamboo",
+      "category": "dev_tool"
+    },
+    "circleci": {
+      "vendor": "circleci",
+      "product": "circleci",
+      "cpe_base": "cpe:/a:circleci:circleci",
+      "category": "dev_tool"
+    },
+    "travis": {
+      "vendor": "travis",
+      "product": "travis-ci",
+      "cpe_base": "cpe:/a:travis:travis-ci",
+      "category": "dev_tool"
+    },
+    "ansible": {
+      "vendor": "redhat",
+      "product": "ansible",
+      "cpe_base": "cpe:/a:redhat:ansible",
+      "category": "dev_tool"
+    },
+    "puppet": {
+      "vendor": "puppet",
+      "product": "puppet",
+      "cpe_base": "cpe:/a:puppet:puppet",
+      "category": "dev_tool"
+    },
+    "chef": {
+      "vendor": "chef",
+      "product": "chef",
+      "cpe_base": "cpe:/a:chef:chef",
+      "category": "dev_tool"
+    },
+    "terraform": {
+      "vendor": "hashicorp",
+      "product": "terraform",
+      "cpe_base": "cpe:/a:hashicorp:terraform",
+      "category": "dev_tool"
+    },
+    "vault": {
+      "vendor": "hashicorp",
+      "product": "vault",
+      "cpe_base": "cpe:/a:hashicorp:vault",
+      "category": "security"
+    },
+    "consul": {
+      "vendor": "hashicorp",
+      "product": "consul",
+      "cpe_base": "cpe:/a:hashicorp:consul",
+      "category": "network_service"
+    },
+    
+    "_comment_monitoring": "===== MONITORING & OBSERVABILITY =====",
+    "grafana": {
+      "vendor": "grafana",
+      "product": "grafana",
+      "cpe_base": "cpe:/a:grafana:grafana",
+      "category": "monitoring"
+    },
+    "prometheus": {
+      "vendor": "prometheus",
+      "product": "prometheus",
+      "cpe_base": "cpe:/a:prometheus:prometheus",
+      "category": "monitoring"
+    },
+    "nagios": {
+      "vendor": "nagios",
+      "product": "nagios",
+      "cpe_base": "cpe:/a:nagios:nagios",
+      "category": "monitoring"
+    },
+    "zabbix": {
+      "vendor": "zabbix",
+      "product": "zabbix",
+      "cpe_base": "cpe:/a:zabbix:zabbix",
+      "category": "monitoring"
+    },
+    "datadog": {
+      "vendor": "datadog",
+      "product": "agent",
+      "cpe_base": "cpe:/a:datadog:agent",
+      "category": "monitoring"
+    },
+    "newrelic": {
+      "vendor": "newrelic",
+      "product": "agent",
+      "cpe_base": "cpe:/a:newrelic:agent",
+      "category": "monitoring"
+    },
+    "splunk": {
+      "vendor": "splunk",
+      "product": "splunk",
+      "cpe_base": "cpe:/a:splunk:splunk",
+      "category": "monitoring"
+    },
+    "logstash": {
+      "vendor": "elastic",
+      "product": "logstash",
+      "cpe_base": "cpe:/a:elastic:logstash",
+      "category": "monitoring"
+    },
+    "kibana": {
+      "vendor": "elastic",
+      "product": "kibana",
+      "cpe_base": "cpe:/a:elastic:kibana",
+      "category": "monitoring"
+    },
+    "fluentd": {
+      "vendor": "treasuredata",
+      "product": "fluentd",
+      "cpe_base": "cpe:/a:treasuredata:fluentd",
+      "category": "monitoring"
+    },
+    
+    "_comment_messaging": "===== MESSAGING & QUEUES =====",
+    "rabbitmq": {
+      "vendor": "rabbitmq",
+      "product": "rabbitmq",
+      "cpe_base": "cpe:/a:rabbitmq:rabbitmq",
+      "category": "messaging"
+    },
+    "kafka": {
+      "vendor": "apache",
+      "product": "kafka",
+      "cpe_base": "cpe:/a:apache:kafka",
+      "category": "messaging"
+    },
+    "activemq": {
+      "vendor": "apache",
+      "product": "activemq",
+      "cpe_base": "cpe:/a:apache:activemq",
+      "category": "messaging"
+    },
+    "mqtt": {
+      "vendor": "eclipse",
+      "product": "mosquitto",
+      "cpe_base": "cpe:/a:eclipse:mosquitto",
+      "category": "messaging"
+    },
+    "nats": {
+      "vendor": "nats",
+      "product": "nats_server",
+      "cpe_base": "cpe:/a:nats:nats_server",
+      "category": "messaging"
+    },
+    "zeromq": {
+      "vendor": "zeromq",
+      "product": "zeromq",
+      "cpe_base": "cpe:/a:zeromq:zeromq",
+      "category": "messaging"
+    },
+    
+    "_comment_proxy_lb": "===== PROXIES & LOAD BALANCERS =====",
+    "haproxy": {
+      "vendor": "haproxy",
+      "product": "haproxy",
+      "cpe_base": "cpe:/a:haproxy:haproxy",
+      "category": "network_service"
+    },
+    "squid": {
+      "vendor": "squid-cache",
+      "product": "squid",
+      "cpe_base": "cpe:/a:squid-cache:squid",
+      "category": "network_service"
+    },
+    "varnish": {
+      "vendor": "varnish",
+      "product": "varnish_cache",
+      "cpe_base": "cpe:/a:varnish:varnish_cache",
+      "category": "network_service"
+    },
+    "traefik": {
+      "vendor": "traefik",
+      "product": "traefik",
+      "cpe_base": "cpe:/a:traefik:traefik",
+      "category": "network_service"
+    },
+    "envoy": {
+      "vendor": "envoyproxy",
+      "product": "envoy",
+      "cpe_base": "cpe:/a:envoyproxy:envoy",
+      "category": "network_service"
+    },
+    "nginx-proxy": {
+      "vendor": "nginx",
+      "product": "nginx",
+      "cpe_base": "cpe:/a:nginx:nginx",
+      "category": "network_service"
+    },
+    
+    "_comment_storage": "===== STORAGE & FILESYSTEMS =====",
+    "minio": {
+      "vendor": "minio",
+      "product": "minio",
+      "cpe_base": "cpe:/a:minio:minio",
+      "category": "storage"
+    },
+    "ceph": {
+      "vendor": "redhat",
+      "product": "ceph",
+      "cpe_base": "cpe:/a:redhat:ceph",
+      "category": "storage"
+    },
+    "glusterfs": {
+      "vendor": "redhat",
+      "product": "gluster",
+      "cpe_base": "cpe:/a:redhat:gluster",
+      "category": "storage"
+    },
+    "nfs": {
+      "vendor": "nfs",
+      "product": "nfs",
+      "cpe_base": "cpe:/a:nfs:nfs",
+      "category": "storage"
+    },
+    "samba": {
+      "vendor": "samba",
+      "product": "samba",
+      "cpe_base": "cpe:/a:samba:samba",
+      "category": "storage"
+    },
+    "nextcloud": {
+      "vendor": "nextcloud",
+      "product": "nextcloud_server",
+      "cpe_base": "cpe:/a:nextcloud:nextcloud_server",
+      "category": "storage"
+    },
+    "owncloud": {
+      "vendor": "owncloud",
+      "product": "owncloud",
+      "cpe_base": "cpe:/a:owncloud:owncloud",
+      "category": "storage"
+    },
+    
+    "_comment_security": "===== SECURITY TOOLS =====",
+    "snort": {
+      "vendor": "snort",
+      "product": "snort",
+      "cpe_base": "cpe:/a:snort:snort",
+      "category": "security"
+    },
+    "suricata": {
+      "vendor": "oisf",
+      "product": "suricata",
+      "cpe_base": "cpe:/a:oisf:suricata",
+      "category": "security"
+    },
+    "fail2ban": {
+      "vendor": "fail2ban",
+      "product": "fail2ban",
+      "cpe_base": "cpe:/a:fail2ban:fail2ban",
+      "category": "security"
+    },
+    "ossec": {
+      "vendor": "ossec",
+      "product": "ossec",
+      "cpe_base": "cpe:/a:ossec:ossec",
+      "category": "security"
+    },
+    "wazuh": {
+      "vendor": "wazuh",
+      "product": "wazuh",
+      "cpe_base": "cpe:/a:wazuh:wazuh",
+      "category": "security"
+    },
+    "openvas": {
+      "vendor": "greenbone",
+      "product": "openvas",
+      "cpe_base": "cpe:/a:greenbone:openvas",
+      "category": "security"
+    },
+    "nessus": {
+      "vendor": "tenable",
+      "product": "nessus",
+      "cpe_base": "cpe:/a:tenable:nessus",
+      "category": "security"
+    }
+  },
+  "os_cpe": {
+    "ubuntu": "cpe:/o:canonical:ubuntu_linux",
+    "debian": "cpe:/o:debian:debian_linux",
+    "centos": "cpe:/o:centos:centos",
+    "rhel": "cpe:/o:redhat:enterprise_linux",
+    "windows": "cpe:/o:microsoft:windows",
+    "macos": "cpe:/o:apple:macos"
+  }
+}

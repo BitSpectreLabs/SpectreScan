@@ -193,7 +193,30 @@ output_reports/
 *.report.html
 *.report.pdf
 
+# Scan results and history
+.spectrescan/
+scans/
+history/
+*.scan
+
+# Benchmark results
+benchmarks/results/
+benchmarks/*.png
+benchmarks/*.csv
+
+# Performance profiling
+*.prof
+*.pstats
+*.pstat
+
 # Temporary files
 tmp/
 temp/
 *.tmp
+
+# Development artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyc
+__pycache__/

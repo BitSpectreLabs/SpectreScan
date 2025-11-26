@@ -93,9 +93,12 @@ def scan(
     aggressive: bool = typer.Option(False, "--aggressive", help="Aggressive scan"),
     
     # Options
-    threads: int = typer.Option(100, "--threads", "-T", help="Number of threads"),
+    threads: int = typer.Option(100, "--threads", help="Number of threads"),
     timeout: float = typer.Option(2.0, "--timeout", help="Timeout in seconds"),
     rate_limit: Optional[int] = typer.Option(None, "--rate-limit", help="Rate limit (packets/sec)"),
+    
+    # Timing templates (like Nmap's -T flag)
+    timing: Optional[str] = typer.Option(None, "-T", "--timing", help="Timing template: T0 (paranoid), T1 (sneaky), T2 (polite), T3 (normal), T4 (aggressive), T5 (insane)"),
     
     # Features
     service_detection: bool = typer.Option(True, "--service-detection/--no-service-detection", help="Enable service detection"),
@@ -200,6 +203,18 @@ def scan(
         config.enable_banner_grabbing = banner_grab
         config.randomize = randomize
     
+    # Apply timing template if specified
+    if timing:
+        from spectrescan.core.timing_engine import get_timing_template_by_name
+        timing_template = get_timing_template_by_name(timing.upper())
+        if timing_template:
+            config.timing_template = timing_template
+            if not quiet:
+                console.print(f"[cyan]Using timing template: {timing_template.name} ({timing_template.level.value})[/cyan]\n")
+        else:
+            console.print(f"[yellow]Warning: Invalid timing template '{timing}'. Using default.[/yellow]")
+            console.print("[cyan]Valid options: T0, T1, T2, T3 (default), T4, T5[/cyan]\n")
+    
     # Parse ports
     if ports:
         try:
@@ -215,8 +230,16 @@ def scan(
         info_table.add_row("Target:", f"[cyan]{target}[/cyan]")
         info_table.add_row("Ports:", f"{len(config.ports)}")
         info_table.add_row("Scan Type:", f"{', '.join(config.scan_types).upper()}")
-        info_table.add_row("Threads:", f"{config.threads}")
-        info_table.add_row("Timeout:", f"{config.timeout}s")
+        
+        # Show timing template info
+        if hasattr(config, 'timing_template') and config.timing_template:
+            tt = config.timing_template
+            info_table.add_row("Timing:", f"{tt.name} ({tt.level.value})")
+            info_table.add_row("Concurrency:", f"{tt.max_concurrent}")
+            info_table.add_row("Timeout:", f"{tt.timeout}s")
+        else:
+            info_table.add_row("Threads:", f"{config.threads}")
+            info_table.add_row("Timeout:", f"{config.timeout}s")
         
         console.print(Panel(info_table, title="[bold]Scan Configuration[/bold]", border_style="blue"))
         console.print()

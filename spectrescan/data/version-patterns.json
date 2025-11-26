@@ -1,0 +1,526 @@
+{
+  "version": "2.0.0",
+  "updated": "2025-11-26",
+  "total_patterns": 100,
+  "description": "Comprehensive version extraction regex patterns for 100+ services and applications",
+  "patterns": {
+    "apache": [
+      "Apache/(\\d+\\.\\d+\\.\\d+)",
+      "Apache httpd (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "nginx": [
+      "nginx/(\\d+\\.\\d+\\.\\d+)",
+      "nginx (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "iis": [
+      "Microsoft-IIS/(\\d+\\.\\d+)",
+      "IIS (\\d+\\.\\d+)"
+    ],
+    "openssh": [
+      "OpenSSH[_/](\\d+\\.\\d+p?\\d*)",
+      "SSH-\\d+\\.\\d+-OpenSSH_(\\d+\\.\\d+p?\\d*)"
+    ],
+    "mysql": [
+      "(\\d+\\.\\d+\\.\\d+)",
+      "MySQL (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "mariadb": [
+      "(\\d+\\.\\d+\\.\\d+)-MariaDB",
+      "MariaDB (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "postgresql": [
+      "PostgreSQL\\s+(\\d+\\.\\d+(?:\\.\\d+)?)",
+      "postgres (\\d+\\.\\d+)"
+    ],
+    "redis": [
+      "redis_version:(\\d+\\.\\d+\\.\\d+)",
+      "Redis (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "mongodb": [
+      "version\"?:\\s*\"?(\\d+\\.\\d+\\.\\d+)",
+      "MongoDB (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "elasticsearch": [
+      "\"number\"\\s*:\\s*\"(\\d+\\.\\d+\\.\\d+)\"",
+      "Elasticsearch/(\\d+\\.\\d+\\.\\d+)"
+    ],
+    "php": [
+      "PHP/(\\d+\\.\\d+\\.\\d+)",
+      "X-Powered-By:.*?PHP/(\\d+\\.\\d+\\.\\d+)"
+    ],
+    "python": [
+      "Python/(\\d+\\.\\d+\\.\\d+)",
+      "python (\\d+\\.\\d+)"
+    ],
+    "ruby": [
+      "Ruby/(\\d+\\.\\d+\\.\\d+)",
+      "ruby (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "node": [
+      "Node.js/(\\d+\\.\\d+\\.\\d+)",
+      "node/(\\d+\\.\\d+\\.\\d+)"
+    ],
+    "tomcat": [
+      "Apache-Coyote/(\\d+\\.\\d+)",
+      "Tomcat/(\\d+\\.\\d+\\.\\d+)"
+    ],
+    "jetty": [
+      "Jetty\\((\\d+\\.\\d+\\.\\d+)",
+      "Jetty/(\\d+\\.\\d+)"
+    ],
+    "express": [
+      "Express",
+      "X-Powered-By: Express"
+    ],
+    "django": [
+      "Django/(\\d+\\.\\d+\\.\\d+)",
+      "django (\\d+\\.\\d+)"
+    ],
+    "flask": [
+      "Flask/(\\d+\\.\\d+\\.\\d+)",
+      "Werkzeug/(\\d+\\.\\d+\\.\\d+)"
+    ],
+    "aspnet": [
+      "X-AspNet-Version: (\\d+\\.\\d+\\.\\d+\\.\\d+)",
+      "ASP.NET/(\\d+\\.\\d+)"
+    ],
+    "wordpress": [
+      "WordPress/(\\d+\\.\\d+\\.\\d+)",
+      "wp-includes/version.php.*?(\\d+\\.\\d+)"
+    ],
+    "drupal": [
+      "Drupal (\\d+\\.\\d+)",
+      "X-Drupal-Cache.*?(\\d+)"
+    ],
+    "joomla": [
+      "Joomla! (\\d+\\.\\d+\\.\\d+)",
+      "joomla (\\d+\\.\\d+)"
+    ],
+    "docker": [
+      "\"Version\":\"(\\d+\\.\\d+\\.\\d+)\"",
+      "Docker/(\\d+\\.\\d+\\.\\d+)"
+    ],
+    "kubernetes": [
+      "\"gitVersion\":\"v(\\d+\\.\\d+\\.\\d+)\"",
+      "kubernetes/(\\d+\\.\\d+)"
+    ],
+    "jenkins": [
+      "Jenkins/(\\d+\\.\\d+)",
+      "X-Jenkins: (\\d+\\.\\d+)"
+    ],
+    "gitlab": [
+      "GitLab.*?(\\d+\\.\\d+\\.\\d+)",
+      "gitlab (\\d+\\.\\d+)"
+    ],
+    "grafana": [
+      "Grafana v(\\d+\\.\\d+\\.\\d+)",
+      "grafana/(\\d+\\.\\d+)"
+    ],
+    "prometheus": [
+      "version (\\d+\\.\\d+\\.\\d+)",
+      "prometheus/(\\d+\\.\\d+)"
+    ],
+    "rabbitmq": [
+      "RabbitMQ (\\d+\\.\\d+\\.\\d+)",
+      "rabbitmq/(\\d+\\.\\d+)"
+    ],
+    "memcached": [
+      "STAT version (\\d+\\.\\d+\\.\\d+)",
+      "memcached (\\d+\\.\\d+)"
+    ],
+    "haproxy": [
+      "HAProxy/(\\d+\\.\\d+\\.\\d+)",
+      "haproxy (\\d+\\.\\d+)"
+    ],
+    "traefik": [
+      "Traefik/(\\d+\\.\\d+\\.\\d+)",
+      "traefik v(\\d+\\.\\d+)"
+    ],
+    "mssql": [
+      "Microsoft SQL Server (\\d+)",
+      "SQL Server (\\d{4})"
+    ],
+    "oracle": [
+      "Oracle Database (\\d+c?)",
+      "VERSION=(\\d+\\.\\d+\\.\\d+\\.\\d+)"
+    ],
+    "db2": [
+      "DB2/(\\d+\\.\\d+\\.\\d+)",
+      "DB2 v(\\d+\\.\\d+)"
+    ],
+    "cassandra": [
+      "Cassandra (\\d+\\.\\d+\\.\\d+)",
+      "cassandra/(\\d+\\.\\d+)"
+    ],
+    "couchdb": [
+      "CouchDB/(\\d+\\.\\d+\\.\\d+)",
+      "\"version\":\"(\\d+\\.\\d+\\.\\d+)\""
+    ],
+    "influxdb": [
+      "InfluxDB/(\\d+\\.\\d+\\.\\d+)",
+      "X-Influxdb-Version: (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "neo4j": [
+      "Neo4j/(\\d+\\.\\d+\\.\\d+)",
+      "neo4j (\\d+\\.\\d+)"
+    ],
+    "vsftpd": [
+      "vsFTPd (\\d+\\.\\d+\\.\\d+)",
+      "vsftpd: version (\\d+\\.\\d+)"
+    ],
+    "proftpd": [
+      "ProFTPD (\\d+\\.\\d+\\.\\d+)",
+      "proftpd (\\d+\\.\\d+)"
+    ],
+    "pure-ftpd": [
+      "Pure-FTPd (\\d+\\.\\d+\\.\\d+)",
+      "pure-ftpd (\\d+\\.\\d+)"
+    ],
+    "filezilla": [
+      "FileZilla Server (\\d+\\.\\d+\\.\\d+)",
+      "filezilla/(\\d+\\.\\d+)"
+    ],
+    "postfix": [
+      "Postfix (\\d+\\.\\d+\\.\\d+)?",
+      "postfix/(\\d+\\.\\d+)"
+    ],
+    "sendmail": [
+      "Sendmail (\\d+\\.\\d+\\.\\d+)",
+      "sendmail/(\\d+\\.\\d+)"
+    ],
+    "exim": [
+      "Exim (\\d+\\.\\d+)",
+      "exim/(\\d+\\.\\d+)"
+    ],
+    "dovecot": [
+      "Dovecot.*?(\\d+\\.\\d+\\.\\d+)",
+      "dovecot (\\d+\\.\\d+)"
+    ],
+    "courier": [
+      "Courier (\\d+\\.\\d+\\.\\d+)",
+      "courier/(\\d+\\.\\d+)"
+    ],
+    "exchange": [
+      "Microsoft Exchange Server (\\d{4})",
+      "Exchange Server (\\d+)"
+    ],
+    "dropbear": [
+      "dropbear[_-](\\d+\\.\\d+)",
+      "Dropbear SSH (\\d+\\.\\d+)"
+    ],
+    "rdp": [
+      "RDP (\\d+\\.\\d+)",
+      "Remote Desktop Protocol (\\d+)"
+    ],
+    "vnc": [
+      "RFB (\\d+\\.\\d+)",
+      "VNC (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "teamviewer": [
+      "TeamViewer (\\d+\\.\\d+\\.\\d+)",
+      "teamviewer/(\\d+)"
+    ],
+    "wildfly": [
+      "WildFly/(\\d+\\.\\d+\\.\\d+)",
+      "wildfly (\\d+\\.\\d+)"
+    ],
+    "weblogic": [
+      "WebLogic Server (\\d+\\.\\d+\\.\\d+)",
+      "weblogic/(\\d+c?)"
+    ],
+    "websphere": [
+      "WebSphere.*(\\d+\\.\\d+\\.\\d+)",
+      "websphere/(\\d+\\.\\d+)"
+    ],
+    "lighttpd": [
+      "lighttpd/(\\d+\\.\\d+\\.\\d+)",
+      "lighttpd (\\d+\\.\\d+)"
+    ],
+    "caddy": [
+      "Caddy/(\\d+\\.\\d+\\.\\d+)",
+      "caddy v(\\d+\\.\\d+)"
+    ],
+    "undertow": [
+      "Undertow (\\d+\\.\\d+\\.\\d+)",
+      "undertow/(\\d+\\.\\d+)"
+    ],
+    "magento": [
+      "Magento/(\\d+\\.\\d+\\.\\d+)",
+      "magento (\\d+\\.\\d+)"
+    ],
+    "rails": [
+      "Ruby on Rails (\\d+\\.\\d+\\.\\d+)",
+      "rails (\\d+\\.\\d+)"
+    ],
+    "laravel": [
+      "Laravel Framework (\\d+\\.\\d+\\.\\d+)",
+      "laravel/(\\d+\\.\\d+)"
+    ],
+    "spring": [
+      "Spring.*?(\\d+\\.\\d+\\.\\d+)",
+      "spring-boot/(\\d+\\.\\d+)"
+    ],
+    "nextjs": [
+      "Next.js (\\d+\\.\\d+\\.\\d+)",
+      "next.js v(\\d+\\.\\d+)"
+    ],
+    "react": [
+      "react@(\\d+\\.\\d+\\.\\d+)",
+      "React (\\d+\\.\\d+)"
+    ],
+    "angular": [
+      "Angular (\\d+\\.\\d+\\.\\d+)",
+      "ng-version=\"(\\d+\\.\\d+\\.\\d+)\""
+    ],
+    "vue": [
+      "Vue.js v(\\d+\\.\\d+\\.\\d+)",
+      "vue@(\\d+\\.\\d+)"
+    ],
+    "github-enterprise": [
+      "GitHub Enterprise (\\d+\\.\\d+\\.\\d+)",
+      "github-enterprise/(\\d+)"
+    ],
+    "bitbucket": [
+      "Bitbucket v(\\d+\\.\\d+\\.\\d+)",
+      "bitbucket (\\d+\\.\\d+)"
+    ],
+    "teamcity": [
+      "TeamCity/(\\d+\\.\\d+)",
+      "teamcity (\\d+\\.\\d+)"
+    ],
+    "bamboo": [
+      "Bamboo (\\d+\\.\\d+\\.\\d+)",
+      "bamboo/(\\d+\\.\\d+)"
+    ],
+    "circleci": [
+      "CircleCI (\\d+\\.\\d+)",
+      "circleci/(\\d+)"
+    ],
+    "travis": [
+      "Travis CI (\\d+\\.\\d+)",
+      "travis/(\\d+)"
+    ],
+    "ansible": [
+      "Ansible (\\d+\\.\\d+\\.\\d+)",
+      "ansible/(\\d+\\.\\d+)"
+    ],
+    "puppet": [
+      "Puppet/(\\d+\\.\\d+\\.\\d+)",
+      "puppet (\\d+\\.\\d+)"
+    ],
+    "chef": [
+      "Chef/(\\d+\\.\\d+\\.\\d+)",
+      "chef (\\d+\\.\\d+)"
+    ],
+    "terraform": [
+      "Terraform v(\\d+\\.\\d+\\.\\d+)",
+      "terraform/(\\d+\\.\\d+)"
+    ],
+    "vault": [
+      "Vault v(\\d+\\.\\d+\\.\\d+)",
+      "vault/(\\d+\\.\\d+)"
+    ],
+    "consul": [
+      "Consul v(\\d+\\.\\d+\\.\\d+)",
+      "consul/(\\d+\\.\\d+)"
+    ],
+    "nagios": [
+      "Nagios.*?(\\d+\\.\\d+\\.\\d+)",
+      "nagios (\\d+\\.\\d+)"
+    ],
+    "zabbix": [
+      "Zabbix (\\d+\\.\\d+\\.\\d+)",
+      "zabbix/(\\d+\\.\\d+)"
+    ],
+    "datadog": [
+      "Datadog Agent (\\d+\\.\\d+\\.\\d+)",
+      "datadog/(\\d+\\.\\d+)"
+    ],
+    "newrelic": [
+      "NewRelic Agent (\\d+\\.\\d+\\.\\d+)",
+      "newrelic/(\\d+\\.\\d+)"
+    ],
+    "splunk": [
+      "Splunk (\\d+\\.\\d+\\.\\d+)",
+      "splunk/(\\d+\\.\\d+)"
+    ],
+    "logstash": [
+      "Logstash/(\\d+\\.\\d+\\.\\d+)",
+      "logstash (\\d+\\.\\d+)"
+    ],
+    "kibana": [
+      "Kibana/(\\d+\\.\\d+\\.\\d+)",
+      "kbn-version: (\\d+\\.\\d+\\.\\d+)"
+    ],
+    "fluentd": [
+      "Fluentd v(\\d+\\.\\d+\\.\\d+)",
+      "fluentd/(\\d+\\.\\d+)"
+    ],
+    "kafka": [
+      "Kafka[_-](\\d+\\.\\d+\\.\\d+)",
+      "kafka (\\d+\\.\\d+)"
+    ],
+    "activemq": [
+      "ActiveMQ/(\\d+\\.\\d+\\.\\d+)",
+      "activemq (\\d+\\.\\d+)"
+    ],
+    "mosquitto": [
+      "mosquitto version (\\d+\\.\\d+\\.\\d+)",
+      "mosquitto/(\\d+\\.\\d+)"
+    ],
+    "nats": [
+      "NATS.*?\"version\":\"(\\d+\\.\\d+\\.\\d+)\"",
+      "nats/(\\d+\\.\\d+)"
+    ],
+    "zeromq": [
+      "ZeroMQ (\\d+\\.\\d+\\.\\d+)",
+      "zeromq/(\\d+\\.\\d+)"
+    ],
+    "squid": [
+      "squid/(\\d+\\.\\d+)",
+      "Squid (\\d+\\.\\d+)"
+    ],
+    "varnish": [
+      "varnish.*?(\\d+\\.\\d+\\.\\d+)",
+      "Varnish/(\\d+\\.\\d+)"
+    ],
+    "envoy": [
+      "envoy.*?(\\d+\\.\\d+\\.\\d+)",
+      "Envoy/(\\d+\\.\\d+)"
+    ],
+    "minio": [
+      "MinIO/(\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}Z)",
+      "minio (\\d+\\.\\d+)"
+    ],
+    "ceph": [
+      "Ceph version (\\d+\\.\\d+\\.\\d+)",
+      "ceph/(\\d+\\.\\d+)"
+    ],
+    "glusterfs": [
+      "GlusterFS (\\d+\\.\\d+)",
+      "glusterfs/(\\d+\\.\\d+)"
+    ],
+    "nfs": [
+      "NFS v(\\d+)",
+      "nfs (\\d+\\.\\d+)"
+    ],
+    "samba": [
+      "Samba (\\d+\\.\\d+\\.\\d+)",
+      "smb/(\\d+\\.\\d+)"
+    ],
+    "nextcloud": [
+      "Nextcloud (\\d+\\.\\d+\\.\\d+)",
+      "nextcloud/(\\d+\\.\\d+)"
+    ],
+    "owncloud": [
+      "ownCloud (\\d+\\.\\d+\\.\\d+)",
+      "owncloud/(\\d+\\.\\d+)"
+    ],
+    "snort": [
+      "Snort (\\d+\\.\\d+\\.\\d+)",
+      "snort/(\\d+\\.\\d+)"
+    ],
+    "suricata": [
+      "Suricata (\\d+\\.\\d+\\.\\d+)",
+      "suricata/(\\d+\\.\\d+)"
+    ],
+    "fail2ban": [
+      "Fail2Ban v(\\d+\\.\\d+\\.\\d+)",
+      "fail2ban (\\d+\\.\\d+)"
+    ],
+    "ossec": [
+      "OSSEC HIDS v(\\d+\\.\\d+)",
+      "ossec (\\d+\\.\\d+)"
+    ],
+    "wazuh": [
+      "Wazuh v(\\d+\\.\\d+\\.\\d+)",
+      "wazuh/(\\d+\\.\\d+)"
+    ],
+    "openvas": [
+      "OpenVAS (\\d+\\.\\d+\\.\\d+)",
+      "openvas/(\\d+\\.\\d+)"
+    ],
+    "nessus": [
+      "Nessus/(\\d+\\.\\d+\\.\\d+)",
+      "nessus (\\d+\\.\\d+)"
+    ],
+    "containerd": [
+      "containerd.*?(\\d+\\.\\d+\\.\\d+)",
+      "containerd/(\\d+\\.\\d+)"
+    ],
+    "podman": [
+      "podman version (\\d+\\.\\d+\\.\\d+)",
+      "podman/(\\d+\\.\\d+)"
+    ],
+    "rancher": [
+      "Rancher/(\\d+\\.\\d+\\.\\d+)",
+      "rancher v(\\d+\\.\\d+)"
+    ],
+    "openshift": [
+      "OpenShift (\\d+\\.\\d+\\.\\d+)",
+      "openshift/(\\d+\\.\\d+)"
+    ],
+    "etcd": [
+      "etcdserver.*?(\\d+\\.\\d+\\.\\d+)",
+      "etcd/(\\d+\\.\\d+)"
+    ],
+    "php-fpm": [
+      "PHP[/-](\\d+\\.\\d+\\.\\d+)-fpm",
+      "php-fpm (\\d+\\.\\d+)"
+    ],
+    "go": [
+      "Go/(\\d+\\.\\d+\\.\\d+)",
+      "golang (\\d+\\.\\d+)"
+    ],
+    "java": [
+      "Java/(\\d+\\.\\d+\\.\\d+)",
+      "java version \"(\\d+\\.\\d+\\.\\d+)\""
+    ],
+    "dotnet": [
+      "\\.NET (\\d+\\.\\d+\\.\\d+)",
+      "dotnet/(\\d+\\.\\d+)"
+    ]
+  },
+  "generic_patterns": [
+    "(\\d+\\.\\d+\\.\\d+\\.\\d+)",
+    "(\\d+\\.\\d+\\.\\d+)",
+    "v(\\d+\\.\\d+\\.\\d+)",
+    "version[:\\s]+(\\d+\\.\\d+\\.\\d+)",
+    "Version[:\\s]+(\\d+\\.\\d+\\.\\d+)",
+    "ver[:\\s]+(\\d+\\.\\d+\\.\\d+)",
+    "(\\d+\\.\\d+)",
+    "v(\\d+\\.\\d+)",
+    "(\\d{4}-\\d{2}-\\d{2})",
+    "build[:\\s]+(\\d+)"
+  ],
+  "os_version_patterns": {
+    "ubuntu": [
+      "Ubuntu (\\d+\\.\\d+)",
+      "ubuntu-(\\d+\\.\\d+)"
+    ],
+    "debian": [
+      "Debian (\\d+\\.\\d+)",
+      "debian/(\\d+)"
+    ],
+    "centos": [
+      "CentOS (\\d+\\.\\d+)",
+      "centos:(\\d+)"
+    ],
+    "rhel": [
+      "Red Hat Enterprise Linux (\\d+\\.\\d+)",
+      "rhel (\\d+)"
+    ],
+    "alpine": [
+      "Alpine Linux v(\\d+\\.\\d+)",
+      "alpine:(\\d+\\.\\d+)"
+    ],
+    "windows": [
+      "Windows (\\d+)",
+      "Microsoft Windows.*?(\\d+\\.\\d+)"
+    ],
+    "macos": [
+      "Mac OS X (\\d+\\.\\d+)",
+      "macOS (\\d+\\.\\d+)"
+    ]
+  }
+}
