@@ -11,7 +11,8 @@ Pillow>=10.0.0  # For GUI logo display
 scapy>=2.5.0  # Optional for SYN scanning
 
 # Report generation
-Jinja2>=3.1.0  # Optional for advanced templating
+reportlab>=4.0.0  # Optional for PDF reports and charts
+Jinja2>=3.1.0  # Optional for custom report templates
 
 # Testing
 pytest>=7.4.0

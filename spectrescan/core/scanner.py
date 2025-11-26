@@ -64,19 +64,30 @@ class PortScanner:
         target: str,
         ports: Optional[List[int]] = None,
         callback: Optional[Callable[[ScanResult], None]] = None,
-        host_discovery: bool = True
+        host_discovery: bool = True,
+        target_callback: Optional[Callable[[str, int, int], None]] = None
     ) -> List[ScanResult]:
         """
-        Perform port scan.
+        Perform port scan on single or multiple targets.
         
         Args:
-            target: Target specification (IP, hostname, CIDR, range)
+            target: Target specification (IP, hostname, CIDR, range, comma-separated)
             ports: List of ports to scan (uses config if None)
-            callback: Optional callback for each result
-            host_discovery: Perform host discovery first
+            callback: Optional callback for each port scan result
+            host_discovery: Perform host discovery first (for CIDR/ranges)
+            target_callback: Optional callback(target, current_index, total) for multi-target progress
             
         Returns:
             List of ScanResult objects
+            
+        Examples:
+            >>> scanner = PortScanner()
+            >>> # Single target
+            >>> results = scanner.scan("192.168.1.1")
+            >>> # Multiple targets
+            >>> results = scanner.scan("192.168.1.1,192.168.1.2,example.com")
+            >>> # CIDR range
+            >>> results = scanner.scan("192.168.1.0/24")
         """
         self.start_time = datetime.now()
         self.results = []
@@ -107,8 +118,13 @@ class PortScanner:
             logger.info(f"Found {len(targets)} live host(s)")
         
         # Scan each target
-        for target_ip in targets:
-            logger.info(f"Scanning {target_ip}...")
+        total_targets = len(targets)
+        for idx, target_ip in enumerate(targets, 1):
+            logger.info(f"Scanning {target_ip}... ({idx}/{total_targets})")
+            
+            # Call target callback if provided
+            if target_callback:
+                target_callback(target_ip, idx, total_targets)
             
             # Determine scan method
             if "tcp" in self.config.scan_types:

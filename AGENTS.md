@@ -553,6 +553,324 @@ def generate_html_report(
 
 ---
 
+### 10a. PDFReportGenerator Agent
+
+**Responsibility:** Generate professional PDF reports with charts
+
+**Input:**
+- List of ScanResult objects
+- Scan summary statistics
+- Host information
+- Chart inclusion flag
+
+**Output:**
+- PDF report with charts and branding
+
+**API:**
+
+```python
+def generate_pdf_report(
+    results: List[ScanResult],
+    output_path: Path,
+    summary: Optional[Dict],
+    host_info: Optional[Dict[str, HostInfo]],
+    include_charts: bool = True
+) -> None
+```
+
+**Features:**
+- Executive summary section with statistics
+- Port status pie charts (open/closed/filtered)
+- Service distribution bar charts
+- Host information tables
+- Detailed scan results with banner info
+- Professional BitSpectreLabs branding
+- Print-ready layout
+
+**Requirements:** ReportLab library (`pip install reportlab`)
+
+---
+
+### 10b. ComparisonReportGenerator Agent
+
+**Responsibility:** Generate detailed scan comparison reports
+
+**Input:**
+- ScanComparison object
+- Output file path
+- Report format (text/html/json)
+
+**Output:**
+- Formatted comparison report
+
+**API:**
+
+```python
+def generate_comparison_report(
+    comparison: ScanComparison,
+    output_path: Path,
+    format: str = 'text'
+) -> None
+```
+
+**Formats:**
+- **Text**: Plain text with ASCII formatting
+- **HTML**: Styled report with color-coded changes
+- **JSON**: Structured data for automation
+
+**Report Sections:**
+- Scan metadata (IDs, timestamps, targets)
+- Change summary statistics
+- Newly opened ports with services
+- Newly closed ports
+- Newly filtered ports
+- Service version changes
+
+---
+
+### 10c. ExecutiveSummaryGenerator Agent
+
+**Responsibility:** Generate high-level security assessments with risk scoring
+
+**Input:**
+- List of ScanResult objects
+- Scan summary statistics
+- Host information
+
+**Output:**
+- Executive summary text with risk assessment
+
+**API:**
+
+```python
+def generate_executive_summary(
+    results: List[ScanResult],
+    summary: Optional[Dict],
+    host_info: Optional[Dict[str, HostInfo]],
+    output_path: Optional[Path]
+) -> str
+
+def calculate_risk_score(
+    results: List[ScanResult]
+) -> tuple[int, str, List[str]]
+```
+
+**Features:**
+- **Risk Scoring Algorithm** (0-100):
+  - Attack surface analysis (port count)
+  - High-risk service detection (FTP, Telnet, SMB, etc.)
+  - Vulnerable port exposure
+  - Database service exposure
+  - Administrative interface exposure
+  
+- **Risk Levels**:
+  - 🔴 CRITICAL (75-100): Immediate action required
+  - 🟠 HIGH (50-74): Significant vulnerabilities
+  - 🟡 MEDIUM (25-49): Moderate concerns
+  - 🟢 LOW (0-24): Minimal risk
+
+- **Critical Findings Identification**:
+  - Unencrypted protocols (FTP, Telnet)
+  - Known vulnerable services
+  - Excessive port exposure
+  - Web admin interfaces
+
+- **Security Recommendations**:
+  - Actionable remediation steps
+  - Risk-based prioritization
+  - Industry best practices
+
+---
+
+### 10d. ChartGenerator Agent
+
+**Responsibility:** Generate visual charts and graphs
+
+**Input:**
+- List of ScanResult objects
+- Chart type specification
+- Dimensions (width/height)
+
+**Output:**
+- ReportLab Drawing objects or ASCII charts
+
+**API:**
+
+```python
+def create_port_distribution_chart(
+    results: List[ScanResult],
+    width: int = 400,
+    height: int = 300
+) -> Optional[Drawing]
+
+def create_service_distribution_chart(
+    results: List[ScanResult],
+    width: int = 500,
+    height: int = 400,
+    top_n: int = 10
+) -> Optional[Drawing]
+
+def create_port_range_distribution_chart(
+    results: List[ScanResult],
+    width: int = 500,
+    height: int = 300
+) -> Optional[Drawing]
+
+def get_ascii_chart(
+    results: List[ScanResult],
+    chart_type: str = 'port_distribution'
+) -> str
+```
+
+**Chart Types:**
+- **Port Distribution**: Pie chart of open/closed/filtered ports
+- **Service Distribution**: Bar chart of top services
+- **Port Range Distribution**: Bar chart by port range (well-known, registered, dynamic)
+- **ASCII Charts**: Terminal-friendly text visualizations
+
+**Export Formats:**
+- PDF (via ReportLab)
+- PNG (requires Pillow)
+- ASCII text
+
+**Requirements:** ReportLab library (optional Pillow for PNG)
+
+---
+
+### 10e. TemplateManager Agent
+
+**Responsibility:** Manage custom report templates
+
+**Input:**
+- Template name
+- Template content
+- Template context variables
+
+**Output:**
+- Rendered reports
+- Template files
+- Template list
+
+**API:**
+
+```python
+class TemplateManager:
+    def __init__(self, templates_dir: Optional[Path])
+    def render_template(self, template_name: str, context: Dict[str, Any]) -> str
+    def render_from_string(self, template_string: str, context: Dict[str, Any]) -> str
+    def list_templates(self) -> List[str]
+    def create_template(self, name: str, content: str, overwrite: bool) -> Path
+    def delete_template(self, name: str) -> bool
+    def get_template_path(self, name: str) -> Optional[Path]
+
+def generate_custom_report(
+    results: List[ScanResult],
+    template_name: str,
+    output_path: Path,
+    summary: Optional[Dict],
+    host_info: Optional[Dict[str, HostInfo]],
+    custom_vars: Optional[Dict[str, Any]],
+    templates_dir: Optional[Path]
+) -> None
+
+def create_default_templates(templates_dir: Optional[Path]) -> None
+```
+
+**Features:**
+- **Jinja2 Template Engine**: Full Jinja2 syntax support with filters and control structures
+- **Template Library**: Store templates in `~/.spectrescan/templates/`
+- **Multiple Formats**: HTML, text, markdown, XML templates
+- **Custom Variables**: Pass custom data to templates
+- **Default Templates**: Pre-built template examples (simple text, markdown, XML)
+- **Template Validation**: Syntax checking and error reporting
+
+**Template Context:**
+- `results`: Full scan results list
+- `summary`: Scan summary statistics
+- `host_info`: Host information dictionary
+- `timestamp`: Current timestamp
+- `tool`: "SpectreScan"
+- `vendor`: "BitSpectreLabs"
+- `open_ports`: Filtered open ports
+- `closed_ports`: Filtered closed ports
+- `filtered_ports`: Filtered filtered ports
+- Custom variables via `custom_vars` parameter
+
+**Default Templates:**
+- `simple_text.txt`: Plain text report
+- `markdown_report.md`: Markdown-formatted report
+- `custom_xml.xml`: XML structured report
+
+**Requirements:** Jinja2 library (`pip install jinja2`)
+
+---
+
+### 10f. InteractiveHTMLReport Agent
+
+**Responsibility:** Generate interactive HTML reports with JavaScript
+
+**Input:**
+- List of ScanResult objects
+- Scan summary statistics
+- Host information
+
+**Output:**
+- Interactive HTML file with embedded JavaScript and CSS
+
+**API:**
+
+```python
+def generate_interactive_html_report(
+    results: List[ScanResult],
+    output_path: Path,
+    summary: Optional[Dict],
+    host_info: Optional[Dict[str, HostInfo]]
+) -> None
+```
+
+**Features:**
+- **Live Search**: Real-time filtering across all fields (host, port, service, banner)
+- **Sortable Columns**: Click-to-sort on any column (host, port, protocol, state, service)
+- **State Filtering**: Filter buttons for all/open/closed/filtered ports
+- **Dark Mode Toggle**: Light/dark theme with persistent preference (localStorage)
+- **Expandable Details**: Click "Details" button to view banner information
+- **Copy to Clipboard**: Quick copy of host:port combinations
+- **Statistics Dashboard**: Visual cards showing scan metrics
+- **Responsive Design**: Mobile-friendly layout
+- **No Dependencies**: Pure JavaScript, no external libraries required
+- **Offline**: Works without internet connection
+
+**Interactive Elements:**
+- Search box with instant filtering
+- State filter buttons (visual badges)
+- Sortable table headers
+- Expandable port details rows
+- Theme toggle button
+- "No results" message when filters match nothing
+
+**Styling:**
+- CSS custom properties for theming
+- Gradient header with branding
+- Color-coded state badges (green/red/orange)
+- Smooth transitions and hover effects
+- Professional BitSpectreLabs branding
+
+**JavaScript Functions:**
+- `filterResults()`: Search and state filtering
+- `toggleDetails()`: Show/hide port details
+- `copyToClipboard()`: Copy text to clipboard
+- Column sorting with direction toggle
+- Theme persistence with localStorage
+
+**Use Cases:**
+- Shareable reports for stakeholders
+- Interactive analysis in browser
+- Offline report viewing
+- Professional client deliverables
+- Team collaboration on findings
+
+---
+
 ### 11. TUIFrontend Agent
 
 **Responsibility:** Provide terminal user interface
@@ -615,6 +933,246 @@ class SpectreScanGUI:
 - Real-time logs
 - Export buttons
 - Dark theme with branding
+
+---
+
+### 13. ProfileManager Agent
+
+**Responsibility:** Manage scan configuration profiles
+
+**Input:**
+- Profile name
+- ScanProfile object
+- Import/export file paths
+
+**Output:**
+- Saved profiles
+- Profile metadata
+- Profile list
+
+**API:**
+
+```python
+class ProfileManager:
+    def __init__(self, profiles_dir: Optional[Path])
+    def save_profile(self, profile: ScanProfile) -> None
+    def load_profile(self, name: str) -> ScanProfile
+    def delete_profile(self, name: str) -> None
+    def list_profiles(self) -> List[str]
+    def profile_exists(self, name: str) -> bool
+    def export_profile(self, name: str, export_path: Path) -> None
+    def import_profile(self, import_path: Path) -> ScanProfile
+```
+
+**Profile Structure:**
+
+```python
+@dataclass
+class ScanProfile:
+    name: str
+    description: str
+    ports: List[int]
+    scan_types: List[str]
+    threads: int
+    timeout: float
+    rate_limit: Optional[int]
+    enable_service_detection: bool
+    enable_os_detection: bool
+    enable_banner_grabbing: bool
+    randomize: bool
+    timing_template: int
+    created_at: Optional[str]
+    modified_at: Optional[str]
+```
+
+**Features:**
+
+- **Profile Storage**: Profiles saved as JSON in `~/.spectrescan/profiles/`
+- **Profile Validation**: Ensures profile integrity on load
+- **Filename Sanitization**: Handles special characters in profile names
+- **Import/Export**: Share profiles between systems
+- **Auto-Timestamps**: Tracks creation and modification times
+- **Profile Overwrite**: Update existing profiles by name
+
+**Use Cases:**
+
+- Save frequently used scan configurations
+- Share scan templates across teams
+- Maintain different profiles for various scenarios
+- Quick access to complex scan setups
+
+---
+
+### 14. HistoryManager Agent
+
+**Responsibility:** Track and manage scan history
+
+**Input:**
+- Scan metadata (target, ports, type, duration)
+- Scan results summary
+- Filter/search criteria
+
+**Output:**
+- ScanHistoryEntry objects
+- History statistics
+- Search results
+
+**API:**
+
+```python
+class HistoryManager:
+    def __init__(self, history_dir: Optional[Path])
+    def add_entry(
+        self, target: str, ports: List[int], scan_type: str,
+        duration: float, open_ports: int, closed_ports: int,
+        filtered_ports: int, config: Dict[str, Any],
+        results_file: Optional[str]
+    ) -> ScanHistoryEntry
+    def get_entry(self, scan_id: str) -> Optional[ScanHistoryEntry]
+    def list_entries(
+        self, limit: Optional[int], target_filter: Optional[str],
+        scan_type_filter: Optional[str]
+    ) -> List[ScanHistoryEntry]
+    def delete_entry(self, scan_id: str) -> bool
+    def clear_history(self) -> None
+    def search_history(self, query: str) -> List[ScanHistoryEntry]
+    def get_statistics(self) -> Dict[str, Any]
+```
+
+**History Entry Structure:**
+
+```python
+@dataclass
+class ScanHistoryEntry:
+    id: str
+    target: str
+    ports: List[int]
+    scan_type: str
+    timestamp: str
+    duration: float
+    open_ports: int
+    closed_ports: int
+    filtered_ports: int
+    total_ports: int
+    config: Dict[str, Any]
+    results_file: Optional[str]
+```
+
+**Features:**
+
+- **Persistent Storage**: History saved as JSON in `~/.spectrescan/history/`
+- **Unique IDs**: MD5-based unique scan identifiers
+- **Filtering**: Filter by target, scan type, time range
+- **Search**: Full-text search across targets and configs
+- **Statistics**: Aggregate data analysis
+- **Chronological Order**: Most recent scans first
+- **Linked Results**: Optional path to detailed scan results
+
+**Statistics Provided:**
+
+- Total scans performed
+- Total ports scanned
+- Total open ports found
+- Total scan time
+- Scan type distribution
+- Most frequently scanned targets
+
+**Use Cases:**
+
+- Track scanning activity over time
+- Review previous scan results
+- Identify frequently scanned targets
+- Audit scanning operations
+- Performance analysis
+
+---
+
+### 15. ScanComparer Agent
+
+**Responsibility:** Compare two scans to identify differences
+
+**Input:**
+- Two scan IDs or target name
+- Optional scan results data
+- History entries
+
+**Output:**
+- ScanComparison object
+- Formatted comparison report
+- Change statistics
+
+**API:**
+
+```python
+class ScanComparer:
+    def __init__(self)
+    def compare_scans(
+        self, scan1_id: str, scan2_id: str,
+        results1: Optional[List[ScanResult]],
+        results2: Optional[List[ScanResult]]
+    ) -> ScanComparison
+    def compare_by_target(
+        self, target: str, limit: int
+    ) -> Optional[ScanComparison]
+    def format_comparison_text(
+        self, comparison: ScanComparison
+    ) -> str
+```
+
+**Comparison Structure:**
+
+```python
+@dataclass
+class ScanComparison:
+    scan1_id: str
+    scan2_id: str
+    scan1_target: str
+    scan2_target: str
+    scan1_timestamp: str
+    scan2_timestamp: str
+    newly_opened: List[PortDifference]
+    newly_closed: List[PortDifference]
+    newly_filtered: List[PortDifference]
+    service_changed: List[PortDifference]
+    total_changes: int
+    scan1_open_count: int
+    scan2_open_count: int
+    open_diff: int
+
+@dataclass
+class PortDifference:
+    port: int
+    protocol: str
+    old_state: str
+    new_state: str
+    service_old: Optional[str]
+    service_new: Optional[str]
+```
+
+**Features:**
+
+- **State Change Detection**: Identifies ports that changed state (open/closed/filtered)
+- **Service Change Detection**: Detects when services change on open ports
+- **Diff Statistics**: Calculates total changes and open port differences
+- **Target Validation**: Ensures scans are for the same target
+- **History Integration**: Automatically loads scans from history
+- **Formatted Output**: Human-readable text report generation
+
+**Change Categories:**
+
+- Newly opened ports
+- Newly closed ports
+- Newly filtered ports
+- Service version changes
+- Open port count differences
+
+**Use Cases:**
+
+- Infrastructure change monitoring
+- Security posture tracking
+- Firewall rule verification
+- Service deployment detection
+- Compliance auditing
 
 ---
 
@@ -778,6 +1336,9 @@ class ScanConfig:
 - `BannerGrabber`: Banner grabbing service
 - `OSDetector`: Operating system detection
 - `HostDiscovery`: Host discovery service
+- `ProfileManager`: Scan profile management
+- `HistoryManager`: Scan history tracking
+- `ScanComparer`: Scan comparison and diff analysis
 
 ### Utility Functions
 
@@ -789,10 +1350,33 @@ class ScanConfig:
 
 ### Report Generators
 
+**Basic Formats:**
 - `generate_json_report()`: Create JSON report
 - `generate_csv_report()`: Create CSV report
 - `generate_xml_report()`: Create XML report
 - `generate_html_report()`: Create HTML report
+
+**Enhanced Reporting:**
+- `generate_pdf_report()`: Create PDF report with charts (requires reportlab)
+- `generate_comparison_report()`: Create scan comparison reports (text/html/json)
+- `generate_executive_summary()`: Create executive summary with risk scoring
+- `calculate_risk_score()`: Calculate security risk score (0-100)
+- `identify_critical_findings()`: Identify critical security issues
+
+**Chart Generation:**
+- `create_port_distribution_chart()`: Pie chart of port states
+- `create_service_distribution_chart()`: Bar chart of top services
+- `create_port_range_distribution_chart()`: Port range distribution
+- `get_ascii_chart()`: Terminal-friendly ASCII charts
+- `generate_all_charts()`: Generate all available charts
+
+**Custom Templates:**
+- `TemplateManager`: Manage custom report templates
+- `generate_custom_report()`: Generate report from custom template
+- `create_default_templates()`: Create default template examples
+
+**Interactive Reports:**
+- `generate_interactive_html_report()`: Create interactive HTML with JavaScript features
 
 ---
 

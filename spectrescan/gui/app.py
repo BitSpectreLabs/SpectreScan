@@ -10,7 +10,7 @@ from typing import Optional, List
 from pathlib import Path
 from spectrescan.core.scanner import PortScanner
 from spectrescan.core.presets import ScanPreset, get_preset_config
-from spectrescan.core.utils import parse_ports, ScanResult
+from spectrescan.core.utils import parse_ports, parse_targets_from_file, ScanResult
 from spectrescan.reports import (
     generate_json_report, generate_csv_report,
     generate_xml_report
@@ -62,6 +62,9 @@ class SpectreScanGUI:
         self.scanning = False
         self.scan_thread: Optional[threading.Thread] = None
         self.results: List[ScanResult] = []
+        self.current_target_index = 0
+        self.total_targets = 0
+        self.target_list: List[str] = []
         
         # Setup UI
         self._setup_ui()
@@ -144,8 +147,53 @@ class SpectreScanGUI:
         # Section: Target Configuration
         self._create_section_header(scrollable_frame, "Target Configuration")
         
-        self._create_modern_entry(scrollable_frame, "Target Host", self.target_var, "192.168.1.1 or scanme.nmap.org")
-        self._create_modern_entry(scrollable_frame, "Port Range", self.ports_var, "1-1000 or 80,443,8080")
+        self._create_modern_entry(scrollable_frame, "Target", self.target_var, "192.168.1.1 or 10.0.0.0/24")
+        
+        # Import targets button
+        import_frame = tk.Frame(scrollable_frame, bg=self.colors['surface'])
+        import_frame.pack(fill=tk.X, pady=(0, 12))
+        
+        tk.Button(
+            import_frame,
+            text="📁 Import Targets from File",
+            command=self._import_targets,
+            bg=self.colors['border'],
+            fg=self.colors['text_secondary'],
+            font=("Inter", 9),
+            relief=tk.FLAT,
+            cursor="hand2",
+            pady=8
+        ).pack(fill=tk.X)
+        
+        self._create_modern_entry(scrollable_frame, "Ports", self.ports_var, "1-1000 or 80,443,8080")
+        
+        # Profile and History buttons
+        profile_hist_frame = tk.Frame(scrollable_frame, bg=self.colors['surface'])
+        profile_hist_frame.pack(fill=tk.X, pady=(0, 12))
+        
+        tk.Button(
+            profile_hist_frame,
+            text="📋 Manage Profiles",
+            command=self._open_profile_manager,
+            bg=self.colors['border'],
+            fg=self.colors['text_secondary'],
+            font=("Inter", 9),
+            relief=tk.FLAT,
+            cursor="hand2",
+            pady=8
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        
+        tk.Button(
+            profile_hist_frame,
+            text="📚 Scan History",
+            command=self._open_history_browser,
+            bg=self.colors['border'],
+            fg=self.colors['text_secondary'],
+            font=("Inter", 9),
+            relief=tk.FLAT,
+            cursor="hand2",
+            pady=8
+        ).pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(5, 0))
         
         # Section: Scan Settings
         self._create_section_header(scrollable_frame, "Scan Settings")
@@ -560,6 +608,65 @@ class SpectreScanGUI:
             self.timeout_var.set(5.0)
             self.scan_type_var.set("syn")
     
+    def _import_targets(self):
+        """Import targets from file."""
+        filename = filedialog.askopenfilename(
+            title="Select Target File",
+            filetypes=[("Text files", "*.txt"), ("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        
+        if not filename:
+            return
+        
+        try:
+            targets = parse_targets_from_file(Path(filename))
+            target_str = ','.join(targets)
+            self.target_var.set(target_str)
+            self._log(f"Loaded {len(targets)} targets from {Path(filename).name}", self.colors['success'])
+            messagebox.showinfo("Success", f"Loaded {len(targets)} targets from file")
+        except FileNotFoundError:
+            messagebox.showerror("Error", "Target file not found")
+        except ValueError as e:
+            messagebox.showerror("Error", f"Failed to parse targets: {e}")
+    
+    def _open_profile_manager(self):
+        """Open profile manager dialog."""
+        from spectrescan.gui.dialogs import ProfileManagerDialog
+        ProfileManagerDialog(self.root, on_load_callback=self._load_profile_config)
+    
+    def _open_history_browser(self):
+        """Open history browser dialog."""
+        from spectrescan.gui.dialogs import HistoryBrowserDialog
+        HistoryBrowserDialog(self.root)
+    
+    def _load_profile_config(self, profile):
+        """Load profile configuration into GUI."""
+        from spectrescan.core.profiles import ScanProfile
+        
+        # Set ports
+        self.ports_var.set(','.join(map(str, profile.ports)))
+        
+        # Set scan type
+        if 'tcp' in profile.scan_types:
+            self.scan_type_var.set('tcp')
+        elif 'syn' in profile.scan_types:
+            self.scan_type_var.set('syn')
+        elif 'udp' in profile.scan_types:
+            self.scan_type_var.set('udp')
+        elif 'async' in profile.scan_types:
+            self.scan_type_var.set('async')
+        
+        # Set performance settings
+        self.threads_var.set(profile.threads)
+        self.timeout_var.set(profile.timeout)
+        
+        # Set feature flags
+        self.service_detect_var.set(profile.enable_service_detection)
+        self.os_detect_var.set(profile.enable_os_detection)
+        self.banner_grab_var.set(profile.enable_banner_grabbing)
+        
+        self._log(f"Loaded profile: {profile.name}", self.colors['success'])
+    
     def _log(self, message: str, color: str = "#00ff00"):
         """Add log message."""
         self.logs_text.insert(tk.END, message + "\n")
@@ -631,6 +738,16 @@ class SpectreScanGUI:
             scanned = [0]
             open_count = [0]
             
+            # Target progress callback
+            def target_callback(current_target: str, idx: int, total: int):
+                self.current_target_index = idx
+                self.total_targets = total
+                if total > 1:
+                    self.root.after(0, lambda: self._log(
+                        f"Scanning target {idx}/{total}: {current_target}",
+                        self.colors['accent']
+                    ))
+            
             def callback(result: ScanResult):
                 if not self.scanning:
                     return
@@ -639,9 +756,14 @@ class SpectreScanGUI:
                 progress = (scanned[0] / total_ports) * 100
                 
                 self.root.after(0, lambda: self.progress_var.set(progress))
-                self.root.after(0, lambda: self.stats_label.config(
-                    text=f"Progress: {scanned[0]}/{total_ports} ({progress:.1f}%) | Open: {open_count[0]}"
-                ))
+                
+                # Update status with multi-target info
+                if self.total_targets > 1:
+                    status_text = f"Target {self.current_target_index}/{self.total_targets} | Progress: {scanned[0]}/{total_ports} ({progress:.1f}%) | Open: {open_count[0]}"
+                else:
+                    status_text = f"Progress: {scanned[0]}/{total_ports} ({progress:.1f}%) | Open: {open_count[0]}"
+                
+                self.root.after(0, lambda: self.stats_label.config(text=status_text))
                 
                 if result.state == "open":
                     open_count[0] += 1
@@ -665,8 +787,8 @@ class SpectreScanGUI:
                         f"[OPEN] {r.host}:{r.port}/{r.protocol} - {r.service or 'unknown'}"
                     ))
             
-            # Run scan
-            self.scanner.scan(target, callback=callback)
+            # Run scan with target callback
+            self.scanner.scan(target, callback=callback, target_callback=target_callback)
             
             # Complete
             if self.scanning:

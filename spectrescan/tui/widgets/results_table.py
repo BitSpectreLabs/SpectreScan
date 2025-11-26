@@ -51,7 +51,7 @@ class ResultsTable(DataTable):
     def clear_results(self) -> None:
         """Clear all results from table."""
         self.clear()
-        self.add_columns("Host", "Port", "Protocol", "State", "Service", "Banner")
+        # Columns are already added in on_mount, just need to clear rows
     
     def filter_open_only(self) -> None:
         """Filter to show only open ports."""

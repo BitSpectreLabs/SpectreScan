@@ -5,7 +5,7 @@ by BitSpectreLabs
 A high-performance, multi-interface port scanning toolkit.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "BitSpectreLabs"
 __license__ = "MIT"
 

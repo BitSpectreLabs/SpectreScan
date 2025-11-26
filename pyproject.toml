@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spectrescan"
-version = "1.0.0"
+version = "1.1.0"
 description = "Professional-grade port scanner with CLI, TUI, and GUI interfaces"
 readme = "README.md"
 requires-python = ">=3.11"

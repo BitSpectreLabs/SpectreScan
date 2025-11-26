@@ -6,9 +6,10 @@ by BitSpectreLabs
 import ipaddress
 import socket
 import re
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 
 @dataclass
@@ -39,23 +40,52 @@ class HostInfo:
     is_up: bool = True
 
 
-def parse_target(target: str) -> List[str]:
+def parse_target(target: Union[str, List[str]]) -> List[str]:
     """
     Parse target specification into list of IP addresses.
     
-    Supports:
-    - Single IP: 192.168.1.1
-    - CIDR: 192.168.1.0/24
-    - Range: 192.168.1.1-254
-    - Hostname: example.com
+    Supports multiple input formats:
+    - Single IP: "192.168.1.1"
+    - CIDR notation: "192.168.1.0/24"
+    - IP range: "192.168.1.1-254"
+    - Hostname: "example.com"
+    - Comma-separated: "192.168.1.1,192.168.1.2,example.com"
+    - List of targets: ["192.168.1.1", "example.com"]
     
     Args:
-        target: Target specification string
+        target: Target specification (string or list of strings)
         
     Returns:
-        List of IP addresses
+        List of IP addresses/hostnames
+        
+    Raises:
+        ValueError: If target specification is invalid
+        
+    Examples:
+        >>> parse_target("192.168.1.1")
+        ['192.168.1.1']
+        >>> parse_target("192.168.1.0/30")
+        ['192.168.1.1', '192.168.1.2']
+        >>> parse_target("192.168.1.1,example.com")
+        ['192.168.1.1', '93.184.216.34']
+        >>> parse_target(["192.168.1.1", "192.168.1.2"])
+        ['192.168.1.1', '192.168.1.2']
     """
-    targets = []
+    all_targets = []
+    
+    # Handle list input
+    if isinstance(target, list):
+        for t in target:
+            all_targets.extend(parse_target(t))
+        return all_targets
+    
+    # Handle comma-separated targets
+    if ',' in target:
+        for t in target.split(','):
+            t = t.strip()
+            if t:
+                all_targets.extend(parse_target(t))
+        return all_targets
     
     # Check if it's a CIDR notation
     if '/' in target:
@@ -70,13 +100,16 @@ def parse_target(target: str) -> List[str]:
         parts = target.split('.')
         if len(parts) == 4 and '-' in parts[3]:
             base = '.'.join(parts[:3])
-            start, end = parts[3].split('-')
-            try:
-                start_num = int(start)
-                end_num = int(end)
-                return [f"{base}.{i}" for i in range(start_num, end_num + 1)]
-            except ValueError:
-                pass
+            range_part = parts[3].split('-')
+            if len(range_part) == 2:
+                try:
+                    start_num = int(range_part[0])
+                    end_num = int(range_part[1])
+                    if start_num < 0 or end_num > 255 or start_num > end_num:
+                        raise ValueError(f"Invalid IP range: {target}")
+                    return [f"{base}.{i}" for i in range(start_num, end_num + 1)]
+                except ValueError as e:
+                    raise ValueError(f"Invalid IP range: {target}") from e
     
     # Try as hostname or single IP
     try:
@@ -90,6 +123,115 @@ def parse_target(target: str) -> List[str]:
             return [target]
         except ValueError:
             raise ValueError(f"Invalid target specification: {target}")
+
+
+def parse_targets_from_file(filepath: Union[str, Path]) -> List[str]:
+    """
+    Parse targets from a file.
+    
+    Supports:
+    - Plain text files with one target per line
+    - CSV files with targets in first column
+    - Comments (lines starting with #)
+    - Empty lines (ignored)
+    - All target formats supported by parse_target()
+    
+    Args:
+        filepath: Path to file containing targets
+        
+    Returns:
+        List of IP addresses/hostnames
+        
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        ValueError: If file format is invalid
+        
+    Examples:
+        File content (targets.txt):
+        ```
+        # Web servers
+        192.168.1.1
+        192.168.1.10-20
+        webserver.example.com
+        
+        # Database subnet
+        10.0.0.0/28
+        ```
+    """
+    filepath = Path(filepath)
+    
+    if not filepath.exists():
+        raise FileNotFoundError(f"Target file not found: {filepath}")
+    
+    if not filepath.is_file():
+        raise ValueError(f"Not a file: {filepath}")
+    
+    all_targets = []
+    line_number = 0
+    
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            for line in f:
+                line_number += 1
+                line = line.strip()
+                
+                # Skip empty lines and comments
+                if not line or line.startswith('#'):
+                    continue
+                
+                # Handle CSV format (take first column)
+                if ',' in line and not _looks_like_target_list(line):
+                    line = line.split(',')[0].strip()
+                
+                # Parse target
+                try:
+                    targets = parse_target(line)
+                    all_targets.extend(targets)
+                except ValueError as e:
+                    # Add line context to error
+                    raise ValueError(f"Line {line_number}: {e}") from e
+    
+    except UnicodeDecodeError:
+        raise ValueError(f"File encoding error: {filepath}. Use UTF-8 encoding.")
+    
+    if not all_targets:
+        raise ValueError(f"No valid targets found in file: {filepath}")
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_targets = []
+    for target in all_targets:
+        if target not in seen:
+            seen.add(target)
+            unique_targets.append(target)
+    
+    return unique_targets
+
+
+def _looks_like_target_list(line: str) -> bool:
+    """
+    Check if line looks like comma-separated targets vs CSV data.
+    
+    Args:
+        line: Line to check
+        
+    Returns:
+        True if looks like target list, False if CSV with other data
+    """
+    # If all comma-separated parts look like IP/hostname, it's a target list
+    parts = [p.strip() for p in line.split(',')]
+    
+    # Check if most parts look like valid targets
+    target_like = 0
+    for part in parts[:5]:  # Check first 5 parts
+        if not part:
+            continue
+        # Simple heuristic: contains dots or looks like hostname
+        if '.' in part or re.match(r'^[a-zA-Z0-9\-]+$', part):
+            target_like += 1
+    
+    # If more than half look like targets, treat as target list
+    return target_like > len(parts[:5]) // 2
 
 
 def parse_ports(port_spec: str) -> List[int]:

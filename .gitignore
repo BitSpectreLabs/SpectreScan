@@ -183,13 +183,15 @@ Thumbs.db
 # Logs
 logs/
 
-# Output files
-*.json
-*.csv
-*.xml
-*.html
+# Output files (generated reports, not source code)
+# Note: spectrescan/reports/ contains source code and should be tracked
 output/
-reports/
+output_reports/
+*.report.json
+*.report.csv
+*.report.xml
+*.report.html
+*.report.pdf
 
 # Temporary files
 tmp/

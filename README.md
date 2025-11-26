@@ -67,10 +67,13 @@
 
 ### Advanced Features
 
+- **Multi-Target Scanning** - Scan multiple targets from command line or file
 - **Host Discovery** - ICMP ping, TCP ping, ARP scanning
 - **Service Detection** - Automatic service/version identification
 - **Banner Grabbing** - Capture service banners for fingerprinting
 - **OS Detection** - TTL-based and TCP fingerprinting
+- **Scan Profiles** - Save and reuse scan configurations
+- **Scan History** - Track and review previous scans
 - **Rate Limiting** - Control scan speed to avoid detection
 - **Timing Templates** - Paranoid to Insane (0-5)
 - **Randomized Scanning** - Randomize target and port order
@@ -322,6 +325,46 @@ spectrescan 192.168.1.1-254
 spectrescan scanme.nmap.org
 ```
 
+#### Multi-Target Scanning
+
+```bash
+# Scan multiple targets (comma-separated)
+spectrescan 192.168.1.1,192.168.1.10,scanme.nmap.org
+
+# Scan multiple ranges
+spectrescan 192.168.1.1-10,192.168.2.1-10
+
+# Scan from target file
+spectrescan --target-file targets.txt
+
+# Short option
+spectrescan -iL targets.txt
+```
+
+**Target File Format** (`targets.txt`):
+```text
+# Web servers
+192.168.1.1
+scanme.nmap.org
+
+# Database servers
+10.0.0.10-15
+
+# Development network
+192.168.100.0/24
+
+# External servers
+example.com
+test.example.org
+```
+
+**Target File Features:**
+- One target per line
+- Supports all target formats (IP, CIDR, range, hostname)
+- Comments with `#` prefix
+- Empty lines ignored
+- Duplicates automatically removed
+
 #### Port Specifications
 
 ```bash
@@ -414,8 +457,165 @@ spectrescan 192.168.1.1 --html report.html
 spectrescan 192.168.1.1 --json out.json --csv out.csv --html report.html
 ```
 
-#### Complete Example
+#### Scan Profiles
 
+Save and reuse scan configurations:
+
+```bash
+# List available profiles
+spectrescan profile list
+
+# View profile details
+spectrescan profile load "Quick Scan"
+
+# Export profile to file
+spectrescan profile export "My Profile" --file myprofile.json
+
+# Import profile from file
+spectrescan profile import --file myprofile.json
+
+# Delete a profile
+spectrescan profile delete "Old Profile"
+```
+
+**Profile Structure:**
+Profiles store complete scan configurations including:
+- Target and port specifications
+- Scan types (TCP, SYN, UDP, Async)
+- Performance settings (threads, timeout, rate limit)
+- Feature flags (service detection, OS detection, banner grabbing)
+- Timing templates and randomization options
+
+**Example Use Case:**
+```bash
+# Create a profile for web server scanning
+# (Profiles are automatically saved during scans or can be created manually)
+
+# Later, load and use the profile
+spectrescan profile load "Web Server Scan"
+# Shows: ports [80, 443, 8080, 8443], TCP scan, service detection enabled
+
+# Use profile settings for new scan
+spectrescan 192.168.1.1 -p 80,443,8080,8443 --tcp --service-detection
+```
+
+#### Scan History
+
+Track and review previous scans:
+
+```bash
+# List recent scans
+spectrescan history list
+
+# List with filters
+spectrescan history list --limit 20 --target 192.168.1.1
+spectrescan history list --scan-type tcp
+
+# View scan details
+spectrescan history show abc123def456
+
+# Search history
+spectrescan history search "example.com"
+spectrescan history search "192.168"
+
+# View statistics
+spectrescan history stats
+
+# Delete specific scan
+spectrescan history delete abc123def456
+
+# Clear all history
+spectrescan history clear
+```
+
+**History Output Example:**
+```
+┌─────────────────────────────────── Scan History ───────────────────────────────────┐
+│ ID           Target            Type  Ports  Open  Duration  Timestamp              │
+├────────────────────────────────────────────────────────────────────────────────────┤
+│ a1b2c3d4e5f6 192.168.1.1       tcp   1000   15    12.5s    2025-01-15 14:30       │
+│ f6e5d4c3b2a1 scanme.nmap.org   syn   100    5     3.2s     2025-01-15 12:15       │
+│ b2c3d4e5f6a1 10.0.0.0/24       tcp   65535  234   185.4s   2025-01-14 18:45       │
+└────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Statistics Example:**
+```
+┌─────────────────────────── Scan History Statistics ───────────────────────────────┐
+│ Total Scans: 47                                                                    │
+│ Total Ports Scanned: 1,245,890                                                     │
+│ Total Open Ports Found: 3,452                                                      │
+│ Total Scan Time: 2,847.32s                                                         │
+│                                                                                     │
+│ Scan Types:                                                                         │
+│   • tcp: 35                                                                         │
+│   • syn: 8                                                                          │
+│   • udp: 4                                                                          │
+│                                                                                     │
+│ Most Scanned Target: 192.168.1.1                                                   │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Scan Comparison
+
+Compare two scans to identify changes over time:
+
+```bash
+# Compare two specific scans by ID
+spectrescan compare abc123def456 def456ghi789
+
+# Compare the two most recent scans for a target
+spectrescan compare --target 192.168.1.1
+```
+
+**Comparison Output Example:**
+```
+======================================================================
+SCAN COMPARISON REPORT
+======================================================================
+
+Scan 1 ID: abc123def456
+Scan 1 Time: 2025-01-15T10:00:00
+Scan 1 Open Ports: 15
+
+Scan 2 ID: def456ghi789
+Scan 2 Time: 2025-01-15T14:00:00
+Scan 2 Open Ports: 17
+
+Target: 192.168.1.1
+Change in Open Ports: +2
+Total Changes: 4
+
+NEWLY OPENED PORTS:
+----------------------------------------------------------------------
+  8080/tcp - http-proxy
+    Changed from: closed -> open
+  3306/tcp - mysql
+    Changed from: filtered -> open
+
+NEWLY CLOSED PORTS:
+----------------------------------------------------------------------
+  21/tcp - ftp
+    Changed from: open -> closed
+
+SERVICE CHANGES:
+----------------------------------------------------------------------
+  80/tcp
+    Service: http -> nginx
+
+======================================================================
+```
+
+**Use Cases:**
+- Monitor infrastructure changes over time
+- Detect unauthorized service deployments
+- Verify firewall rule changes
+- Track service version updates
+- Identify security posture drift
+
+#### Complete Examples
+
+**Single Network Scan:**
 ```bash
 spectrescan 192.168.1.0/24 \
   --top-ports \
@@ -427,6 +627,36 @@ spectrescan 192.168.1.0/24 \
   --randomize \
   --json scan_results.json \
   --html report.html
+```
+
+**Multi-Target Enterprise Scan:**
+```bash
+# Create targets file with all enterprise infrastructure
+cat > enterprise_targets.txt << EOF
+# Production Web Servers
+192.168.10.0/24
+10.0.1.1-50
+
+# Database Cluster
+192.168.20.10
+192.168.20.11
+192.168.20.12
+
+# External Endpoints
+api.example.com
+www.example.com
+mail.example.com
+EOF
+
+# Perform comprehensive scan
+spectrescan --target-file enterprise_targets.txt \
+  --top-ports \
+  --async \
+  --threads 1000 \
+  --os-detection \
+  --banner-grab \
+  --json enterprise_scan.json \
+  --html enterprise_report.html
 ```
 
 ### TUI Interface
@@ -447,9 +677,13 @@ spectrescan 192.168.1.1 -p 1-1000 --tui
 - Real-time scan progress visualization
 - Live results table with filtering
 - Comprehensive logs panel
-- Keyboard shortcuts (`s` = start, `x` = stop, `c` = clear, `q` = quit)
+- Keyboard shortcuts (`s` = start, `x` = stop, `c` = clear, `q` = quit, `p` = profiles, `h` = history)
 - Dark/light theme toggle (`d`)
 - Statistics dashboard
+- **Profile Management** - Press `p` to open profile selection screen
+- **History Browser** - Press `h` to view scan history (coming soon)
+- Profile loading with auto-configuration
+- Multi-target support with file import
 
 ### GUI Interface
 
@@ -469,6 +703,10 @@ spectrescan --gui
 - Export buttons (JSON, CSV, HTML)
 - Dark theme with BitSpectreLabs branding
 - Error dialog handling
+- **Profile Manager Dialog** - Save, load, delete, export, and import scan profiles
+- **History Browser Dialog** - View, search, and filter scan history with statistics
+- Multi-target file import with visual feedback
+- Profile-based configuration loading
 
 ---
 
@@ -553,6 +791,153 @@ Professional HTML report with:
 - Host information section
 - Modern responsive design
 - Print-friendly layout
+
+### PDF Report (Enhanced Reporting)
+
+Generate professional PDF reports with charts:
+
+```bash
+spectrescan scan 192.168.1.1 --quick --pdf report.pdf
+```
+
+Features:
+- Executive summary section
+- Port status pie charts
+- Service distribution graphs
+- Host information tables
+- Professional branding
+- Print-ready format
+
+**Requires:** `pip install reportlab`
+
+### Executive Summary
+
+Generate high-level security assessments:
+
+```bash
+spectrescan scan 192.168.1.0/24 --quick --exec-summary summary.txt
+```
+
+Includes:
+- **Risk scoring** (0-100 with severity levels)
+- **Critical findings** identification
+- **Security recommendations**
+- **Service distribution** analysis
+- **Host information** summary
+
+Risk Levels:
+- 🔴 **CRITICAL** (75-100): Immediate action required
+- 🟠 **HIGH** (50-74): Significant vulnerabilities
+- 🟡 **MEDIUM** (25-49): Moderate concerns
+- 🟢 **LOW** (0-24): Minimal risk
+
+### Comparison Reports
+
+Generate detailed scan comparison reports:
+
+```bash
+# Text format
+spectrescan compare scan1_id scan2_id --output comparison.txt
+
+# HTML format with styling
+spectrescan compare --target 192.168.1.1 --format html --output diff.html
+
+# JSON format for automation
+spectrescan compare scan1_id scan2_id --format json --output changes.json
+```
+
+Comparison formats:
+- **Text**: Terminal-friendly plain text
+- **HTML**: Styled report with color-coded changes
+- **JSON**: Machine-readable structured data
+
+### ASCII Charts
+
+View quick charts in the terminal:
+
+```python
+from spectrescan.reports import get_ascii_chart
+
+# Port distribution
+print(get_ascii_chart(results, 'port_distribution'))
+
+# Service distribution
+print(get_ascii_chart(results, 'service_distribution'))
+```
+
+Output example:
+```
+Top 5 Services:
+──────────────────────────────────────────────────
+http            │███████████████████████ 12
+ssh             │██████████████ 8
+https           │████████████ 6
+mysql           │████████ 4
+ftp             │█████ 3
+──────────────────────────────────────────────────
+```
+
+---
+
+### Custom Report Templates
+
+Create custom report layouts using Jinja2 templates:
+
+```bash
+# Install Jinja2 for template support
+pip install jinja2
+
+# Create default template examples
+python -c "from spectrescan.reports import create_default_templates; create_default_templates()"
+
+# Use custom template
+spectrescan scan 192.168.1.1 --quick --custom-template my_template.html --output report.html
+```
+
+**Features:**
+- Jinja2-based template engine
+- Custom variables and filters
+- Multiple format support (HTML, text, markdown, XML)
+- Template library management
+- Professional report layouts
+
+**Template Example:**
+```jinja2
+# My Custom Report
+## Scan Results for {{ timestamp }}
+
+Total Open Ports: {{ open_ports|length }}
+
+{% for result in open_ports %}
+- {{ result.port }}/{{ result.protocol }}: {{ result.service }}
+{% endfor %}
+```
+
+---
+
+### Interactive HTML Reports
+
+Generate interactive HTML reports with advanced features:
+
+```bash
+spectrescan scan 192.168.1.0/24 --quick --interactive-html report.html
+```
+
+**Features:**
+- 🔍 **Live Search**: Real-time filtering across all fields
+- 📊 **Sortable Columns**: Click headers to sort by any column
+- 🎯 **State Filtering**: Filter by open/closed/filtered ports
+- 🌙 **Dark Mode**: Toggle between light and dark themes
+- 📋 **Copy to Clipboard**: Quick copy of host:port combinations
+- 📱 **Responsive Design**: Works on desktop and mobile
+- ⚡ **No Server Required**: Pure client-side JavaScript
+
+**Interactive Features:**
+- Search by host, port, service, or banner content
+- Expandable port details with banner information
+- Visual state badges (color-coded)
+- Statistics dashboard
+- Persistent theme preference (localStorage)
 
 ---
 
