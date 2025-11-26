@@ -25,7 +25,6 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/BitSpectreLabs/SpectreScan"
 Repository = "https://github.com/BitSpectreLabs/SpectreScan"
-Documentation = "https://github.com/BitSpectreLabs/SpectreScan/wiki"
 Issues = "https://github.com/BitSpectreLabs/SpectreScan/issues"
 
 [project.scripts]
