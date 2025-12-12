@@ -1,11 +1,3 @@
-# SpectreScan Subdomain Wordlist - Medium
-# Extended subdomain wordlist for thorough enumeration
-# by BitSpectreLabs
-#
-# Usage: spectrescan dns example.com --wordlist medium
-# Contains: ~500 common and less common subdomains
-
-# Common Web
 www
 www1
 www2
@@ -16,8 +8,6 @@ web2
 webmail
 webdisk
 webserver
-
-# Mail
 mail
 mail1
 mail2
@@ -37,8 +27,6 @@ email
 mailserver
 autodiscover
 autoconfig
-
-# FTP/File Transfer
 ftp
 ftp1
 ftp2
@@ -49,8 +37,6 @@ upload
 uploads
 download
 downloads
-
-# DNS
 ns
 ns1
 ns2
@@ -59,8 +45,6 @@ ns4
 dns
 dns1
 dns2
-
-# Database
 db
 db1
 db2
@@ -75,8 +59,6 @@ elastic
 elasticsearch
 sql
 mssql
-
-# Development
 dev
 dev1
 dev2
@@ -96,14 +78,10 @@ alpha
 beta
 preprod
 pre-prod
-
-# Production
 prod
 production
 live
 www-prod
-
-# API
 api
 api1
 api2
@@ -113,8 +91,6 @@ rest
 graphql
 gateway
 services
-
-# Admin
 admin
 administrator
 panel
@@ -126,8 +102,6 @@ dashboard
 manage
 management
 cms
-
-# Internal
 internal
 intranet
 extranet
@@ -135,16 +109,12 @@ private
 corp
 corporate
 hq
-
-# Mobile
 m
 mobile
 app
 apps
 ios
 android
-
-# CDN/Static
 cdn
 cdn1
 cdn2
@@ -157,8 +127,6 @@ images
 media
 video
 audio
-
-# Security
 secure
 ssl
 vpn
@@ -169,8 +137,6 @@ login
 oauth
 identity
 id
-
-# Monitoring
 monitor
 monitoring
 status
@@ -184,8 +150,6 @@ nagios
 zabbix
 newrelic
 datadog
-
-# CI/CD
 ci
 cd
 build
@@ -198,16 +162,12 @@ bamboo
 travis
 circleci
 teamcity
-
-# Containers
 docker
 k8s
 kubernetes
 container
 registry
 rancher
-
-# Cloud
 cloud
 aws
 azure
@@ -217,9 +177,6 @@ s3
 storage
 backup
 bak
-
-# Networking
-gateway
 proxy
 lb
 loadbalancer
@@ -229,8 +186,6 @@ apache
 router
 switch
 firewall
-
-# Directory Services
 ldap
 ad
 dc
@@ -239,8 +194,6 @@ dc2
 domain
 directory
 ad1
-
-# Collaboration
 jira
 confluence
 wiki
@@ -257,17 +210,12 @@ chat
 im
 meet
 zoom
-video
-
-# CRM/ERP
 crm
 erp
 sap
 oracle
 salesforce
 hubspot
-
-# E-commerce
 shop
 store
 ecommerce
@@ -275,8 +223,6 @@ cart
 checkout
 payment
 pay
-
-# Blog/Content
 blog
 news
 press
@@ -285,8 +231,6 @@ wordpress
 wp
 drupal
 joomla
-
-# User
 users
 user
 account
@@ -304,8 +248,6 @@ partner
 partners
 vendor
 vendors
-
-# Office
 office
 office365
 o365
@@ -314,47 +256,33 @@ calendar
 cal
 sharepoint
 onedrive
-
-# Social
 social
 facebook
 twitter
 linkedin
 instagram
 youtube
-
-# Marketing
 marketing
 campaign
 campaigns
 promo
 landing
 lp
-
-# Finance
 finance
 accounting
 payroll
 invoice
 billing
-pay
-payment
-
-# HR
 hr
 career
 careers
 jobs
 recruiting
 talent
-
-# Legal
 legal
 compliance
 privacy
 terms
-
-# Misc Common
 home
 homepage
 portal
@@ -364,7 +292,6 @@ info
 information
 about
 contact
-services
 service
 products
 product
@@ -372,8 +299,6 @@ solutions
 features
 pricing
 faq
-terms
-privacy
 sitemap
 search
 old
@@ -383,8 +308,6 @@ tmp
 cache
 archive
 archives
-
-# Servers
 server
 server1
 server2
@@ -400,8 +323,6 @@ primary
 secondary
 backup1
 backup2
-
-# Remote Access
 remote
 rdp
 vnc
@@ -409,8 +330,6 @@ ssh
 terminal
 console
 shell
-
-# Voip/Communication
 pbx
 voip
 sip
@@ -419,16 +338,12 @@ phone
 telephone
 call
 voice
-
-# IoT
 iot
 device
 devices
 sensor
 sensors
 hub
-
-# Version Control
 git
 svn
 hg
@@ -437,16 +352,12 @@ repository
 vcs
 source
 src
-
-# Logs
 log
 logs
 logging
 syslog
 splunk
 graylog
-
-# Network Services
 ntp
 time
 dhcp

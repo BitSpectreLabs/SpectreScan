@@ -10,6 +10,7 @@ Pillow>=10.0.0  # For GUI logo display
 # Scanning dependencies
 scapy>=2.5.0  # Optional for SYN scanning
 dnspython>=2.4.0  # DNS enumeration
+lupa>=2.0  # Optional for NSE Lua script execution
 
 # Report generation
 reportlab>=4.0.0  # Optional for PDF reports and charts

@@ -79,9 +79,87 @@
 - **Randomized Scanning** - Randomize target and port order
 - **Graceful Error Handling** - Robust exception management
 
-### 🗄️ Comprehensive Signature Databases
+### Enterprise Features
 
-SpectreScan v1.2.0 includes **extensive signature databases** for professional-grade service detection:
+- **IPv6 Support** - Full IPv6 address and network scanning
+- **SSL/TLS Analysis** - Certificate validation, cipher suite analysis, vulnerability detection
+- **CVE Matching** - Automatic CVE lookup for detected services
+- **REST API Server** - Full-featured FastAPI server with WebSocket support
+- **Scan Resume/Checkpoint** - Save and resume interrupted scans
+- **Configuration Files** - TOML-based configuration with layered settings
+- **DNS Enumeration** - Subdomain discovery, zone transfers, record lookup
+- **Markdown Reports** - Generate Markdown-formatted scan reports
+- **Shell Completion** - Tab completion for Bash, Zsh, Fish, PowerShell
+
+### NSE Compatibility
+
+- **NSE Script Engine** - Execute Nmap-compatible Lua scripts
+- **10 Bundled Scripts** - http-title, ssl-cert, ssh-hostkey, ftp-anon, and more
+- **Script Categories** - auth, brute, discovery, exploit, vuln, safe, default
+- **Script Arguments** - Pass custom arguments to scripts
+- **Lua Runtime** - Powered by Lupa (LuaJIT Python binding)
+
+### Distributed Scanning
+
+- **Master-Worker Architecture** - Coordinate large-scale scans across multiple machines
+- **Worker Registration** - Automatic worker discovery and registration
+- **Task Distribution** - Intelligent load balancing across workers
+- **Result Aggregation** - Combine results from all workers automatically
+- **Health Monitoring** - Track worker status with heartbeat checks
+- **Automatic Failover** - Retry failed tasks on healthy workers
+- **Secure Communication** - TLS encryption between master and workers
+- **Message Queue Support** - Redis/RabbitMQ for reliable task delivery
+
+### Web Dashboard
+
+- **Real-time Monitoring** - Live scan progress via WebSocket
+- **Interactive Dashboard** - Modern responsive web interface
+- **User Authentication** - Session-based login with secure password hashing
+- **Role-Based Access Control** - 5 roles with 30+ granular permissions
+- **Scan Management** - Start, stop, pause scans from the browser
+- **History Browser** - View and search past scan results
+- **Profile Management** - Create and manage scan profiles via UI
+- **Dark Theme** - Professional dark mode interface
+- **Mobile Responsive** - Works on desktop and mobile devices
+
+### Scan Scheduling and Automation
+
+- **Cron-like Scheduling** - Full cron expression support with wildcards, ranges, lists, and steps
+- **Multiple Schedule Types** - One-time, cron, interval, daily, weekly, and monthly schedules
+- **Pre/Post Scan Hooks** - Execute shell commands or Python functions before and after scans
+- **Conditional Execution** - Run scans only if host is up, port changed, or within time window
+- **Scan Chaining** - Link scans together to create automated workflows
+- **Background Daemon** - Persistent scheduler daemon for continuous monitoring
+- **Schedule Persistence** - SQLite-based storage for reliable schedule management
+- **Schedule Management CLI** - Full CRUD operations via `spectrescan schedule` command
+
+### Proxy Support
+
+- **SOCKS4/4a/5 Support** - Full SOCKS proxy protocol support with authentication
+- **HTTP/HTTPS Proxy** - HTTP CONNECT method proxy support
+- **Proxy Chaining** - Route traffic through multiple proxies (multi-hop)
+- **Proxy Pool** - Manage multiple proxies with automatic rotation
+- **Rotation Strategies** - Round-robin, random, least-used, or fastest proxy selection
+- **Tor Integration** - Built-in Tor network support with circuit renewal
+- **Health Checking** - Automatic proxy health monitoring and validation
+- **Per-target Configuration** - Different proxies for different targets
+
+### IDS/IPS Evasion
+
+- **Packet Fragmentation** - Split packets to evade signature detection
+- **Decoy Scanning** - Send packets from spoofed source IPs
+- **Source Port Manipulation** - Use common ports (53, 80, 443) as source
+- **TTL Manipulation** - Control time-to-live values for stealth
+- **Bad Checksum Packets** - Send malformed packets that IDS may ignore
+- **Idle/Zombie Scanning** - Use third-party hosts for stealth scanning
+- **Timing-based Evasion** - Slow scans to avoid rate-based detection
+- **Host Randomization** - Randomize target scan order
+- **Custom Packet Crafting** - Full control over packet construction
+- **Evasion Profiles** - Preset configurations (stealth, paranoid, aggressive)
+
+### Comprehensive Signature Databases
+
+SpectreScan includes **extensive signature databases** for professional-grade service detection:
 
 #### **CPE Dictionary** (`cpe-dictionary.json`)
 - **200+ CPE mappings** for Common Platform Enumeration
@@ -152,9 +230,10 @@ SpectreScan v1.2.0 includes **extensive signature databases** for professional-g
 
 ### Multiple Interfaces
 
-- **CLI** - Powerful command-line interface with Typer
+- **CLI** - Powerful command-line interface with Typer and shell completion
 - **TUI** - Beautiful terminal UI with Textual framework
 - **GUI** - User-friendly tkinter graphical interface
+- **REST API** - FastAPI server with WebSocket support and JWT authentication
 
 ### Professional Reporting
 
@@ -162,6 +241,8 @@ SpectreScan v1.2.0 includes **extensive signature databases** for professional-g
 - **CSV** - Spreadsheet-compatible format
 - **XML** - Standardized markup format
 - **HTML** - Professional branded reports with logo and summary
+- **PDF** - Charts and executive summaries with ReportLab
+- **Markdown** - Documentation-friendly format
 
 ### Scan Presets
 
@@ -952,37 +1033,339 @@ ftp             │█████ 3
 
 ### Custom Report Templates
 
-Create custom report layouts using Jinja2 templates:
+Create custom report layouts using the advanced templating engine with Jinja2:
 
 ```bash
-# Install Jinja2 for template support
+# Install Jinja2 for template support (included in requirements.txt)
 pip install jinja2
 
 # Create default template examples
-python -c "from spectrescan.reports import create_default_templates; create_default_templates()"
+spectrescan template init
 
-# Use custom template
-spectrescan scan 192.168.1.1 --quick --custom-template my_template.html --output report.html
+# List all templates
+spectrescan template list
+
+# Use custom template in scan
+spectrescan scan 192.168.1.1 --quick --custom-template my_report.html --output report.html
 ```
 
-**Features:**
-- Jinja2-based template engine
-- Custom variables and filters
-- Multiple format support (HTML, text, markdown, XML)
-- Template library management
-- Professional report layouts
+#### Template Management CLI
 
-**Template Example:**
+**List Templates:**
+```bash
+# List all templates
+spectrescan template list
+
+# List by category
+spectrescan template list --category security
+
+# List by format
+spectrescan template list --format html
+```
+
+**Create Templates:**
+```bash
+# Create from file
+spectrescan template create my_report.html --file template.html
+
+# Create with metadata
+spectrescan template create security_audit.md \
+  --file template.md \
+  --author "Your Name" \
+  --description "Security audit report" \
+  --category security \
+  --tags scan,audit,security
+```
+
+**Validate Templates:**
+```bash
+# Check syntax and show variables
+spectrescan template validate my_report.html
+```
+
+**Search Templates:**
+```bash
+# Search by name or description
+spectrescan template search security
+
+# Filter by tags
+spectrescan template search --tags vulnerability,cve
+```
+
+**Import/Export:**
+```bash
+# Export template with metadata
+spectrescan template export my_report.html --output template.zip
+
+# Import template from marketplace
+spectrescan template import downloaded_template.zip
+```
+
+#### Template Features
+
+**1. Custom Jinja2 Filters:**
+
+Built-in filters for common formatting needs:
+
 ```jinja2
-# My Custom Report
-## Scan Results for {{ timestamp }}
+<!-- Format bytes -->
+{{ file_size|format_bytes }}  <!-- Output: "1.5 MB" -->
 
-Total Open Ports: {{ open_ports|length }}
+<!-- Format duration -->
+{{ scan_time|format_duration }}  <!-- Output: "2m 30s" -->
 
+<!-- Severity color -->
+{{ vulnerability.severity|severity_color }}  <!-- Output: "#dc2626" -->
+
+<!-- Port category -->
+{{ port|port_category }}  <!-- Output: "well-known" -->
+```
+
+**2. Template Metadata:**
+
+Every template includes structured metadata:
+
+```json
+{
+  "name": "security_audit.html",
+  "version": "1.0.0",
+  "author": "Security Team",
+  "description": "Comprehensive security audit report",
+  "category": "security",
+  "tags": ["audit", "compliance", "vulnerability"],
+  "format": "html",
+  "license": "MIT",
+  "created_at": "2025-01-15T10:00:00Z"
+}
+```
+
+**3. Company Branding:**
+
+Add your company's branding to templates:
+
+```python
+from spectrescan.reports.templates import CompanyBranding
+
+branding = CompanyBranding(
+    company_name="Your Company",
+    logo_path="/path/to/logo.png",
+    colors={
+        'primary': '#0066cc',
+        'secondary': '#333333',
+        'accent': '#ff6600'
+    },
+    footer_text="Confidential - Internal Use Only",
+    contact_email="security@yourcompany.com",
+    website="https://yourcompany.com"
+)
+
+# Use in template
+context = {
+    'branding': branding,
+    'results': scan_results,
+    # ... other variables
+}
+```
+
+**4. Template Validation:**
+
+Validate templates before use:
+
+```python
+from spectrescan.reports.templates import TemplateValidator
+
+# Validate syntax
+is_valid, error = TemplateValidator.validate_syntax(template_content)
+
+# Extract variables
+variables = TemplateValidator.extract_variables(template_content)
+
+# Check required variables
+all_present, missing = TemplateValidator.check_required_variables(
+    template_content,
+    required=['tool', 'vendor', 'results']
+)
+```
+
+#### Template Context Variables
+
+Standard variables available in all templates:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `tool` | str | "SpectreScan" |
+| `vendor` | str | "BitSpectreLabs" |
+| `timestamp` | str | Current timestamp |
+| `results` | List[ScanResult] | All scan results |
+| `open_ports` | List[ScanResult] | Open ports only |
+| `closed_ports` | List[ScanResult] | Closed ports only |
+| `filtered_ports` | List[ScanResult] | Filtered ports only |
+| `summary` | Dict | Scan summary statistics |
+| `host_info` | Dict[str, HostInfo] | Host information |
+| `branding` | CompanyBranding | Company branding (optional) |
+
+**Custom variables** can be passed via `custom_vars` parameter.
+
+#### Example Templates
+
+**Simple Text Report:**
+```jinja2
+# {{ tool }} Scan Report
+Generated: {{ timestamp }}
+by {{ vendor }}
+
+## Summary
+- Total Ports: {{ results|length }}
+- Open Ports: {{ open_ports|length }}
+- Closed Ports: {{ closed_ports|length }}
+
+## Open Ports
 {% for result in open_ports %}
 - {{ result.port }}/{{ result.protocol }}: {{ result.service }}
+  {% if result.banner %}Banner: {{ result.banner }}{% endif %}
 {% endfor %}
 ```
+
+**HTML Report with Branding:**
+```jinja2
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ branding.company_name }} - Security Scan Report</title>
+    <style>
+        :root {
+            --primary: {{ branding.colors.primary }};
+            --secondary: {{ branding.colors.secondary }};
+        }
+        /* ... styles ... */
+    </style>
+</head>
+<body>
+    <header>
+        <img src="{{ branding.logo_path }}" alt="Logo">
+        <h1>Security Scan Report</h1>
+    </header>
+    
+    <section class="summary">
+        <h2>Scan Summary</h2>
+        <table>
+            <tr><td>Target</td><td>{{ summary.target }}</td></tr>
+            <tr><td>Duration</td><td>{{ summary.duration|format_duration }}</td></tr>
+            <tr><td>Open Ports</td><td>{{ open_ports|length }}</td></tr>
+        </table>
+    </section>
+    
+    <section class="results">
+        <h2>Open Ports</h2>
+        {% for result in open_ports %}
+        <div class="port">
+            <span class="port-number">{{ result.port }}</span>
+            <span class="service">{{ result.service }}</span>
+            <span class="category">{{ result.port|port_category }}</span>
+        </div>
+        {% endfor %}
+    </section>
+    
+    <footer>
+        <p>{{ branding.footer_text }}</p>
+        <p>Contact: {{ branding.contact_email }}</p>
+    </footer>
+</body>
+</html>
+```
+
+**Markdown Report:**
+```jinja2
+# {{ branding.company_name if branding else tool }} Scan Report
+
+**Generated:** {{ timestamp }}  
+**Target:** {{ summary.target }}  
+**Duration:** {{ summary.duration|format_duration }}
+
+---
+
+## 📊 Executive Summary
+
+- **Total Ports Scanned:** {{ results|length }}
+- **Open Ports:** {{ open_ports|length }}
+- **Closed Ports:** {{ closed_ports|length }}
+- **Filtered Ports:** {{ filtered_ports|length }}
+
+## 🔓 Open Ports
+
+| Port | Protocol | Service | Category | Banner |
+|------|----------|---------|----------|--------|
+{% for result in open_ports -%}
+| {{ result.port }} | {{ result.protocol }} | {{ result.service or 'unknown' }} | {{ result.port|port_category }} | {{ result.banner or '-' }} |
+{% endfor %}
+
+---
+
+*Report generated by {{ tool }} - {{ vendor }}*
+{% if branding %}
+*{{ branding.footer_text }}*
+{% endif %}
+```
+
+#### Template Categories
+
+- **general** - Basic scan reports
+- **security** - Security audit reports
+- **compliance** - Compliance and regulatory reports
+- **executive** - Executive summaries
+- **technical** - Detailed technical reports
+- **comparison** - Scan comparison reports
+
+#### Python API
+
+```python
+from spectrescan.reports.templates import TemplateManager, TemplateMetadata, CompanyBranding
+
+# Initialize manager
+manager = TemplateManager()
+
+# Create template
+template_content = """
+# Scan Report for {{ target }}
+Open Ports: {{ open_ports|length }}
+"""
+template_path = manager.create_template("my_report.md", template_content)
+
+# Set metadata
+metadata = TemplateMetadata(
+    name="my_report.md",
+    version="1.0.0",
+    author="Your Name",
+    description="Custom scan report",
+    category="general",
+    tags=["scan", "report"],
+    format="markdown"
+)
+manager.set_metadata("my_report.md", metadata)
+
+# Render template
+context = {
+    'target': '192.168.1.1',
+    'results': scan_results,
+    'open_ports': [r for r in scan_results if r.state == 'open'],
+    'branding': CompanyBranding("My Company")
+}
+rendered = manager.render_template("my_report.md", context)
+
+# Add custom filter
+def uppercase_filter(value):
+    return value.upper()
+
+manager.add_custom_filter('uppercase', uppercase_filter)
+
+# Export template
+manager.export_template("my_report.md", Path("template.zip"))
+
+# Import template
+manager.import_template(Path("downloaded_template.zip"))
+```
+
+**Requirements:** `pip install jinja2`
 
 ---
 
@@ -1060,6 +1443,735 @@ spectrescan 192.168.0.0/22 \
   --banner-grab \
   --threads 500
 ```
+
+---
+
+## <img src="https://cdn.simpleicons.org/lua/2C2D72" width="20" height="20" style="vertical-align: middle;"/> NSE Script Scanning
+
+SpectreScan supports Nmap Script Engine (NSE) compatibility, allowing you to run Lua-based scripts for advanced service detection and vulnerability scanning.
+
+### Quick Start
+
+```bash
+# Run default scripts on open ports
+spectrescan scan 192.168.1.1 -sC
+
+# Run specific script
+spectrescan script run http-title -t 192.168.1.1 -p 80
+
+# Run scripts by category
+spectrescan scan 192.168.1.1 --script discovery
+
+# Run multiple scripts with wildcards
+spectrescan scan 192.168.1.1 --script "http-*,ssl-*"
+```
+
+### Script Management
+
+```bash
+# List all available scripts
+spectrescan script list
+
+# Show script categories
+spectrescan script categories
+
+# Get detailed script information
+spectrescan script info http-title
+
+# Run script with arguments
+spectrescan script run http-title -t example.com -p 80 --script-args "path=/admin"
+```
+
+### Bundled Scripts
+
+| Script | Description | Category |
+|--------|-------------|----------|
+| `http-title` | Extract HTTP page titles | discovery, safe |
+| `ssl-cert` | SSL certificate information | discovery, safe |
+| `ssh-hostkey` | SSH host key fingerprints | discovery, safe |
+| `ftp-anon` | Check for anonymous FTP login | auth, safe |
+| `smb-os-discovery` | SMB operating system discovery | discovery, safe |
+| `http-headers` | HTTP response headers | discovery, safe |
+| `http-methods` | HTTP allowed methods | discovery, safe |
+| `mysql-info` | MySQL server information | discovery, safe |
+| `redis-info` | Redis server information | discovery, safe |
+| `smtp-commands` | SMTP supported commands | discovery, safe |
+
+### Script Categories
+
+- **auth** - Authentication testing
+- **brute** - Brute-force password attacks
+- **discovery** - Host and service discovery
+- **exploit** - Exploitation scripts
+- **vuln** - Vulnerability detection
+- **safe** - Non-intrusive, safe scripts
+- **default** - Scripts run with `-sC`
+
+**Requirements:** Install Lupa for Lua support: `pip install lupa`
+
+---
+
+## <img src="https://cdn.simpleicons.org/sqlite/003B57" width="20" height="20" style="vertical-align: middle;"/> Custom Vulnerability Database
+
+Manage your own local vulnerability database with custom definitions, severity scores, and matching rules.
+
+### Quick Start
+
+```bash
+# Initialize the database
+spectrescan vulndb init
+
+# Add a vulnerability
+spectrescan vulndb add \
+  --id "CVE-2023-1234" \
+  --title "Example Vulnerability" \
+  --severity "High" \
+  --cvss 8.5 \
+  --product "Apache.*" \
+  --version "< 2.4.50"
+
+# Search for vulnerabilities
+spectrescan vulndb search "Apache"
+
+# List all vulnerabilities
+spectrescan vulndb list
+```
+
+### Features
+
+- **Local SQLite Storage** - Fast, self-contained database
+- **Custom Definitions** - Define your own vulnerabilities
+- **Regex Matching** - Match products using regular expressions
+- **Version Ranges** - Support for complex version constraints (`<`, `<=`, `>`, `>=`, `==`, `!=`)
+- **Import/Export** - JSON and CSV support for bulk operations
+- **CVSS Scoring** - Track severity with standard CVSS scores
+
+### Import/Export
+
+```bash
+# Import from JSON
+spectrescan vulndb import vulns.json
+
+# Export to JSON
+spectrescan vulndb export backup.json
+```
+
+---
+
+## <img src="https://cdn.simpleicons.org/kubernetes/326CE5" width="20" height="20" style="vertical-align: middle;"/> Distributed Scanning
+
+Scale your scans across multiple machines with the distributed scanning feature.
+
+### Architecture
+
+```
+┌─────────────────┐
+│  Master Node    │
+│  (Coordinator)  │
+└────────┬────────┘
+         │
+    ┌────┴────┬────────┬────────┐
+    ▼         ▼        ▼        ▼
+┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐
+│Worker1│ │Worker2│ │Worker3│ │Worker4│
+└───────┘ └───────┘ └───────┘ └───────┘
+```
+
+### Quick Start
+
+**Start Master Node:**
+```bash
+# Initialize cluster with 4 workers
+spectrescan cluster init --workers 4
+
+# Check cluster status
+spectrescan cluster status
+```
+
+**Start Worker Nodes:**
+```bash
+# On each worker machine
+spectrescan cluster worker --master 192.168.1.100:5000
+```
+
+**Run Distributed Scan:**
+```bash
+# Scan large network across all workers
+spectrescan cluster scan 10.0.0.0/8 --workers all
+
+# Scan with specific workers
+spectrescan cluster scan 192.168.0.0/16 --workers worker1,worker2
+```
+
+### CLI Commands
+
+```bash
+# Cluster management
+spectrescan cluster init              # Initialize master node
+spectrescan cluster status            # Show cluster status
+spectrescan cluster workers           # List registered workers
+spectrescan cluster shutdown          # Shutdown cluster
+
+# Worker management
+spectrescan cluster worker            # Start worker node
+spectrescan cluster worker --id node1 # Start with custom ID
+
+# Distributed scanning
+spectrescan cluster scan <target>     # Run distributed scan
+spectrescan cluster results <scan-id> # Get aggregated results
+```
+
+### Features
+
+- **Automatic Load Balancing** - Tasks distributed evenly across workers
+- **Health Monitoring** - Continuous heartbeat checks
+- **Automatic Failover** - Failed tasks reassigned to healthy workers
+- **Result Aggregation** - Results merged from all workers
+- **Secure Communication** - TLS encryption (optional)
+- **Message Queue** - Redis/RabbitMQ support for reliability
+
+---
+
+## <img src="https://cdn.simpleicons.org/googlechrome/4285F4" width="20" height="20" style="vertical-align: middle;"/> Web Dashboard
+
+Access SpectreScan through a modern web interface with real-time updates.
+
+### Quick Start
+
+```bash
+# Start web dashboard on default port (8080)
+spectrescan web
+
+# Custom port
+spectrescan web --port 9000
+
+# Don't auto-open browser
+spectrescan web --no-browser
+
+# Enable debug mode
+spectrescan web --debug
+```
+
+Then open your browser to `http://localhost:8080`
+
+### Default Credentials
+
+| Username | Password | Role |
+|----------|----------|------|
+| admin | admin | Super Admin |
+
+**Important:** Change the default password after first login!
+
+### Features
+
+**Dashboard:**
+- Real-time scan progress with WebSocket updates
+- Live results streaming
+- Statistics overview (open ports, services, scan history)
+- Recent scan activity feed
+
+**Scan Management:**
+- Start new scans from the browser
+- Configure scan parameters (ports, timing, detection options)
+- Stop/pause running scans
+- View detailed scan results
+
+**History Browser:**
+- Search and filter past scans
+- Compare scans side-by-side
+- Export results in multiple formats
+- Delete old scan records
+
+**Profile Management:**
+- Create and save scan profiles
+- Load profiles for quick scanning
+- Share profiles across team
+
+### Role-Based Access Control (RBAC)
+
+| Role | Permissions |
+|------|-------------|
+| **Viewer** | View scans and results only |
+| **Operator** | Execute scans, manage own profiles |
+| **Analyst** | Full scan access, export data |
+| **Admin** | User management, system settings |
+| **Super Admin** | Full access, security settings |
+
+### API Endpoints
+
+The web dashboard exposes a REST API:
+
+```bash
+# Authentication
+POST /api/auth/login          # Login with credentials
+POST /api/auth/logout         # Logout current session
+
+# Scans
+GET  /api/scans               # List all scans
+POST /api/scans               # Start new scan
+GET  /api/scans/{id}          # Get scan details
+DELETE /api/scans/{id}        # Delete scan
+
+# Profiles
+GET  /api/profiles            # List profiles
+POST /api/profiles            # Create profile
+
+# WebSocket
+WS   /ws                      # Real-time updates
+```
+
+### Screenshots
+
+**Dashboard View:**
+- Dark theme with BitSpectreLabs branding
+- Real-time scan progress indicator
+- Statistics cards with key metrics
+- Recent activity feed
+
+**Scan Results:**
+- Interactive results table
+- Sortable columns
+- State filtering (open/closed/filtered)
+- Expandable port details
+
+---
+
+## <img src="https://cdn.simpleicons.org/clockify/03A9F4" width="20" height="20" style="vertical-align: middle;"/> Scan Scheduling and Automation
+
+Automate your scans with the powerful scheduling engine. Schedule one-time, recurring, or conditional scans with pre/post hooks.
+
+### Quick Start
+
+```bash
+# List all schedules
+spectrescan schedule list
+
+# Add a daily scan at 2 AM
+spectrescan schedule add --name "Nightly Scan" --target 192.168.1.0/24 --type daily --at "02:00"
+
+# Add a cron-based scan (every Monday at 9 AM)
+spectrescan schedule add --name "Weekly Audit" --target 10.0.0.1 --type cron --cron "0 9 * * 1"
+
+# Add an interval scan (every 4 hours)
+spectrescan schedule add --name "Frequent Check" --target example.com --type interval --interval "4h"
+
+# Start the scheduler daemon
+spectrescan schedule run --daemon
+```
+
+### Schedule Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `once` | One-time scan at specific datetime | `--type once --at "2025-01-20 14:00"` |
+| `cron` | Full cron expression support | `--type cron --cron "0 2 * * *"` |
+| `interval` | Repeat every N seconds/minutes/hours | `--type interval --interval "30m"` |
+| `daily` | Run daily at specific time | `--type daily --at "09:00"` |
+| `weekly` | Run on specific days of week | `--type weekly --days "mon,wed,fri" --at "08:00"` |
+| `monthly` | Run on specific day of month | `--type monthly --day 1 --at "00:00"` |
+
+### Cron Expression Syntax
+
+```
+ ┌───────────── minute (0-59)
+ │ ┌───────────── hour (0-23)
+ │ │ ┌───────────── day of month (1-31)
+ │ │ │ ┌───────────── month (1-12)
+ │ │ │ │ ┌───────────── day of week (0-6, Monday=0)
+ │ │ │ │ │
+ * * * * *
+```
+
+**Supported Patterns:**
+- `*` - Any value
+- `5` - Specific value
+- `1-5` - Range of values
+- `1,3,5` - List of values
+- `*/15` - Step values (every 15)
+- `1-10/2` - Range with step (1,3,5,7,9)
+
+**Shorthand Expressions:**
+- `@hourly` - Every hour (0 * * * *)
+- `@daily` - Every day at midnight (0 0 * * *)
+- `@weekly` - Every Monday at midnight (0 0 * * 0)
+- `@monthly` - First day of month at midnight (0 0 1 * *)
+
+### CLI Commands
+
+```bash
+# Schedule Management
+spectrescan schedule list                    # List all schedules
+spectrescan schedule add [options]           # Create new schedule
+spectrescan schedule remove <id>             # Delete schedule
+spectrescan schedule pause <id>              # Pause schedule
+spectrescan schedule resume <id>             # Resume schedule
+
+# Execution
+spectrescan schedule run <id>                # Run schedule now (manual trigger)
+spectrescan schedule run --daemon            # Start scheduler daemon
+
+# Status & History
+spectrescan schedule status <id>             # View schedule status
+spectrescan schedule history <id>            # View execution history
+```
+
+### Schedule Options
+
+```bash
+spectrescan schedule add \
+  --name "Production Audit" \           # Schedule name (required)
+  --target 192.168.1.0/24 \             # Target to scan (required)
+  --type cron \                         # Schedule type
+  --cron "0 2 * * *" \                  # Cron expression
+  --ports "1-1000" \                    # Port range
+  --scan-type tcp \                     # Scan type (tcp/syn/udp/async)
+  --profile "Quick Scan" \              # Use saved profile
+  --pre-hook "echo Starting scan" \     # Pre-scan hook command
+  --post-hook "notify-send Done" \      # Post-scan hook command
+  --enabled                             # Enable immediately
+```
+
+### Pre/Post Scan Hooks
+
+Execute commands or scripts before and after scans:
+
+```bash
+# Shell command hooks
+spectrescan schedule add --name "Audit" --target 10.0.0.1 \
+  --type daily --at "03:00" \
+  --pre-hook "echo 'Scan starting' >> /var/log/scans.log" \
+  --post-hook "/scripts/process_results.sh"
+
+# Multiple hooks (in Python API)
+from spectrescan.core.scheduler import ScanScheduler, ScanHook, HookType
+
+scheduler = ScanScheduler()
+schedule = scheduler.create_schedule(
+    name="Audit",
+    target="192.168.1.1",
+    schedule_type="daily",
+    time_spec={"at": "03:00"},
+    hooks=[
+        ScanHook(type=HookType.PRE_SCAN, command="backup_config.sh"),
+        ScanHook(type=HookType.POST_SCAN, command="send_report.py"),
+        ScanHook(type=HookType.ON_ERROR, command="alert_team.sh"),
+        ScanHook(type=HookType.ON_CHANGE, command="notify_changes.py"),
+    ]
+)
+```
+
+### Conditional Execution
+
+Run scans only when conditions are met:
+
+```python
+from spectrescan.core.scheduler import ExecutionCondition, ConditionType
+
+# Only scan if host responds to ping
+condition = ExecutionCondition(
+    type=ConditionType.HOST_UP,
+    parameters={"timeout": 5}
+)
+
+# Only during business hours
+condition = ExecutionCondition(
+    type=ConditionType.TIME_WINDOW,
+    parameters={"start": "09:00", "end": "17:00"}
+)
+
+# Only if previous scan succeeded
+condition = ExecutionCondition(
+    type=ConditionType.PREVIOUS_SUCCESS
+)
+```
+
+### Scan Chaining
+
+Create automated workflows by chaining scans:
+
+```python
+from spectrescan.core.scheduler import ScanScheduler
+
+scheduler = ScanScheduler()
+
+# Create parent scan
+parent = scheduler.create_schedule(
+    name="Initial Discovery",
+    target="192.168.1.0/24",
+    schedule_type="daily",
+    time_spec={"at": "01:00"}
+)
+
+# Chain child scan (runs after parent completes)
+child = scheduler.create_schedule(
+    name="Deep Scan",
+    target="192.168.1.1",  # Specific host found
+    schedule_type="once",
+    time_spec={},
+    chain_from=parent.id
+)
+```
+
+### Background Daemon
+
+Run the scheduler as a persistent background service:
+
+```bash
+# Start daemon (foreground)
+spectrescan schedule run --daemon
+
+# Run as background process
+nohup spectrescan schedule run --daemon > scheduler.log 2>&1 &
+
+# Or use systemd (Linux)
+# Create /etc/systemd/system/spectrescan-scheduler.service
+```
+
+**Systemd Service Example:**
+```ini
+[Unit]
+Description=SpectreScan Scheduler Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=scanner
+ExecStart=/usr/local/bin/spectrescan schedule run --daemon
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+---
+
+## <img src="https://cdn.simpleicons.org/hackaday/1A1A1A" width="20" height="20" style="vertical-align: middle;"/> IDS/IPS Evasion
+
+Evade intrusion detection systems with advanced evasion techniques. SpectreScan provides multiple methods to avoid detection during reconnaissance.
+
+### Quick Start
+
+```bash
+# Use stealth evasion profile
+spectrescan scan 192.168.1.1 --evasion stealth
+
+# Use paranoid profile (maximum stealth)
+spectrescan scan 192.168.1.1 --evasion paranoid
+
+# Custom decoy scanning with 5 random decoys
+spectrescan scan 192.168.1.1 -D RND:5
+
+# Specific decoy IPs
+spectrescan scan 192.168.1.1 -D 10.0.0.1,10.0.0.2,ME,10.0.0.3
+
+# Fragment packets to evade signature detection
+spectrescan scan 192.168.1.1 -f --mtu 8
+
+# Manipulate source port (use DNS port)
+spectrescan scan 192.168.1.1 -g 53
+
+# Use common source ports (random from 53, 80, 443)
+spectrescan scan 192.168.1.1 --common-source-port
+
+# TTL manipulation
+spectrescan scan 192.168.1.1 --ttl 64 --ttl-style random
+
+# Slow scan to avoid rate-based detection
+spectrescan scan 192.168.1.1 --scan-delay 5.0 --max-parallelism 1
+```
+
+### Evasion Profiles
+
+| Profile | Description | Use Case |
+|---------|-------------|----------|
+| `none` | No evasion techniques | Normal scanning |
+| `stealth` | Balanced stealth and speed | General IDS evasion |
+| `paranoid` | Maximum stealth, very slow | High-security networks |
+| `aggressive` | Fast with basic evasion | Quick reconnaissance |
+| `custom` | User-configured options | Fine-tuned evasion |
+
+### Evasion Techniques
+
+#### Decoy Scanning (`-D`)
+
+Send packets appearing to come from multiple source IPs:
+
+```bash
+# 5 random decoys (ME = your real IP position)
+spectrescan scan 192.168.1.1 -D RND:5
+
+# Specific decoys with your position
+spectrescan scan 192.168.1.1 -D 10.0.0.1,ME,10.0.0.2
+
+# Control number of random decoys
+spectrescan scan 192.168.1.1 --decoy-count 10
+```
+
+#### Packet Fragmentation (`-f`)
+
+Fragment IP packets to evade signature-based detection:
+
+```bash
+# Enable fragmentation
+spectrescan scan 192.168.1.1 -f
+
+# Custom MTU (fragment size)
+spectrescan scan 192.168.1.1 -f --mtu 8
+
+# Requires scapy for raw packet crafting
+```
+
+#### Source Port Manipulation (`-g`)
+
+Use specific source ports that may bypass firewall rules:
+
+```bash
+# Use DNS port (53) as source
+spectrescan scan 192.168.1.1 -g 53
+
+# Use HTTP port (80) as source
+spectrescan scan 192.168.1.1 -g 80
+
+# Random source port
+spectrescan scan 192.168.1.1 --random-source-port
+
+# Random from common ports (53, 80, 443, 20, 21, 25)
+spectrescan scan 192.168.1.1 --common-source-port
+```
+
+#### TTL Manipulation (`--ttl`)
+
+Control Time-To-Live values:
+
+```bash
+# Fixed TTL
+spectrescan scan 192.168.1.1 --ttl 64
+
+# TTL styles
+spectrescan scan 192.168.1.1 --ttl-style fixed      # Use exact TTL
+spectrescan scan 192.168.1.1 --ttl-style random     # Random 32-128
+spectrescan scan 192.168.1.1 --ttl-style incremental # Increment each packet
+spectrescan scan 192.168.1.1 --ttl-style decremental # Decrement each packet
+spectrescan scan 192.168.1.1 --ttl-style os_mimic   # Mimic OS defaults
+```
+
+#### Bad Checksums (`--badsum`)
+
+Send packets with intentionally bad checksums:
+
+```bash
+# IDS may ignore packets with bad checksums
+spectrescan scan 192.168.1.1 --badsum
+```
+
+#### Idle/Zombie Scanning (`-sI`)
+
+Use an idle host to scan through (stealth scanning):
+
+```bash
+# Use zombie host for scanning
+spectrescan scan 192.168.1.1 -sI 10.0.0.100
+
+# Specify zombie port (default: 80)
+spectrescan scan 192.168.1.1 -sI 10.0.0.100 --zombie-port 443
+```
+
+#### Timing-Based Evasion
+
+Slow scans to avoid rate-based detection:
+
+```bash
+# Delay between packets (seconds)
+spectrescan scan 192.168.1.1 --scan-delay 5.0
+
+# Limit parallel connections
+spectrescan scan 192.168.1.1 --max-parallelism 1
+
+# Random delay jitter (0.5-1.5x delay)
+spectrescan scan 192.168.1.1 --scan-delay 2.0
+```
+
+#### Host Randomization
+
+Randomize the order of target hosts:
+
+```bash
+spectrescan scan 192.168.1.0/24 --randomize-hosts
+```
+
+### CLI Options Summary
+
+| Option | Description |
+|--------|-------------|
+| `-e/--evasion` | Evasion profile (none/stealth/paranoid/aggressive) |
+| `-D/--decoys` | Decoy IPs (comma-separated, RND:N for random) |
+| `--decoy-count` | Number of random decoys |
+| `-g/--source-port` | Specific source port |
+| `--random-source-port` | Use random source port |
+| `--common-source-port` | Use common ports (53,80,443) |
+| `--ttl` | TTL value (1-255) |
+| `--ttl-style` | TTL style (fixed/random/incremental/decremental/os_mimic) |
+| `-f/--fragment` | Enable packet fragmentation |
+| `--mtu` | Fragment MTU size |
+| `--badsum` | Send bad checksums |
+| `--randomize-hosts` | Randomize host scan order |
+| `--scan-delay` | Delay between probes (seconds) |
+| `--max-parallelism` | Max concurrent connections |
+| `-sI/--idle-scan` | Zombie host for idle scan |
+| `--zombie-port` | Zombie host port |
+| `--data-length` | Append random data to packets |
+
+### Python API
+
+```python
+from spectrescan.core.evasion import (
+    EvasionManager,
+    EvasionConfig,
+    EvasionProfile,
+    DecoyConfig,
+    FragmentConfig,
+    TimingConfig,
+    TimingLevel
+)
+
+# Create evasion configuration
+config = EvasionConfig(
+    profile=EvasionProfile.STEALTH,
+    decoys=DecoyConfig(
+        enabled=True,
+        decoy_ips=["10.0.0.1", "10.0.0.2"],
+        random_count=3,
+        include_real_ip=True
+    ),
+    fragmentation=FragmentConfig(
+        enabled=True,
+        mtu=8
+    ),
+    timing=TimingConfig(
+        level=TimingLevel.SNEAKY,
+        scan_delay=2.0,
+        max_parallelism=5
+    ),
+    source_port=53,
+    ttl=64,
+    randomize_hosts=True
+)
+
+# Create evasion manager
+evasion = EvasionManager(config)
+
+# Use with scanner
+from spectrescan.core.scanner import PortScanner
+scanner = PortScanner(evasion=evasion)
+results = scanner.scan("192.168.1.1")
+```
+
+### Requirements
+
+- **Scapy** (optional): Required for advanced packet crafting (fragmentation, decoys, TTL manipulation)
+- **Root/Admin**: Some techniques require elevated privileges
+- Without scapy: Basic timing and ordering evasion still available
 
 ---
 

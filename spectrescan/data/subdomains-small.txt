@@ -1,10 +1,3 @@
-# SpectreScan Subdomain Wordlist - Small
-# Common subdomains for quick enumeration
-# by BitSpectreLabs
-#
-# Usage: spectrescan dns example.com --wordlist small
-# Contains: ~100 most common subdomains
-
 www
 mail
 ftp

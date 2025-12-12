@@ -73,6 +73,36 @@ except ImportError:
     ZoneTransferResult = None
     format_dns_report = None
 
+# NSE Engine - optional import (requires lupa for execution)
+try:
+    from spectrescan.core.nse_engine import (
+        NSEEngine,
+        NSEScriptInfo,
+        NSEScriptResult,
+        NSEHostInfo,
+        NSEPortInfo,
+        NSECategory,
+        NSEScriptParser,
+        NSELibrary,
+        parse_script_args,
+        format_nse_results,
+        create_nse_engine,
+    )
+    NSE_AVAILABLE = True
+except ImportError:
+    NSE_AVAILABLE = False
+    NSEEngine = None
+    NSEScriptInfo = None
+    NSEScriptResult = None
+    NSEHostInfo = None
+    NSEPortInfo = None
+    NSECategory = None
+    NSEScriptParser = None
+    NSELibrary = None
+    parse_script_args = None
+    format_nse_results = None
+    create_nse_engine = None
+
 __all__ = [
     "PortScanner",
     "ScanPreset",
@@ -129,4 +159,17 @@ __all__ = [
     "SubdomainResult",
     "ZoneTransferResult",
     "format_dns_report",
+    # NSE Engine
+    "NSE_AVAILABLE",
+    "NSEEngine",
+    "NSEScriptInfo",
+    "NSEScriptResult",
+    "NSEHostInfo",
+    "NSEPortInfo",
+    "NSECategory",
+    "NSEScriptParser",
+    "NSELibrary",
+    "parse_script_args",
+    "format_nse_results",
+    "create_nse_engine",
 ]

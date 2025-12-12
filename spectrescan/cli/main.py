@@ -108,6 +108,33 @@ def scan(
     cve_check: bool = typer.Option(False, "--cve-check", help="Check detected services for CVEs (requires internet)"),
     randomize: bool = typer.Option(False, "--randomize", help="Randomize scan order"),
     
+    # Proxy options
+    proxy: Optional[str] = typer.Option(None, "--proxy", help="Proxy URL (e.g., socks5://127.0.0.1:9050)"),
+    proxy_file: Optional[Path] = typer.Option(None, "--proxy-file", help="File with proxy URLs (one per line)"),
+    proxy_rotate: bool = typer.Option(False, "--proxy-rotate", help="Rotate through proxies in pool"),
+    proxy_strategy: str = typer.Option("round_robin", "--proxy-strategy", help="Rotation strategy: round_robin, random, least_used, fastest"),
+    tor: bool = typer.Option(False, "--tor", help="Use Tor network (socks5://127.0.0.1:9050)"),
+    proxy_check: bool = typer.Option(False, "--proxy-check", help="Check proxy health before scanning"),
+    
+    # Evasion options
+    evasion: Optional[str] = typer.Option(None, "--evasion", "-e", help="Evasion profile: none, stealth, paranoid, aggressive"),
+    decoys: Optional[str] = typer.Option(None, "-D", "--decoys", help="Decoy IPs (comma-separated, use RND for random)"),
+    decoy_count: int = typer.Option(0, "--decoy-count", help="Number of random decoys to generate"),
+    source_port: Optional[int] = typer.Option(None, "-g", "--source-port", help="Use specific source port"),
+    random_source_port: bool = typer.Option(False, "--random-source-port", help="Randomize source port"),
+    common_source_port: bool = typer.Option(False, "--common-source-port", help="Use common source port (53, 80, 443)"),
+    ttl: Optional[int] = typer.Option(None, "--ttl", help="Set IP Time-To-Live"),
+    ttl_style: str = typer.Option("default", "--ttl-style", help="TTL style: linux, windows, solaris, random"),
+    fragment: bool = typer.Option(False, "-f", "--fragment", help="Fragment packets"),
+    fragment_mtu: int = typer.Option(8, "--mtu", help="Set MTU for fragmentation"),
+    bad_checksum: bool = typer.Option(False, "--badsum", help="Send packets with bad checksums"),
+    randomize_hosts: bool = typer.Option(False, "--randomize-hosts", help="Randomize target host order"),
+    scan_delay: Optional[float] = typer.Option(None, "--scan-delay", help="Delay between probes (ms)"),
+    max_parallelism: int = typer.Option(100, "--max-parallelism", help="Maximum concurrent probes"),
+    zombie_host: Optional[str] = typer.Option(None, "-sI", "--idle-scan", help="Idle scan using zombie host"),
+    zombie_port: int = typer.Option(80, "--zombie-port", help="Zombie host port for idle scan"),
+    data_length: int = typer.Option(0, "--data-length", help="Append random data to packets"),
+    
     # Output
     json_output: Optional[Path] = typer.Option(None, "--json", help="Save JSON output"),
     csv_output: Optional[Path] = typer.Option(None, "--csv", help="Save CSV output"),
@@ -141,6 +168,24 @@ def scan(
       spectrescan scan 192.168.1.1,192.168.1.2,example.com --quick
       
       spectrescan scan --target-file targets.txt --top-ports
+      
+      # Proxy scanning
+      spectrescan scan 192.168.1.1 --proxy socks5://127.0.0.1:9050
+      
+      spectrescan scan 192.168.1.1 --tor
+      
+      spectrescan scan 192.168.1.1 --proxy-file proxies.txt --proxy-rotate
+      
+      # Evasion scanning
+      spectrescan scan 192.168.1.1 --evasion stealth
+      
+      spectrescan scan 192.168.1.1 -D 1.1.1.1,2.2.2.2,RND,RND --quick
+      
+      spectrescan scan 192.168.1.1 -f --mtu 8 --ttl 64
+      
+      spectrescan scan 192.168.1.1 -g 53 --randomize-hosts
+      
+      spectrescan scan 192.168.1.1 -sI zombie.example.com
     """
     # Validate input
     if not target and not target_file:
@@ -229,12 +274,155 @@ def scan(
             console.print(f"[red]Error:[/red] {e}", style="bold")
             sys.exit(1)
     
+    # Configure proxy
+    proxy_config = None
+    proxy_pool_config = None
+    
+    if tor:
+        # Use Tor network
+        from spectrescan.core.proxy import create_tor_proxy
+        proxy_config = create_tor_proxy()
+        if not quiet:
+            console.print("[cyan]Using Tor network (socks5://127.0.0.1:9050)[/cyan]\n")
+    elif proxy:
+        # Single proxy
+        from spectrescan.core.proxy import ProxyConfig
+        try:
+            proxy_config = ProxyConfig.from_url(proxy, timeout=config.timeout)
+            if not quiet:
+                console.print(f"[cyan]Using proxy: {proxy_config.url}[/cyan]\n")
+        except ValueError as e:
+            console.print(f"[red]Error:[/red] Invalid proxy URL: {e}", style="bold")
+            sys.exit(1)
+    elif proxy_file:
+        # Load proxies from file
+        from spectrescan.core.proxy import load_proxies_from_file, create_proxy_pool, ProxyHealthChecker
+        import asyncio
+        
+        try:
+            proxies = load_proxies_from_file(proxy_file)
+            if not proxies:
+                console.print(f"[red]Error:[/red] No valid proxies found in {proxy_file}", style="bold")
+                sys.exit(1)
+            
+            if proxy_rotate:
+                proxy_pool_config = create_proxy_pool(proxies, rotation_strategy=proxy_strategy)
+                if not quiet:
+                    console.print(f"[cyan]Loaded {len(proxies)} proxies with {proxy_strategy} rotation[/cyan]\n")
+            else:
+                # Use first proxy
+                proxy_config = proxies[0]
+                if not quiet:
+                    console.print(f"[cyan]Using proxy: {proxy_config.url}[/cyan]\n")
+            
+            # Health check if requested
+            if proxy_check and (proxy_pool_config or proxy_config):
+                if not quiet:
+                    console.print("[dim]Checking proxy health...[/dim]")
+                checker = ProxyHealthChecker(timeout=5.0)
+                
+                if proxy_pool_config:
+                    results = asyncio.run(checker.check_pool(proxy_pool_config))
+                    healthy_count = sum(1 for s in results.values() if s.value == "healthy")
+                    console.print(f"[cyan]Healthy proxies: {healthy_count}/{len(results)}[/cyan]\n")
+                elif proxy_config:
+                    status = asyncio.run(checker.check_proxy(proxy_config))
+                    if status.value != "healthy":
+                        console.print(f"[yellow]Warning: Proxy status: {status.value}[/yellow]\n")
+                    else:
+                        console.print(f"[green]Proxy is healthy (latency: {proxy_config.latency_ms:.0f}ms)[/green]\n")
+        except FileNotFoundError:
+            console.print(f"[red]Error:[/red] Proxy file not found: {proxy_file}", style="bold")
+            sys.exit(1)
+        except Exception as e:
+            console.print(f"[red]Error:[/red] Failed to load proxies: {e}", style="bold")
+            sys.exit(1)
+    
+    # Configure evasion
+    evasion_manager = None
+    
+    # Parse decoys
+    decoy_list = None
+    random_decoy_count = decoy_count
+    if decoys:
+        decoy_list = []
+        for d in decoys.split(","):
+            d = d.strip()
+            if d.upper() == "RND":
+                random_decoy_count += 1
+            else:
+                decoy_list.append(d)
+    
+    # Check if any evasion option is specified
+    has_evasion = any([
+        evasion, decoy_list, random_decoy_count > 0, source_port,
+        random_source_port, common_source_port, ttl,
+        ttl_style != "default", fragment, bad_checksum,
+        randomize_hosts, scan_delay, zombie_host, data_length > 0,
+    ])
+    
+    if has_evasion:
+        from spectrescan.core.evasion import EvasionManager
+        
+        # Get timing level from timing option or default
+        timing_level = 3  # Normal
+        if timing:
+            timing_map = {"T0": 0, "T1": 1, "T2": 2, "T3": 3, "T4": 4, "T5": 5}
+            timing_level = timing_map.get(timing.upper(), 3)
+        
+        evasion_manager = EvasionManager.from_cli_args(
+            evasion=evasion,
+            decoys=decoy_list,
+            decoy_count=random_decoy_count,
+            source_port=source_port,
+            randomize_source_port=random_source_port,
+            common_source_port=common_source_port,
+            ttl=ttl,
+            ttl_style=ttl_style,
+            fragment=fragment,
+            fragment_mtu=fragment_mtu,
+            bad_checksum=bad_checksum,
+            randomize_hosts=randomize_hosts,
+            randomize_ports=randomize,
+            timing_level=timing_level,
+            max_parallelism=max_parallelism,
+            scan_delay=scan_delay,
+            zombie_host=zombie_host,
+            zombie_port=zombie_port,
+            data_length=data_length,
+        )
+        
+        if not quiet:
+            summary = evasion_manager.get_summary()
+            console.print("[cyan]Evasion Mode Enabled[/cyan]")
+            if summary["profile"] != "none":
+                console.print(f"  Profile: {summary['profile']}")
+            if summary["techniques"]:
+                console.print(f"  Techniques: {', '.join(summary['techniques'])}")
+            if summary["decoys"] > 0:
+                console.print(f"  Decoys: {summary['decoys']}")
+            if summary["fragmentation"]:
+                console.print(f"  Fragmentation: MTU {fragment_mtu}")
+            if summary["source_port"]:
+                console.print(f"  Source Port: {summary['source_port']}")
+            if summary["ttl"]:
+                console.print(f"  TTL: {summary['ttl']}")
+            if summary["idle_scan"]:
+                console.print(f"  Idle Scan: {zombie_host}:{zombie_port}")
+            console.print()
+    
     # Display scan info
     if not quiet:
         info_table = Table(show_header=False, box=None)
         info_table.add_row("Target:", f"[cyan]{target}[/cyan]")
         info_table.add_row("Ports:", f"{len(config.ports)}")
         info_table.add_row("Scan Type:", f"{', '.join(config.scan_types).upper()}")
+        
+        # Show proxy info
+        if proxy_config:
+            info_table.add_row("Proxy:", f"{proxy_config.url}")
+        elif proxy_pool_config:
+            info_table.add_row("Proxy Pool:", f"{len(proxy_pool_config)} proxies ({proxy_strategy})")
         
         # Show timing template info
         if hasattr(config, 'timing_template') and config.timing_template:
@@ -246,11 +434,15 @@ def scan(
             info_table.add_row("Threads:", f"{config.threads}")
             info_table.add_row("Timeout:", f"{config.timeout}s")
         
+        # Show evasion info
+        if evasion_manager and evasion_manager.is_evasion_enabled():
+            info_table.add_row("Evasion:", "[yellow]Enabled[/yellow]")
+        
         console.print(Panel(info_table, title="[bold]Scan Configuration[/bold]", border_style="blue"))
         console.print()
     
     # Create scanner
-    scanner = PortScanner(config)
+    scanner = PortScanner(config, proxy=proxy_config, proxy_pool=proxy_pool_config, evasion=evasion_manager)
     
     # Perform scan
     try:
@@ -1144,6 +1336,282 @@ def launch_tui(
     run_tui(target, ports)
 
 
+@app.command(name="script")
+def script_command(
+    action: str = typer.Argument(..., help="Action: list, info, run, categories"),
+    script_name: Optional[str] = typer.Argument(None, help="Script name (for info/run)"),
+    target: Optional[str] = typer.Option(None, "-t", "--target", help="Target host for script execution"),
+    port: Optional[int] = typer.Option(None, "-p", "--port", help="Target port for script execution"),
+    script_args: Optional[str] = typer.Option(None, "--script-args", help="Script arguments (key=value,...)"),
+    category: Optional[str] = typer.Option(None, "-c", "--category", help="Filter by category (for list)"),
+    verbose: bool = typer.Option(False, "-v", "--verbose", help="Show verbose output"),
+):
+    """
+    Manage and run NSE (Nmap Script Engine) compatible scripts.
+    
+    SpectreScan supports executing Lua-based NSE scripts for advanced
+    service detection, vulnerability scanning, and security assessment.
+    
+    Examples:
+    
+      # List all available scripts
+      spectrescan script list
+      
+      # List scripts by category
+      spectrescan script list --category discovery
+      
+      # Show script information
+      spectrescan script info http-title
+      
+      # Run a script against a target
+      spectrescan script run http-title --target 192.168.1.1 --port 80
+      
+      # Run with script arguments
+      spectrescan script run http-methods --target example.com --port 443 --script-args "http.useragent=Mozilla/5.0"
+      
+      # Show available categories
+      spectrescan script categories
+    
+    Note: Lua script execution requires the 'lupa' package:
+      pip install lupa
+    """
+    import asyncio
+    
+    if action == "list":
+        # List available scripts
+        _script_list(category, verbose)
+    
+    elif action == "categories":
+        # Show available categories
+        _script_categories()
+    
+    elif action == "info":
+        # Show script information
+        if not script_name:
+            console.print("[red]Error:[/red] Script name required for 'info' action")
+            sys.exit(1)
+        _script_info(script_name, verbose)
+    
+    elif action == "run":
+        # Run a script
+        if not script_name:
+            console.print("[red]Error:[/red] Script name required for 'run' action")
+            sys.exit(1)
+        if not target:
+            console.print("[red]Error:[/red] Target required for 'run' action (use --target)")
+            sys.exit(1)
+        
+        # Parse script args
+        args = {}
+        if script_args:
+            from spectrescan.core.nse_engine import parse_script_args
+            args = parse_script_args(script_args)
+        
+        asyncio.run(_script_run(script_name, target, port, args, verbose))
+    
+    else:
+        console.print(f"[red]Error:[/red] Unknown action '{action}'")
+        console.print("Valid actions: list, info, run, categories")
+        sys.exit(1)
+
+
+def _script_list(category: Optional[str] = None, verbose: bool = False):
+    """List available NSE scripts."""
+    try:
+        from spectrescan.core.nse_engine import NSEEngine, NSECategory
+        
+        engine = NSEEngine()
+        engine.load_scripts()  # Load all scripts from directory
+        scripts = [engine.get_script(name) for name in engine.list_scripts()]
+        
+        if not scripts:
+            console.print("[yellow]No NSE scripts found.[/yellow]")
+            console.print(f"Scripts are loaded from: {engine.scripts_dir}")
+            return
+        
+        # Filter by category if specified
+        if category:
+            try:
+                cat_enum = NSECategory(category.lower())
+                scripts = [s for s in scripts if cat_enum in s.categories]
+            except ValueError:
+                console.print(f"[red]Error:[/red] Unknown category '{category}'")
+                console.print(f"Valid categories: {', '.join(c.value for c in NSECategory)}")
+                sys.exit(1)
+        
+        # Create table
+        table = Table(title="Available NSE Scripts", box=None)
+        table.add_column("Script", style="cyan")
+        table.add_column("Categories", style="yellow")
+        if verbose:
+            table.add_column("Description", style="white")
+        
+        for script in sorted(scripts, key=lambda s: s.name):
+            cats = ", ".join(c.value for c in script.categories[:3])
+            if len(script.categories) > 3:
+                cats += f" (+{len(script.categories) - 3})"
+            
+            if verbose:
+                desc = script.description[:60] + "..." if len(script.description) > 60 else script.description
+                table.add_row(script.name, cats, desc)
+            else:
+                table.add_row(script.name, cats)
+        
+        console.print(table)
+        console.print(f"\n[green]Total:[/green] {len(scripts)} scripts")
+        
+        if not engine.lua_available:
+            console.print("\n[yellow]Note:[/yellow] Lua runtime not available. Install with: pip install lupa")
+    
+    except Exception as e:
+        console.print(f"[red]Error listing scripts:[/red] {e}")
+        sys.exit(1)
+
+
+def _script_categories():
+    """Show available script categories."""
+    from spectrescan.core.nse_engine import NSECategory
+    
+    table = Table(title="NSE Script Categories", box=None)
+    table.add_column("Category", style="cyan")
+    table.add_column("Description", style="white")
+    
+    category_descriptions = {
+        "auth": "Authentication and credential testing",
+        "broadcast": "Broadcast network discovery",
+        "brute": "Brute-force password attacks",
+        "default": "Default scripts run with -sC",
+        "discovery": "Host and service discovery",
+        "dos": "Denial of service testing",
+        "exploit": "Exploitation scripts",
+        "external": "External service queries",
+        "fuzzer": "Fuzzing and input testing",
+        "intrusive": "Potentially harmful scripts",
+        "malware": "Malware detection",
+        "safe": "Safe, non-intrusive scripts",
+        "version": "Version detection enhancement",
+        "vuln": "Vulnerability detection",
+    }
+    
+    for cat in NSECategory:
+        desc = category_descriptions.get(cat.value, "")
+        table.add_row(cat.value, desc)
+    
+    console.print(table)
+
+
+def _script_info(script_name: str, verbose: bool = False):
+    """Show information about a specific script."""
+    try:
+        from spectrescan.core.nse_engine import NSEEngine
+        
+        engine = NSEEngine()
+        engine.load_scripts()  # Load all scripts from directory
+        script = engine.get_script(script_name)
+        
+        if not script:
+            console.print(f"[red]Error:[/red] Script '{script_name}' not found")
+            console.print("\nUse 'spectrescan script list' to see available scripts")
+            sys.exit(1)
+        
+        # Display script info
+        console.print(Panel(f"[bold cyan]{script.name}[/bold cyan]", title="NSE Script"))
+        
+        console.print(f"\n[bold]Description:[/bold]")
+        console.print(f"  {script.description}")
+        
+        console.print(f"\n[bold]Categories:[/bold]")
+        console.print(f"  {', '.join(c.value for c in script.categories)}")
+        
+        if script.author:
+            console.print(f"\n[bold]Author:[/bold]")
+            console.print(f"  {script.author}")
+        
+        if script.license:
+            console.print(f"\n[bold]License:[/bold]")
+            console.print(f"  {script.license}")
+        
+        if script.dependencies:
+            console.print(f"\n[bold]Dependencies:[/bold]")
+            for dep in script.dependencies:
+                console.print(f"  - {dep}")
+        
+        console.print(f"\n[bold]Path:[/bold]")
+        console.print(f"  {script.path}")
+        
+        if not engine.lua_available:
+            console.print("\n[yellow]Note:[/yellow] Lua runtime not available. Install with: pip install lupa")
+    
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}")
+        sys.exit(1)
+
+
+async def _script_run(script_name: str, target: str, port: Optional[int], 
+                      args: dict, verbose: bool = False):
+    """Run an NSE script against a target."""
+    try:
+        from spectrescan.core.nse_engine import NSEEngine, NSEHostInfo, NSEPortInfo, format_nse_results
+        
+        engine = NSEEngine()
+        engine.load_scripts()  # Load all scripts from directory
+        
+        if not engine.lua_available:
+            console.print("[red]Error:[/red] Lua runtime not available")
+            console.print("Install with: [cyan]pip install lupa[/cyan]")
+            sys.exit(1)
+        
+        # Get script info first
+        script = engine.get_script(script_name)
+        if not script:
+            console.print(f"[red]Error:[/red] Script '{script_name}' not found")
+            sys.exit(1)
+        
+        console.print(f"[cyan]Running script:[/cyan] {script_name}")
+        console.print(f"[cyan]Target:[/cyan] {target}" + (f":{port}" if port else ""))
+        
+        if args:
+            console.print(f"[cyan]Arguments:[/cyan] {args}")
+        
+        console.print()
+        
+        # Create host/port info
+        host = NSEHostInfo(ip=target)
+        port_info = NSEPortInfo(number=port or 0, protocol="tcp", state="open") if port else None
+        
+        # Run the script
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("Executing script...", total=None)
+            result = await engine.run_script(script_name, host, port_info, args)
+            progress.update(task, completed=True)
+        
+        # Display results
+        if result.success:
+            console.print("[green]Script completed successfully[/green]\n")
+            
+            if result.output:
+                console.print("[bold]Output:[/bold]")
+                # Format output nicely - pass as list, not dict
+                formatted = format_nse_results([result])
+                console.print(formatted)
+            else:
+                console.print("[yellow]No output returned[/yellow]")
+        else:
+            console.print(f"[red]Script failed:[/red] {result.error}")
+            sys.exit(1)
+        
+        if verbose and result.execution_time:
+            console.print(f"\n[dim]Execution time: {result.execution_time:.2f}s[/dim]")
+    
+    except Exception as e:
+        console.print(f"[red]Error running script:[/red] {e}")
+        sys.exit(1)
+
+
 @app.command(name="api")
 def api_server(
     host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind to"),
@@ -1258,6 +1726,100 @@ def api_server(
         workers=workers if not reload else 1,
         access_log=True,
     )
+
+
+@app.command(name="web")
+def web_dashboard(
+    host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind to"),
+    port: int = typer.Option(8080, "--port", "-p", help="Port to bind to"),
+    debug: bool = typer.Option(False, "--debug", help="Enable debug mode"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Don't open browser automatically"),
+):
+    """
+    Start the Web Dashboard UI server.
+    
+    The web dashboard provides a modern browser-based interface for SpectreScan
+    with real-time scan monitoring, interactive results visualization, and
+    network topology graphs.
+    
+    Features:
+      - Real-time scan progress via WebSocket
+      - Interactive results filtering and sorting
+      - Network topology visualization
+      - User authentication with role-based access
+      - Dark/light theme support
+      - Mobile-responsive design
+    
+    Examples:
+    
+      # Start web dashboard on default port 8080
+      spectrescan web
+      
+      # Start on custom port
+      spectrescan web --port 9000
+      
+      # Start without opening browser
+      spectrescan web --no-browser
+      
+      # Enable debug mode
+      spectrescan web --debug
+    
+    Default Login:
+      Username: admin
+      Password: admin
+      (Change this immediately in production!)
+    """
+    try:
+        import uvicorn
+    except ImportError:
+        console.print(
+            "[red]Error:[/red] uvicorn is required for the web dashboard.\n"
+            "Install with: [cyan]pip install uvicorn[standard][/cyan]"
+        )
+        sys.exit(1)
+    
+    # Check FastAPI availability
+    try:
+        from spectrescan.web.app import create_web_app, FASTAPI_AVAILABLE
+        if not FASTAPI_AVAILABLE:
+            raise ImportError("FastAPI not available")
+    except ImportError:
+        console.print(
+            "[red]Error:[/red] FastAPI is required for the web dashboard.\n"
+            "Install with: [cyan]pip install fastapi uvicorn[standard][/cyan]"
+        )
+        sys.exit(1)
+    
+    print_logo()
+    
+    console.print("\n[bold cyan]Starting SpectreScan Web Dashboard...[/bold cyan]\n")
+    console.print(f"[green]Host:[/green] {host}")
+    console.print(f"[green]Port:[/green] {port}")
+    console.print(f"[green]Debug:[/green] {'Yes' if debug else 'No'}")
+    
+    display_host = "localhost" if host == "0.0.0.0" else host
+    dashboard_url = f"http://{display_host}:{port}"
+    
+    console.print(f"\n[cyan]Dashboard:[/cyan] {dashboard_url}")
+    console.print(f"[cyan]Login:[/cyan] {dashboard_url}/login")
+    console.print(f"[cyan]Health:[/cyan] {dashboard_url}/health")
+    console.print(f"\n[yellow]Default credentials: admin / admin[/yellow]\n")
+    
+    # Open browser automatically
+    if not no_browser:
+        import webbrowser
+        import threading
+        
+        def open_browser():
+            import time
+            time.sleep(1.5)  # Wait for server to start
+            webbrowser.open(dashboard_url)
+        
+        threading.Thread(target=open_browser, daemon=True).start()
+    
+    # Create and run dashboard
+    dashboard = create_web_app(host=host, port=port, debug=debug)
+    dashboard.run()
 
 
 @app.command(name="profile")
@@ -2071,12 +2633,1037 @@ def completion_cmd(
         sys.exit(1)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISTRIBUTED SCANNING COMMANDS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@app.command(name="cluster")
+def cluster_command(
+    action: str = typer.Argument(..., help="Action: init, status, scan, workers, add-worker, remove-worker, stop"),
+    target: Optional[str] = typer.Argument(None, help="Target for scan action"),
+    
+    # Cluster options
+    workers: int = typer.Option(2, "--workers", "-w", help="Number of workers for init/scale"),
+    queue_type: str = typer.Option("memory", "--queue", help="Queue type: memory or redis"),
+    redis_host: str = typer.Option("localhost", "--redis-host", help="Redis host"),
+    redis_port: int = typer.Option(6379, "--redis-port", help="Redis port"),
+    
+    # Scan options
+    ports: Optional[str] = typer.Option(None, "-p", "--ports", help="Port specification"),
+    scan_type: str = typer.Option("tcp", "--type", help="Scan type: tcp, syn, udp, async"),
+    timeout: float = typer.Option(3600, "--timeout", help="Scan timeout in seconds"),
+    
+    # Worker options
+    worker_id: Optional[str] = typer.Option(None, "--worker-id", help="Worker ID for remove action"),
+    capacity: int = typer.Option(4, "--capacity", help="Worker capacity"),
+    tags: Optional[str] = typer.Option(None, "--tags", help="Worker tags (comma-separated)"),
+    
+    # Output options
+    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file for results"),
+    output_format: str = typer.Option("json", "--format", help="Output format: json, csv"),
+):
+    """
+    Distributed scanning cluster management.
+    
+    Actions:
+        init        - Initialize and start a cluster with workers
+        status      - Show cluster status
+        scan        - Submit a distributed scan
+        workers     - List all workers
+        add-worker  - Add a local worker
+        remove-worker - Remove a worker
+        stop        - Stop the cluster
+    
+    Examples:
+        spectrescan cluster init --workers 4
+        spectrescan cluster status
+        spectrescan cluster scan 192.168.1.0/24 -p 1-1000
+        spectrescan cluster workers
+        spectrescan cluster add-worker --capacity 8
+        spectrescan cluster stop
+    """
+    import asyncio
+    
+    try:
+        asyncio.run(_cluster_action(
+            action=action,
+            target=target,
+            workers=workers,
+            queue_type=queue_type,
+            redis_host=redis_host,
+            redis_port=redis_port,
+            ports=ports,
+            scan_type=scan_type,
+            timeout=timeout,
+            worker_id=worker_id,
+            capacity=capacity,
+            tags=tags,
+            output=output,
+            output_format=output_format
+        ))
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Interrupted[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
+# Global cluster instance for persistence across commands
+_cluster_instance = None
+
+
+async def _cluster_action(
+    action: str,
+    target: Optional[str],
+    workers: int,
+    queue_type: str,
+    redis_host: str,
+    redis_port: int,
+    ports: Optional[str],
+    scan_type: str,
+    timeout: float,
+    worker_id: Optional[str],
+    capacity: int,
+    tags: Optional[str],
+    output: Optional[Path],
+    output_format: str
+):
+    """Execute cluster action."""
+    global _cluster_instance
+    
+    from spectrescan.distributed.cluster import ClusterManager, ClusterConfig, create_cluster
+    from spectrescan.distributed.models import TaskPriority
+    from spectrescan.core.utils import parse_ports, parse_target
+    
+    if action == "init":
+        # Initialize cluster
+        console.print("[cyan]Initializing distributed scanning cluster...[/cyan]")
+        
+        # Build queue config
+        queue_config = {}
+        if queue_type == "redis":
+            queue_config = {
+                "host": redis_host,
+                "port": redis_port
+            }
+        
+        config = ClusterConfig(
+            queue_type=queue_type,
+            queue_config=queue_config
+        )
+        
+        _cluster_instance = ClusterManager(config=config)
+        
+        if not await _cluster_instance.start():
+            console.print("[red]Failed to start cluster[/red]")
+            return
+        
+        # Add workers
+        for i in range(workers):
+            worker_tags = tags.split(",") if tags else []
+            wid = await _cluster_instance.add_local_worker(
+                capacity=capacity,
+                tags=worker_tags
+            )
+            if wid:
+                console.print(f"  [green]Added worker {wid}[/green]")
+        
+        status = _cluster_instance.get_cluster_status()
+        console.print(f"\n[green]Cluster initialized![/green]")
+        console.print(f"  Cluster ID: {status.cluster_id}")
+        console.print(f"  Workers: {status.total_workers}")
+        console.print(f"  Total capacity: {status.total_capacity} concurrent tasks")
+        console.print("\n[dim]Use 'spectrescan cluster scan <target>' to submit scans[/dim]")
+        
+        # Keep running
+        console.print("\n[cyan]Cluster running. Press Ctrl+C to stop.[/cyan]")
+        try:
+            while True:
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            pass
+        finally:
+            await _cluster_instance.stop()
+            console.print("[yellow]Cluster stopped[/yellow]")
+    
+    elif action == "status":
+        # Show cluster status
+        if not _cluster_instance or not _cluster_instance.is_running:
+            console.print("[yellow]No cluster running. Use 'spectrescan cluster init' to start.[/yellow]")
+            return
+        
+        status = _cluster_instance.get_cluster_status()
+        
+        table = Table(title="Cluster Status", show_header=False)
+        table.add_column("Property", style="cyan")
+        table.add_column("Value", style="green")
+        
+        table.add_row("Cluster ID", status.cluster_id)
+        table.add_row("Master ID", status.master_id)
+        table.add_row("Total Workers", str(status.total_workers))
+        table.add_row("Active Workers", str(status.active_workers))
+        table.add_row("Idle Workers", str(status.idle_workers))
+        table.add_row("Total Capacity", str(status.total_capacity))
+        table.add_row("Available Capacity", str(status.available_capacity))
+        table.add_row("Pending Tasks", str(status.pending_tasks))
+        table.add_row("Running Tasks", str(status.running_tasks))
+        table.add_row("Completed Tasks", str(status.completed_tasks))
+        table.add_row("Failed Tasks", str(status.failed_tasks))
+        table.add_row("Uptime", f"{status.uptime_seconds:.1f}s")
+        
+        console.print(table)
+    
+    elif action == "scan":
+        # Submit distributed scan
+        if not target:
+            console.print("[red]Error:[/red] Target required for scan")
+            return
+        
+        if not _cluster_instance or not _cluster_instance.is_running:
+            # Create temporary cluster
+            console.print("[cyan]Starting temporary cluster...[/cyan]")
+            _cluster_instance = await create_cluster(workers=workers, queue_type=queue_type)
+        
+        # Parse targets
+        target_list = parse_target(target)
+        if not target_list:
+            console.print(f"[red]Error:[/red] Invalid target: {target}")
+            return
+        
+        # Parse ports
+        port_list = parse_ports(ports) if ports else list(range(1, 1001))
+        
+        console.print(f"[cyan]Submitting distributed scan...[/cyan]")
+        console.print(f"  Targets: {len(target_list)}")
+        console.print(f"  Ports: {len(port_list)}")
+        console.print(f"  Scan type: {scan_type}")
+        
+        task_id = await _cluster_instance.submit_scan(
+            targets=target_list,
+            ports=port_list,
+            scan_type=scan_type,
+            priority=TaskPriority.NORMAL
+        )
+        
+        if not task_id:
+            console.print("[red]Failed to submit scan[/red]")
+            return
+        
+        console.print(f"  Task ID: {task_id}")
+        console.print("\n[cyan]Waiting for scan completion...[/cyan]")
+        
+        # Wait with progress updates
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("Scanning...", total=None)
+            
+            while True:
+                status = await _cluster_instance.get_scan_status(task_id)
+                if not status:
+                    break
+                
+                subtasks = status.get("subtasks", {})
+                progress.update(
+                    task,
+                    description=f"Scanning... {subtasks.get('completed', 0)}/{subtasks.get('total', 0)} subtasks"
+                )
+                
+                if status.get("status") in ("completed", "failed", "cancelled"):
+                    break
+                
+                await asyncio.sleep(0.5)
+        
+        # Get results
+        results = await _cluster_instance.get_scan_results(task_id)
+        
+        # Count open ports
+        open_ports = [r for r in results if r.get("state") == "open"]
+        
+        console.print(f"\n[green]Scan completed![/green]")
+        console.print(f"  Total results: {len(results)}")
+        console.print(f"  Open ports: {len(open_ports)}")
+        
+        # Show open ports
+        if open_ports:
+            table = Table(title="Open Ports")
+            table.add_column("Host", style="cyan")
+            table.add_column("Port", style="green")
+            table.add_column("Service", style="yellow")
+            
+            for result in open_ports[:50]:  # Limit to 50 for display
+                table.add_row(
+                    result.get("host", ""),
+                    str(result.get("port", "")),
+                    result.get("service", "unknown")
+                )
+            
+            if len(open_ports) > 50:
+                console.print(f"[dim](Showing first 50 of {len(open_ports)} open ports)[/dim]")
+            
+            console.print(table)
+        
+        # Save results
+        if output:
+            output_path = await _cluster_instance.save_results(task_id, output_format)
+            if output_path:
+                console.print(f"Results saved to: {output_path}")
+    
+    elif action == "workers":
+        # List workers
+        if not _cluster_instance or not _cluster_instance.is_running:
+            console.print("[yellow]No cluster running[/yellow]")
+            return
+        
+        workers_list = _cluster_instance.get_workers()
+        
+        if not workers_list:
+            console.print("[yellow]No workers registered[/yellow]")
+            return
+        
+        table = Table(title=f"Cluster Workers ({len(workers_list)} total)")
+        table.add_column("Worker ID", style="cyan")
+        table.add_column("Host", style="white")
+        table.add_column("Status", style="green")
+        table.add_column("Tasks", style="yellow")
+        table.add_column("Capacity", style="blue")
+        table.add_column("CPU", style="magenta")
+        table.add_column("Memory", style="magenta")
+        
+        for w in workers_list:
+            status_color = {
+                "idle": "green",
+                "busy": "yellow",
+                "offline": "red",
+                "error": "red"
+            }.get(w.status.value, "white")
+            
+            table.add_row(
+                w.worker_id,
+                f"{w.ip_address}:{w.port}",
+                f"[{status_color}]{w.status.value}[/{status_color}]",
+                str(w.current_tasks),
+                str(w.capacity),
+                f"{w.cpu_usage:.1f}%",
+                f"{w.memory_usage:.1f}%"
+            )
+        
+        console.print(table)
+    
+    elif action == "add-worker":
+        # Add a worker
+        if not _cluster_instance or not _cluster_instance.is_running:
+            console.print("[yellow]No cluster running[/yellow]")
+            return
+        
+        worker_tags = tags.split(",") if tags else []
+        wid = await _cluster_instance.add_local_worker(
+            capacity=capacity,
+            tags=worker_tags
+        )
+        
+        if wid:
+            console.print(f"[green]Added worker {wid}[/green]")
+        else:
+            console.print("[red]Failed to add worker[/red]")
+    
+    elif action == "remove-worker":
+        # Remove a worker
+        if not _cluster_instance or not _cluster_instance.is_running:
+            console.print("[yellow]No cluster running[/yellow]")
+            return
+        
+        if not worker_id:
+            console.print("[red]Error:[/red] --worker-id required")
+            return
+        
+        if await _cluster_instance.remove_local_worker(worker_id):
+            console.print(f"[green]Removed worker {worker_id}[/green]")
+        else:
+            console.print(f"[red]Worker {worker_id} not found[/red]")
+    
+    elif action == "stop":
+        # Stop cluster
+        if not _cluster_instance:
+            console.print("[yellow]No cluster running[/yellow]")
+            return
+        
+        await _cluster_instance.stop()
+        _cluster_instance = None
+        console.print("[green]Cluster stopped[/green]")
+    
+    else:
+        console.print(f"[red]Unknown action:[/red] {action}")
+        console.print("Valid actions: init, status, scan, workers, add-worker, remove-worker, stop")
+
+
+# =============================================================================
+# Schedule Command
+# =============================================================================
+
+@app.command(name="schedule")
+def schedule_command(
+    action: str = typer.Argument(..., help="Action: list, add, remove, pause, resume, run, status, history"),
+    schedule_id: Optional[str] = typer.Argument(None, help="Schedule ID (for remove, pause, resume, run, history)"),
+    # Add schedule options
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Schedule name"),
+    target: Optional[str] = typer.Option(None, "--target", "-t", help="Scan target"),
+    ports: str = typer.Option("1-1000", "--ports", "-p", help="Port specification"),
+    schedule_type: str = typer.Option("once", "--type", help="Schedule type: once, cron, interval, daily, weekly"),
+    cron: Optional[str] = typer.Option(None, "--cron", help="Cron expression (e.g., '0 2 * * *')"),
+    interval: Optional[str] = typer.Option(None, "--interval", "-i", help="Interval (e.g., '30m', '2h', '1d')"),
+    at_time: Optional[str] = typer.Option(None, "--at", help="Run at time (HH:MM for daily/weekly)"),
+    days: Optional[str] = typer.Option(None, "--days", help="Days of week for weekly (e.g., 'mon,wed,fri')"),
+    scan_type: str = typer.Option("tcp", "--scan-type", help="Scan type: tcp, syn, udp, async"),
+    profile: Optional[str] = typer.Option(None, "--profile", help="Use scan profile"),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="Schedule description"),
+    # Hook options
+    pre_hook: Optional[str] = typer.Option(None, "--pre-hook", help="Command to run before scan"),
+    post_hook: Optional[str] = typer.Option(None, "--post-hook", help="Command to run after scan"),
+    # Daemon options
+    daemon: bool = typer.Option(False, "--daemon", help="Run scheduler as daemon (for 'run' action)"),
+    check_interval: int = typer.Option(60, "--check-interval", help="Scheduler check interval in seconds"),
+    # Display options
+    limit: int = typer.Option(20, "--limit", "-l", help="Limit number of results"),
+    verbose: bool = typer.Option(False, "-v", "--verbose", help="Show verbose output"),
+):
+    """
+    Manage scheduled scans and run the scheduler daemon.
+    
+    SpectreScan supports automated scan scheduling with cron-like expressions,
+    one-time scheduled scans, recurring patterns, and scan chaining.
+    
+    Examples:
+    
+      # List all scheduled scans
+      spectrescan schedule list
+      
+      # Add a one-time scan scheduled for 2 AM
+      spectrescan schedule add --name "Nightly Scan" --target 192.168.1.0/24 --at "02:00" --type once
+      
+      # Add a daily recurring scan
+      spectrescan schedule add --name "Daily Check" --target 192.168.1.1 --type daily --at "09:00"
+      
+      # Add a cron-based schedule (every day at 3 AM)
+      spectrescan schedule add --name "Cron Scan" --target 10.0.0.1 --type cron --cron "0 3 * * *"
+      
+      # Add interval-based scan (every 2 hours)
+      spectrescan schedule add --name "Hourly Check" --target server.local --type interval --interval "2h"
+      
+      # Add weekly scan on specific days
+      spectrescan schedule add --name "Weekend Scan" --target 192.168.1.0/24 --type weekly --days "sat,sun" --at "01:00"
+      
+      # Add scan with hooks
+      spectrescan schedule add --name "Hooked Scan" --target 192.168.1.1 --pre-hook "echo Starting" --post-hook "notify.sh"
+      
+      # View schedule details
+      spectrescan schedule status <schedule_id>
+      
+      # Pause a schedule
+      spectrescan schedule pause <schedule_id>
+      
+      # Resume a paused schedule
+      spectrescan schedule resume <schedule_id>
+      
+      # Manually trigger a scheduled scan
+      spectrescan schedule run <schedule_id>
+      
+      # View run history for a schedule
+      spectrescan schedule history <schedule_id>
+      
+      # Start the scheduler daemon
+      spectrescan schedule run --daemon
+      
+      # Remove a schedule
+      spectrescan schedule remove <schedule_id>
+    
+    Schedule Types:
+      - once: One-time scheduled scan
+      - daily: Run every day at specified time
+      - weekly: Run on specific days of the week
+      - interval: Run every N minutes/hours/days
+      - cron: Cron expression for complex schedules
+    
+    Cron Shortcuts:
+      @hourly   = "0 * * * *"
+      @daily    = "0 0 * * *"
+      @weekly   = "0 0 * * 0"
+      @monthly  = "0 0 1 * *"
+    """
+    import asyncio
+    
+    if action == "list":
+        _schedule_list(limit, verbose)
+    
+    elif action == "add":
+        _schedule_add(
+            name=name,
+            target=target,
+            ports=ports,
+            schedule_type=schedule_type,
+            cron_expr=cron,
+            interval_str=interval,
+            at_time=at_time,
+            days=days,
+            scan_type=scan_type,
+            profile_name=profile,
+            description=description,
+            pre_hook=pre_hook,
+            post_hook=post_hook,
+            verbose=verbose,
+        )
+    
+    elif action == "remove":
+        if not schedule_id:
+            console.print("[red]Error:[/red] Schedule ID required for 'remove' action")
+            sys.exit(1)
+        _schedule_remove(schedule_id)
+    
+    elif action == "pause":
+        if not schedule_id:
+            console.print("[red]Error:[/red] Schedule ID required for 'pause' action")
+            sys.exit(1)
+        _schedule_pause(schedule_id)
+    
+    elif action == "resume":
+        if not schedule_id:
+            console.print("[red]Error:[/red] Schedule ID required for 'resume' action")
+            sys.exit(1)
+        _schedule_resume(schedule_id)
+    
+    elif action == "status":
+        _schedule_status(schedule_id, verbose)
+    
+    elif action == "history":
+        _schedule_history(schedule_id, limit)
+    
+    elif action == "run":
+        if daemon:
+            asyncio.run(_schedule_daemon(check_interval))
+        elif schedule_id:
+            asyncio.run(_schedule_run_now(schedule_id))
+        else:
+            console.print("[red]Error:[/red] Either --daemon or schedule_id required for 'run' action")
+            sys.exit(1)
+    
+    else:
+        console.print(f"[red]Error:[/red] Unknown action '{action}'")
+        console.print("Valid actions: list, add, remove, pause, resume, run, status, history")
+        sys.exit(1)
+
+
+def _schedule_list(limit: int = 20, verbose: bool = False):
+    """List all scheduled scans."""
+    from spectrescan.core.scheduler import ScanScheduler, ScheduleStatus, format_next_run
+    
+    scheduler = ScanScheduler()
+    schedules = scheduler.list_schedules(limit=limit)
+    
+    if not schedules:
+        console.print("[yellow]No scheduled scans found[/yellow]")
+        console.print("\nTo add a schedule, use:")
+        console.print("  [cyan]spectrescan schedule add --name 'My Scan' --target 192.168.1.1 --type daily --at '02:00'[/cyan]")
+        return
+    
+    table = Table(
+        title="Scheduled Scans",
+        show_header=True,
+        header_style="bold cyan"
+    )
+    table.add_column("ID", style="dim")
+    table.add_column("Name", style="cyan")
+    table.add_column("Target")
+    table.add_column("Type")
+    table.add_column("Status")
+    table.add_column("Next Run")
+    table.add_column("Runs", justify="right")
+    
+    for s in schedules:
+        status_color = {
+            ScheduleStatus.PENDING: "green",
+            ScheduleStatus.RUNNING: "yellow",
+            ScheduleStatus.PAUSED: "dim",
+            ScheduleStatus.FAILED: "red",
+            ScheduleStatus.COMPLETED: "blue",
+            ScheduleStatus.CANCELLED: "dim",
+        }.get(s.status, "white")
+        
+        table.add_row(
+            s.schedule_id[:8],
+            s.name,
+            s.target[:20] + ("..." if len(s.target) > 20 else ""),
+            s.schedule_type.value,
+            f"[{status_color}]{s.status.value}[/{status_color}]",
+            format_next_run(s.next_run),
+            f"{s.success_count}/{s.run_count}",
+        )
+    
+    console.print(table)
+    
+    if verbose:
+        # Show statistics
+        stats = scheduler.get_statistics()
+        console.print("\n[bold]Statistics:[/bold]")
+        console.print(f"  Total schedules: {stats['total_schedules']}")
+        console.print(f"  Active: {stats['active_schedules']}")
+        console.print(f"  Paused: {stats['paused_schedules']}")
+        console.print(f"  Total runs: {stats['total_runs']}")
+        console.print(f"  Success rate: {stats['successful_runs']}/{stats['total_runs']}")
+
+
+def _schedule_add(
+    name: Optional[str],
+    target: Optional[str],
+    ports: str,
+    schedule_type: str,
+    cron_expr: Optional[str],
+    interval_str: Optional[str],
+    at_time: Optional[str],
+    days: Optional[str],
+    scan_type: str,
+    profile_name: Optional[str],
+    description: Optional[str],
+    pre_hook: Optional[str],
+    post_hook: Optional[str],
+    verbose: bool,
+):
+    """Add a new scheduled scan."""
+    from spectrescan.core.scheduler import (
+        ScanScheduler, ScheduleType, HookType,
+        parse_cron_shorthand, parse_interval, DAYS_OF_WEEK
+    )
+    from datetime import datetime, timedelta
+    
+    if not name:
+        console.print("[red]Error:[/red] --name is required")
+        sys.exit(1)
+    
+    if not target:
+        console.print("[red]Error:[/red] --target is required")
+        sys.exit(1)
+    
+    scheduler = ScanScheduler()
+    
+    # Parse schedule type
+    try:
+        stype = ScheduleType(schedule_type.lower())
+    except ValueError:
+        console.print(f"[red]Error:[/red] Invalid schedule type '{schedule_type}'")
+        console.print("Valid types: once, cron, interval, daily, weekly, monthly")
+        sys.exit(1)
+    
+    # Parse time
+    run_at = None
+    if at_time:
+        try:
+            hour, minute = map(int, at_time.split(":"))
+            run_at = datetime.now().replace(hour=hour, minute=minute, second=0, microsecond=0)
+            if run_at <= datetime.now():
+                run_at += timedelta(days=1)
+        except ValueError:
+            console.print(f"[red]Error:[/red] Invalid time format '{at_time}'. Use HH:MM")
+            sys.exit(1)
+    
+    # Parse cron expression
+    cron_expression = None
+    if cron_expr:
+        cron_expression = parse_cron_shorthand(cron_expr)
+    
+    # Parse interval
+    interval_minutes = None
+    if interval_str:
+        try:
+            interval_minutes = parse_interval(interval_str)
+        except ValueError as e:
+            console.print(f"[red]Error:[/red] {e}")
+            sys.exit(1)
+    
+    # Parse days of week
+    days_of_week = []
+    if days:
+        for day in days.lower().split(","):
+            day = day.strip()
+            if day in DAYS_OF_WEEK:
+                days_of_week.append(DAYS_OF_WEEK[day])
+            else:
+                console.print(f"[red]Error:[/red] Invalid day '{day}'")
+                console.print("Valid days: mon, tue, wed, thu, fri, sat, sun")
+                sys.exit(1)
+    
+    # Validate required options for each type
+    if stype == ScheduleType.CRON and not cron_expression:
+        console.print("[red]Error:[/red] --cron is required for cron schedule type")
+        sys.exit(1)
+    
+    if stype == ScheduleType.INTERVAL and not interval_minutes:
+        console.print("[red]Error:[/red] --interval is required for interval schedule type")
+        sys.exit(1)
+    
+    if stype in (ScheduleType.DAILY, ScheduleType.WEEKLY) and not at_time:
+        console.print(f"[red]Error:[/red] --at is required for {stype.value} schedule type")
+        sys.exit(1)
+    
+    if stype == ScheduleType.WEEKLY and not days_of_week:
+        console.print("[red]Error:[/red] --days is required for weekly schedule type")
+        sys.exit(1)
+    
+    # Create schedule
+    try:
+        schedule = scheduler.create_schedule(
+            name=name,
+            target=target,
+            ports=ports,
+            schedule_type=stype,
+            cron_expression=cron_expression,
+            interval_minutes=interval_minutes,
+            run_at=run_at,
+            days_of_week=days_of_week,
+            scan_type=scan_type,
+            profile_name=profile_name,
+            description=description,
+        )
+        
+        # Add hooks
+        if pre_hook:
+            scheduler.add_hook(schedule.schedule_id, HookType.PRE_SCAN, pre_hook)
+        if post_hook:
+            scheduler.add_hook(schedule.schedule_id, HookType.POST_SCAN, post_hook)
+        
+        console.print(f"\n[green]Schedule created successfully![/green]")
+        console.print(f"[bold]ID:[/bold] {schedule.schedule_id}")
+        console.print(f"[bold]Name:[/bold] {schedule.name}")
+        console.print(f"[bold]Target:[/bold] {schedule.target}")
+        console.print(f"[bold]Type:[/bold] {schedule.schedule_type.value}")
+        
+        from spectrescan.core.scheduler import format_next_run
+        console.print(f"[bold]Next Run:[/bold] {format_next_run(schedule.next_run)}")
+        
+        if verbose:
+            console.print(f"\n[dim]Ports: {schedule.ports}[/dim]")
+            console.print(f"[dim]Scan Type: {schedule.scan_type}[/dim]")
+            if schedule.cron_expression:
+                console.print(f"[dim]Cron: {schedule.cron_expression}[/dim]")
+            if schedule.interval_minutes:
+                console.print(f"[dim]Interval: {schedule.interval_minutes} minutes[/dim]")
+    
+    except Exception as e:
+        console.print(f"[red]Error creating schedule:[/red] {e}")
+        sys.exit(1)
+
+
+def _schedule_remove(schedule_id: str):
+    """Remove a scheduled scan."""
+    from spectrescan.core.scheduler import ScanScheduler
+    
+    scheduler = ScanScheduler()
+    
+    # Try to find schedule with partial ID
+    schedules = scheduler.list_schedules()
+    matching = [s for s in schedules if s.schedule_id.startswith(schedule_id)]
+    
+    if not matching:
+        console.print(f"[red]Error:[/red] Schedule '{schedule_id}' not found")
+        sys.exit(1)
+    
+    if len(matching) > 1:
+        console.print(f"[red]Error:[/red] Multiple schedules match '{schedule_id}'")
+        for s in matching:
+            console.print(f"  - {s.schedule_id}: {s.name}")
+        sys.exit(1)
+    
+    schedule = matching[0]
+    
+    if scheduler.delete_schedule(schedule.schedule_id):
+        console.print(f"[green]Removed schedule:[/green] {schedule.name} ({schedule.schedule_id})")
+    else:
+        console.print(f"[red]Error:[/red] Failed to remove schedule")
+        sys.exit(1)
+
+
+def _schedule_pause(schedule_id: str):
+    """Pause a scheduled scan."""
+    from spectrescan.core.scheduler import ScanScheduler
+    
+    scheduler = ScanScheduler()
+    schedules = scheduler.list_schedules()
+    matching = [s for s in schedules if s.schedule_id.startswith(schedule_id)]
+    
+    if not matching:
+        console.print(f"[red]Error:[/red] Schedule '{schedule_id}' not found")
+        sys.exit(1)
+    
+    schedule = matching[0]
+    
+    if scheduler.pause_schedule(schedule.schedule_id):
+        console.print(f"[green]Paused schedule:[/green] {schedule.name}")
+    else:
+        console.print(f"[red]Error:[/red] Failed to pause schedule")
+
+
+def _schedule_resume(schedule_id: str):
+    """Resume a paused schedule."""
+    from spectrescan.core.scheduler import ScanScheduler
+    
+    scheduler = ScanScheduler()
+    schedules = scheduler.list_schedules()
+    matching = [s for s in schedules if s.schedule_id.startswith(schedule_id)]
+    
+    if not matching:
+        console.print(f"[red]Error:[/red] Schedule '{schedule_id}' not found")
+        sys.exit(1)
+    
+    schedule = matching[0]
+    
+    if scheduler.resume_schedule(schedule.schedule_id):
+        console.print(f"[green]Resumed schedule:[/green] {schedule.name}")
+    else:
+        console.print(f"[red]Error:[/red] Failed to resume schedule")
+
+
+def _schedule_status(schedule_id: Optional[str], verbose: bool):
+    """Show schedule status or statistics."""
+    from spectrescan.core.scheduler import ScanScheduler, format_next_run
+    
+    scheduler = ScanScheduler()
+    
+    if schedule_id:
+        # Show specific schedule details
+        schedules = scheduler.list_schedules()
+        matching = [s for s in schedules if s.schedule_id.startswith(schedule_id)]
+        
+        if not matching:
+            console.print(f"[red]Error:[/red] Schedule '{schedule_id}' not found")
+            sys.exit(1)
+        
+        s = matching[0]
+        
+        console.print(f"\n[bold cyan]Schedule Details[/bold cyan]")
+        console.print(f"[bold]ID:[/bold] {s.schedule_id}")
+        console.print(f"[bold]Name:[/bold] {s.name}")
+        console.print(f"[bold]Target:[/bold] {s.target}")
+        console.print(f"[bold]Ports:[/bold] {s.ports}")
+        console.print(f"[bold]Scan Type:[/bold] {s.scan_type}")
+        console.print(f"[bold]Schedule Type:[/bold] {s.schedule_type.value}")
+        console.print(f"[bold]Status:[/bold] {s.status.value}")
+        console.print(f"[bold]Created:[/bold] {s.created_at.strftime('%Y-%m-%d %H:%M') if s.created_at else 'N/A'}")
+        console.print(f"[bold]Last Run:[/bold] {s.last_run.strftime('%Y-%m-%d %H:%M') if s.last_run else 'Never'}")
+        console.print(f"[bold]Next Run:[/bold] {format_next_run(s.next_run)}")
+        console.print(f"[bold]Run Count:[/bold] {s.run_count}")
+        console.print(f"[bold]Success/Failure:[/bold] {s.success_count}/{s.failure_count}")
+        
+        if s.cron_expression:
+            console.print(f"[bold]Cron:[/bold] {s.cron_expression}")
+        if s.interval_minutes:
+            console.print(f"[bold]Interval:[/bold] {s.interval_minutes} minutes")
+        if s.days_of_week:
+            day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            console.print(f"[bold]Days:[/bold] {', '.join(day_names[d] for d in s.days_of_week)}")
+        
+        if s.hooks:
+            console.print(f"\n[bold]Hooks:[/bold]")
+            for hook in s.hooks:
+                console.print(f"  - {hook.hook_type.value}: {hook.action}")
+        
+        if s.conditions:
+            console.print(f"\n[bold]Conditions:[/bold]")
+            for cond in s.conditions:
+                console.print(f"  - {cond.condition_type.value}")
+        
+        if s.chain_next:
+            console.print(f"\n[bold]Chain Next:[/bold] {s.chain_next}")
+        
+        if s.description:
+            console.print(f"\n[bold]Description:[/bold] {s.description}")
+    
+    else:
+        # Show overall statistics
+        stats = scheduler.get_statistics()
+        
+        console.print("\n[bold cyan]Scheduler Statistics[/bold cyan]\n")
+        console.print(f"[bold]Total Schedules:[/bold] {stats['total_schedules']}")
+        console.print(f"[bold]Active:[/bold] {stats['active_schedules']}")
+        console.print(f"[bold]Paused:[/bold] {stats['paused_schedules']}")
+        console.print(f"\n[bold]Total Runs:[/bold] {stats['total_runs']}")
+        console.print(f"[bold]Successful:[/bold] {stats['successful_runs']}")
+        console.print(f"[bold]Failed:[/bold] {stats['failed_runs']}")
+        console.print(f"[bold]Total Open Ports Found:[/bold] {stats['total_open_ports_found']}")
+        console.print(f"[bold]Avg Duration:[/bold] {stats['avg_duration_seconds']:.1f}s")
+
+
+def _schedule_history(schedule_id: Optional[str], limit: int):
+    """Show run history."""
+    from spectrescan.core.scheduler import ScanScheduler
+    
+    scheduler = ScanScheduler()
+    
+    # Resolve partial ID
+    full_id = None
+    if schedule_id:
+        schedules = scheduler.list_schedules()
+        matching = [s for s in schedules if s.schedule_id.startswith(schedule_id)]
+        if matching:
+            full_id = matching[0].schedule_id
+    
+    history = scheduler.get_run_history(schedule_id=full_id, limit=limit)
+    
+    if not history:
+        console.print("[yellow]No run history found[/yellow]")
+        return
+    
+    table = Table(
+        title="Run History",
+        show_header=True,
+        header_style="bold cyan"
+    )
+    table.add_column("Run ID", style="dim")
+    table.add_column("Schedule", style="dim")
+    table.add_column("Started")
+    table.add_column("Duration")
+    table.add_column("Status")
+    table.add_column("Open Ports", justify="right")
+    
+    for r in history:
+        status_color = "green" if r.success else "red"
+        status_text = "Success" if r.success else "Failed"
+        
+        table.add_row(
+            r.run_id[:8],
+            r.schedule_id[:8],
+            r.started_at.strftime("%Y-%m-%d %H:%M"),
+            f"{r.duration_seconds:.1f}s",
+            f"[{status_color}]{status_text}[/{status_color}]",
+            str(r.open_ports),
+        )
+    
+    console.print(table)
+
+
+async def _schedule_daemon(check_interval: int):
+    """Run the scheduler daemon."""
+    from spectrescan.core.scheduler import ScanScheduler
+    import signal
+    
+    scheduler = ScanScheduler(check_interval=check_interval)
+    
+    # Set up signal handlers
+    stop_event = asyncio.Event()
+    
+    def handle_signal(sig):
+        console.print(f"\n[yellow]Received signal {sig}, shutting down...[/yellow]")
+        stop_event.set()
+    
+    # Register signal handlers
+    loop = asyncio.get_event_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            loop.add_signal_handler(sig, lambda s=sig: handle_signal(s))
+        except NotImplementedError:
+            # Windows doesn't support add_signal_handler
+            pass
+    
+    console.print("\n[bold cyan]Starting SpectreScan Scheduler Daemon[/bold cyan]\n")
+    console.print(f"[green]Check Interval:[/green] {check_interval}s")
+    console.print("[dim]Press Ctrl+C to stop[/dim]\n")
+    
+    # Define callbacks
+    def on_scan_start(schedule, result):
+        console.print(f"[cyan]Starting scan:[/cyan] {schedule.name} -> {schedule.target}")
+    
+    def on_scan_complete(schedule, result):
+        if result.success:
+            console.print(f"[green]Completed:[/green] {schedule.name} - {result.open_ports} open ports")
+        else:
+            console.print(f"[red]Failed:[/red] {schedule.name} - {result.error_message}")
+    
+    def on_scan_error(schedule, result):
+        console.print(f"[red]Error in {schedule.name}:[/red] {result.error_message}")
+    
+    scheduler.set_callbacks(
+        on_start=on_scan_start,
+        on_complete=on_scan_complete,
+        on_error=on_scan_error,
+    )
+    
+    # Start scheduler
+    await scheduler.start()
+    
+    # Wait for stop signal
+    try:
+        await stop_event.wait()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        await scheduler.stop()
+        console.print("[green]Scheduler stopped[/green]")
+
+
+async def _schedule_run_now(schedule_id: str):
+    """Manually trigger a scheduled scan."""
+    from spectrescan.core.scheduler import ScanScheduler
+    
+    scheduler = ScanScheduler()
+    
+    # Resolve partial ID
+    schedules = scheduler.list_schedules()
+    matching = [s for s in schedules if s.schedule_id.startswith(schedule_id)]
+    
+    if not matching:
+        console.print(f"[red]Error:[/red] Schedule '{schedule_id}' not found")
+        sys.exit(1)
+    
+    schedule = matching[0]
+    
+    console.print(f"[cyan]Manually triggering:[/cyan] {schedule.name}")
+    console.print(f"[dim]Target: {schedule.target}[/dim]\n")
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Running scan...", total=None)
+        
+        result = await scheduler.run_now(schedule.schedule_id)
+        
+        progress.update(task, completed=True)
+    
+    if result:
+        if result.success:
+            console.print(f"\n[green]Scan completed successfully![/green]")
+            console.print(f"[bold]Open Ports:[/bold] {result.open_ports}")
+            console.print(f"[bold]Closed Ports:[/bold] {result.closed_ports}")
+            console.print(f"[bold]Filtered Ports:[/bold] {result.filtered_ports}")
+            console.print(f"[bold]Duration:[/bold] {result.duration_seconds:.1f}s")
+            if result.results_file:
+                console.print(f"[bold]Results:[/bold] {result.results_file}")
+        else:
+            console.print(f"\n[red]Scan failed:[/red] {result.error_message}")
+    else:
+        console.print("[red]Error:[/red] No result returned")
+
+
+# Register VulnDB commands
+from spectrescan.cli import vulndb_commands
+app.add_typer(vulndb_commands.app, name="vulndb", help="Manage custom vulnerability database")
+
+# Register Template commands
+from spectrescan.cli import template_commands
+app.add_typer(template_commands.app, name="template", help="Manage report templates")
+
+# Register Performance commands
+from spectrescan.cli import perf_commands
+app.add_typer(perf_commands.app, name="perf", help="Performance profiling and benchmarking tools")
+
+
 def main():
     """Main entry point."""
     import sys
     
     # If no command provided but there's a target-like argument, inject 'scan'
-    if len(sys.argv) > 1 and not sys.argv[1] in ['scan', 'presets', 'version', 'gui', 'tui', 'profile', 'history', 'compare', 'ssl', 'cve', 'dns', 'api', 'resume', 'checkpoint', 'config', 'completion', '--help', '-h']:
+    if len(sys.argv) > 1 and not sys.argv[1] in ['scan', 'presets', 'version', 'gui', 'tui', 'profile', 'history', 'compare', 'ssl', 'cve', 'dns', 'api', 'resume', 'checkpoint', 'config', 'completion', 'script', 'cluster', 'web', 'schedule', 'vulndb', 'template', 'perf', '--help', '-h']:
         # Check if first arg looks like a target (IP, hostname, or flag)
         first_arg = sys.argv[1]
         if not first_arg.startswith('--') or first_arg in ['--gui', '--tui']:

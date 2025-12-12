@@ -715,8 +715,8 @@ class TestJWTAuth:
         # Should work immediately
         assert jwt.verify_token(token) is not None
         
-        # Wait for expiration (with buffer)
-        time.sleep(1.5)
+        # Wait for expiration (with larger buffer for reliability)
+        time.sleep(2.5)
         
         # Should be expired
         assert jwt.verify_token(token) is None

@@ -1,9 +1,20 @@
 {
   "version": "2.0.0",
-  "updated": "2025-11-26",
+  "updated": "2025-12-12",
   "description": "Comprehensive Common Platform Enumeration (CPE) dictionary for service identification - 200+ services",
   "total_entries": 200,
-  "categories": ["web_servers", "databases", "app_servers", "network_services", "dev_tools", "containers", "monitoring", "messaging", "storage", "security"],
+  "categories": [
+    "web_servers",
+    "databases",
+    "app_servers",
+    "network_services",
+    "dev_tools",
+    "containers",
+    "monitoring",
+    "messaging",
+    "storage",
+    "security"
+  ],
   "cpe_mappings": {
     "_comment_web_servers": "===== WEB SERVERS =====",
     "apache": {
@@ -11,21 +22,28 @@
       "product": "http_server",
       "cpe_base": "cpe:/a:apache:http_server",
       "category": "web_server",
-      "aliases": ["httpd", "apache2"]
+      "aliases": [
+        "httpd",
+        "apache2"
+      ]
     },
     "nginx": {
       "vendor": "nginx",
       "product": "nginx",
       "cpe_base": "cpe:/a:nginx:nginx",
       "category": "web_server",
-      "aliases": ["nginx-core"]
+      "aliases": [
+        "nginx-core"
+      ]
     },
     "iis": {
       "vendor": "microsoft",
       "product": "internet_information_services",
       "cpe_base": "cpe:/a:microsoft:internet_information_services",
       "category": "web_server",
-      "aliases": ["microsoft-iis"]
+      "aliases": [
+        "microsoft-iis"
+      ]
     },
     "lighttpd": {
       "vendor": "lighttpd",
@@ -44,7 +62,9 @@
       "product": "tomcat",
       "cpe_base": "cpe:/a:apache:tomcat",
       "category": "app_server",
-      "aliases": ["apache-tomcat"]
+      "aliases": [
+        "apache-tomcat"
+      ]
     },
     "jetty": {
       "vendor": "eclipse",
@@ -63,7 +83,9 @@
       "product": "wildfly",
       "cpe_base": "cpe:/a:redhat:wildfly",
       "category": "app_server",
-      "aliases": ["jboss"]
+      "aliases": [
+        "jboss"
+      ]
     },
     "weblogic": {
       "vendor": "oracle",
@@ -77,14 +99,15 @@
       "cpe_base": "cpe:/a:ibm:websphere_application_server",
       "category": "app_server"
     },
-    
     "_comment_databases": "===== DATABASES =====",
     "mysql": {
       "vendor": "oracle",
       "product": "mysql",
       "cpe_base": "cpe:/a:oracle:mysql",
       "category": "database",
-      "aliases": ["mysql-server"]
+      "aliases": [
+        "mysql-server"
+      ]
     },
     "mariadb": {
       "vendor": "mariadb",
@@ -97,7 +120,9 @@
       "product": "postgresql",
       "cpe_base": "cpe:/a:postgresql:postgresql",
       "category": "database",
-      "aliases": ["postgres"]
+      "aliases": [
+        "postgres"
+      ]
     },
     "redis": {
       "vendor": "redis",
@@ -140,7 +165,10 @@
       "product": "sql_server",
       "cpe_base": "cpe:/a:microsoft:sql_server",
       "category": "database",
-      "aliases": ["sqlserver", "microsoft-sql"]
+      "aliases": [
+        "sqlserver",
+        "microsoft-sql"
+      ]
     },
     "db2": {
       "vendor": "ibm",
@@ -166,14 +194,15 @@
       "cpe_base": "cpe:/a:neo4j:neo4j",
       "category": "database"
     },
-    
     "_comment_ssh_services": "===== SSH & REMOTE ACCESS =====",
     "openssh": {
       "vendor": "openbsd",
       "product": "openssh",
       "cpe_base": "cpe:/a:openbsd:openssh",
       "category": "network_service",
-      "aliases": ["ssh"]
+      "aliases": [
+        "ssh"
+      ]
     },
     "dropbear": {
       "vendor": "matt_johnston",
@@ -199,7 +228,6 @@
       "cpe_base": "cpe:/a:teamviewer:teamviewer",
       "category": "network_service"
     },
-    
     "_comment_ftp_services": "===== FTP SERVICES =====",
     "vsftpd": {
       "vendor": "vsftpd_project",
@@ -225,7 +253,6 @@
       "cpe_base": "cpe:/a:filezilla:filezilla_server",
       "category": "network_service"
     },
-    
     "_comment_mail_services": "===== MAIL SERVICES =====",
     "postfix": {
       "vendor": "postfix",
@@ -263,7 +290,6 @@
       "cpe_base": "cpe:/a:microsoft:exchange_server",
       "category": "network_service"
     },
-    
     "_comment_containers": "===== CONTAINERS & ORCHESTRATION =====",
     "docker": {
       "vendor": "docker",
@@ -276,7 +302,9 @@
       "product": "kubernetes",
       "cpe_base": "cpe:/a:kubernetes:kubernetes",
       "category": "orchestration",
-      "aliases": ["k8s"]
+      "aliases": [
+        "k8s"
+      ]
     },
     "containerd": {
       "vendor": "docker",
@@ -302,7 +330,6 @@
       "cpe_base": "cpe:/a:rancher:rancher",
       "category": "orchestration"
     },
-    
     "_comment_cms_frameworks": "===== CMS & FRAMEWORKS =====",
     "php": {
       "vendor": "php",
@@ -348,10 +375,9 @@
     },
     "rails": {
       "vendor": "rubyonrails",
-      "product": "rails",
-      "cpe_base": "cpe:/a:rubyonrails:rails",
-      "category": "framework",
-      "aliases": ["ruby-on-rails"]
+      "product": "ruby_on_rails",
+      "cpe_base": "cpe:/a:rubyonrails:ruby_on_rails",
+      "category": "framework"
     },
     "laravel": {
       "vendor": "laravel",
@@ -395,7 +421,6 @@
       "cpe_base": "cpe:/a:vue:vue.js",
       "category": "framework"
     },
-    
     "_comment_devops": "===== DEVOPS & CI/CD =====",
     "jenkins": {
       "vendor": "jenkins",
@@ -481,7 +506,6 @@
       "cpe_base": "cpe:/a:hashicorp:consul",
       "category": "network_service"
     },
-    
     "_comment_monitoring": "===== MONITORING & OBSERVABILITY =====",
     "grafana": {
       "vendor": "grafana",
@@ -538,12 +562,11 @@
       "category": "monitoring"
     },
     "fluentd": {
-      "vendor": "treasuredata",
+      "vendor": "fluentd",
       "product": "fluentd",
-      "cpe_base": "cpe:/a:treasuredata:fluentd",
-      "category": "monitoring"
+      "cpe_base": "cpe:/a:fluentd:fluentd",
+      "category": "logging"
     },
-    
     "_comment_messaging": "===== MESSAGING & QUEUES =====",
     "rabbitmq": {
       "vendor": "rabbitmq",
@@ -581,7 +604,6 @@
       "cpe_base": "cpe:/a:zeromq:zeromq",
       "category": "messaging"
     },
-    
     "_comment_proxy_lb": "===== PROXIES & LOAD BALANCERS =====",
     "haproxy": {
       "vendor": "haproxy",
@@ -619,7 +641,6 @@
       "cpe_base": "cpe:/a:nginx:nginx",
       "category": "network_service"
     },
-    
     "_comment_storage": "===== STORAGE & FILESYSTEMS =====",
     "minio": {
       "vendor": "minio",
@@ -663,7 +684,6 @@
       "cpe_base": "cpe:/a:owncloud:owncloud",
       "category": "storage"
     },
-    
     "_comment_security": "===== SECURITY TOOLS =====",
     "snort": {
       "vendor": "snort",
@@ -708,36 +728,6 @@
       "category": "security"
     },
     "_comment_frameworks": "===== FRAMEWORKS =====",
-    "express": {
-      "vendor": "expressjs",
-      "product": "express",
-      "cpe_base": "cpe:/a:expressjs:express",
-      "category": "framework"
-    },
-    "django": {
-      "vendor": "djangoproject",
-      "product": "django",
-      "cpe_base": "cpe:/a:djangoproject:django",
-      "category": "framework"
-    },
-    "flask": {
-      "vendor": "palletsprojects",
-      "product": "flask",
-      "cpe_base": "cpe:/a:palletsprojects:flask",
-      "category": "framework"
-    },
-    "rails": {
-      "vendor": "rubyonrails",
-      "product": "ruby_on_rails",
-      "cpe_base": "cpe:/a:rubyonrails:ruby_on_rails",
-      "category": "framework"
-    },
-    "laravel": {
-      "vendor": "laravel",
-      "product": "laravel",
-      "cpe_base": "cpe:/a:laravel:laravel",
-      "category": "framework"
-    },
     "spring-boot": {
       "vendor": "vmware",
       "product": "spring_boot",
@@ -770,12 +760,6 @@
       "category": "auth"
     },
     "_comment_logging": "===== LOGGING =====",
-    "fluentd": {
-      "vendor": "fluentd",
-      "product": "fluentd",
-      "cpe_base": "cpe:/a:fluentd:fluentd",
-      "category": "logging"
-    },
     "fluent-bit": {
       "vendor": "fluentbit",
       "product": "fluent_bit",
@@ -926,6 +910,366 @@
       "product": "mimir",
       "cpe_base": "cpe:/a:grafana:mimir",
       "category": "monitoring"
+    },
+    "apachemq": {
+      "vendor": "apache",
+      "product": "activemq",
+      "cpe_base": "cpe:/a:apache:activemq",
+      "category": "web_server"
+    },
+    "airserv-ng": {
+      "vendor": "aircrack-ng",
+      "product": "air",
+      "cpe_base": "cpe:/a:aircrack-ng:air",
+      "category": "network_service"
+    },
+    "amanda": {
+      "vendor": "amanda",
+      "product": "amanda",
+      "cpe_base": "cpe:/a:amanda:amanda",
+      "category": "network_service"
+    },
+    "appguard-db": {
+      "vendor": "app_bv",
+      "product": "appguard_u",
+      "cpe_base": "cpe:/a:app_bv:appguard_u",
+      "category": "network_service"
+    },
+    "articy-server": {
+      "vendor": "nevigo",
+      "product": "articy%3adraft/",
+      "cpe_base": "cpe:/a:nevigo:articy%3adraft/",
+      "category": "network_service"
+    },
+    "asterisk": {
+      "vendor": "digium",
+      "product": "a",
+      "cpe_base": "cpe:/a:digium:a",
+      "category": "network_service"
+    },
+    "asterisk-proxy": {
+      "vendor": "digium",
+      "product": "a",
+      "cpe_base": "cpe:/a:digium:a",
+      "category": "network_service"
+    },
+    "avg": {
+      "vendor": "avg",
+      "product": "anti-viru",
+      "cpe_base": "cpe:/a:avg:anti-viru",
+      "category": "network_service"
+    },
+    "backdoor": {
+      "vendor": "linux",
+      "product": "linux_kernel/a",
+      "cpe_base": "cpe:/o:linux:linux_kernel/a",
+      "category": "network_service"
+    },
+    "barracuda-bcp": {
+      "vendor": "barracuda",
+      "product": "web_",
+      "cpe_base": "cpe:/a:barracuda:web_",
+      "category": "network_service"
+    },
+    "bitcoin": {
+      "vendor": "bitcoin",
+      "product": "bitcoind",
+      "cpe_base": "cpe:/a:bitcoin:bitcoind",
+      "category": "network_service"
+    },
+    "bitcoin-jsonrpc": {
+      "vendor": "bitcoin",
+      "product": "bitcoind",
+      "cpe_base": "cpe:/a:bitcoin:bitcoind",
+      "category": "network_service"
+    },
+    "softwarepatrol": {
+      "vendor": "bmc",
+      "product": "patrol_agent/",
+      "cpe_base": "cpe:/a:bmc:patrol_agent/",
+      "category": "network_service"
+    },
+    "bro": {
+      "vendor": "bro",
+      "product": "bro/",
+      "cpe_base": "cpe:/a:bro:bro/",
+      "category": "network_service"
+    },
+    "ca-unicenter": {
+      "vendor": "ca",
+      "product": "unicenter_remote_control/",
+      "cpe_base": "cpe:/a:ca:unicenter_remote_control/",
+      "category": "network_service"
+    },
+    "calibre-json": {
+      "vendor": "kovid_goyal",
+      "product": "calibre",
+      "cpe_base": "cpe:/a:kovid_goyal:calibre",
+      "category": "network_service"
+    },
+    "chargen": {
+      "vendor": "linux",
+      "product": "linux_kernel/a",
+      "cpe_base": "cpe:/o:linux:linux_kernel/a",
+      "category": "network_service"
+    },
+    "citadel": {
+      "vendor": "citadel",
+      "product": "ux/",
+      "cpe_base": "cpe:/a:citadel:ux/",
+      "category": "network_service"
+    },
+    "clementine": {
+      "vendor": "clementine-player",
+      "product": "clementine",
+      "cpe_base": "cpe:/a:clementine-player:clementine",
+      "category": "network_service"
+    },
+    "control-m": {
+      "vendor": "bmc",
+      "product": "",
+      "cpe_base": "cpe:/a:bmc:",
+      "category": "network_service"
+    },
+    "cyrus-sync": {
+      "vendor": "cmu",
+      "product": "cyru",
+      "cpe_base": "cpe:/a:cmu:cyru",
+      "category": "network_service"
+    },
+    "daytime": {
+      "vendor": "hp",
+      "product": "hp-ux/a",
+      "cpe_base": "cpe:/o:hp:hp-ux/a",
+      "category": "network_service"
+    },
+    "devonthink": {
+      "vendor": "apple",
+      "product": "mac_o",
+      "cpe_base": "cpe:/o:apple:mac_o",
+      "category": "network_service"
+    },
+    "digifort": {
+      "vendor": "digifort",
+      "product": "digifort",
+      "cpe_base": "cpe:/a:digifort:digifort",
+      "category": "network_service"
+    },
+    "digifort-analytics": {
+      "vendor": "digifort",
+      "product": "digifort",
+      "cpe_base": "cpe:/a:digifort:digifort",
+      "category": "network_service"
+    },
+    "digifort-lpr": {
+      "vendor": "digifort",
+      "product": "digifort",
+      "cpe_base": "cpe:/a:digifort:digifort",
+      "category": "network_service"
+    },
+    "directconnect": {
+      "vendor": "apple",
+      "product": "mac_o",
+      "cpe_base": "cpe:/o:apple:mac_o",
+      "category": "network_service"
+    },
+    "docker-swarm": {
+      "vendor": "redhat",
+      "product": "docker/",
+      "cpe_base": "cpe:/a:redhat:docker/",
+      "category": "network_service"
+    },
+    "drawpile": {
+      "vendor": "calle_laakkonen",
+      "product": "drawpile",
+      "cpe_base": "cpe:/a:calle_laakkonen:drawpile",
+      "category": "network_service"
+    },
+    "durian": {
+      "vendor": "mozilla",
+      "product": "durian_web_application_",
+      "cpe_base": "cpe:/a:mozilla:durian_web_application_",
+      "category": "network_service"
+    },
+    "drac-console": {
+      "vendor": "dell",
+      "product": "remote_acce",
+      "cpe_base": "cpe:/h:dell:remote_acce",
+      "category": "network_service"
+    },
+    "electra": {
+      "vendor": "cardinal_kft",
+      "product": "electra/",
+      "cpe_base": "cpe:/a:cardinal_kft:electra/",
+      "category": "network_service"
+    },
+    "exec": {
+      "vendor": "netkit",
+      "product": "netkit/ cpe",
+      "cpe_base": "cpe:/a:netkit:netkit/ cpe",
+      "category": "network_service"
+    },
+    "filemaker-xdbc": {
+      "vendor": "apple",
+      "product": "mac_o",
+      "cpe_base": "cpe:/o:apple:mac_o",
+      "category": "network_service"
+    },
+    "filenet-pch": {
+      "vendor": "ibm",
+      "product": "datacap",
+      "cpe_base": "cpe:/a:ibm:datacap",
+      "category": "network_service"
+    },
+    "finger": {
+      "vendor": "openldap",
+      "product": "openldap/",
+      "cpe_base": "cpe:/a:openldap:openldap/",
+      "category": "network_service"
+    },
+    "ftp": {
+      "vendor": "tumbleweed",
+      "product": "",
+      "cpe_base": "cpe:/a:tumbleweed:",
+      "category": "network_service"
+    },
+    "ftp-proxy": {
+      "vendor": "analogx",
+      "product": "proxy",
+      "cpe_base": "cpe:/a:analogx:proxy",
+      "category": "network_service"
+    },
+    "fw1-rlogin": {
+      "vendor": "checkpoint",
+      "product": "firewall-1/",
+      "cpe_base": "cpe:/a:checkpoint:firewall-1/",
+      "category": "network_service"
+    },
+    "gnats": {
+      "vendor": "gnu",
+      "product": "gnat",
+      "cpe_base": "cpe:/a:gnu:gnat",
+      "category": "network_service"
+    },
+    "git-daemon": {
+      "vendor": "git",
+      "product": "git/",
+      "cpe_base": "cpe:/a:git:git/",
+      "category": "network_service"
+    },
+    "teamtalk": {
+      "vendor": "bearware",
+      "product": "teamtalk/",
+      "cpe_base": "cpe:/a:bearware:teamtalk/",
+      "category": "network_service"
+    },
+    "gnupg": {
+      "vendor": "gnupg",
+      "product": "gnupg",
+      "cpe_base": "cpe:/a:gnupg:gnupg",
+      "category": "network_service"
+    },
+    "h.323-gatekeeper": {
+      "vendor": "linux",
+      "product": "linux_kernel/a",
+      "cpe_base": "cpe:/o:linux:linux_kernel/a",
+      "category": "network_service"
+    },
+    "hpiod": {
+      "vendor": "hp",
+      "product": "linux_imaging_and_printing_project/ cpe",
+      "cpe_base": "cpe:/a:hp:linux_imaging_and_printing_project/ cpe",
+      "category": "network_service"
+    },
+    "http": {
+      "vendor": "apple",
+      "product": "mac_o",
+      "cpe_base": "cpe:/o:apple:mac_o",
+      "category": "web_server"
+    },
+    "http-proxy": {
+      "vendor": "kerio",
+      "product": "control/",
+      "cpe_base": "cpe:/a:kerio:control/",
+      "category": "web_server"
+    },
+    "ibm-hmc": {
+      "vendor": "ibm",
+      "product": "hardware_management_con",
+      "cpe_base": "cpe:/a:ibm:hardware_management_con",
+      "category": "network_service"
+    },
+    "ichat": {
+      "vendor": "koz.com",
+      "product": "ichat_room",
+      "cpe_base": "cpe:/a:koz.com:ichat_room",
+      "category": "network_service"
+    },
+    "igel-remote": {
+      "vendor": "igel",
+      "product": "remote_management_",
+      "cpe_base": "cpe:/a:igel:remote_management_",
+      "category": "network_service"
+    },
+    "ilo": {
+      "vendor": "hp",
+      "product": "integrated_light",
+      "cpe_base": "cpe:/h:hp:integrated_light",
+      "category": "network_service"
+    },
+    "ilo-console": {
+      "vendor": "hp",
+      "product": "integrated_light",
+      "cpe_base": "cpe:/h:hp:integrated_light",
+      "category": "network_service"
+    },
+    "imap": {
+      "vendor": "novell",
+      "product": "groupwi",
+      "cpe_base": "cpe:/a:novell:groupwi",
+      "category": "network_service"
+    },
+    "ssl/imap": {
+      "vendor": "cmu",
+      "product": "cyru",
+      "cpe_base": "cpe:/a:cmu:cyru",
+      "category": "network_service"
+    },
+    "imap-proxy": {
+      "vendor": "pgp",
+      "product": "univer",
+      "cpe_base": "cpe:/a:pgp:univer",
+      "category": "network_service"
+    },
+    "imsp": {
+      "vendor": "cmu",
+      "product": "cyru",
+      "cpe_base": "cpe:/a:cmu:cyru",
+      "category": "network_service"
+    },
+    "inetd": {
+      "vendor": "pureftpd",
+      "product": "pure-ftpd/",
+      "cpe_base": "cpe:/a:pureftpd:pure-ftpd/",
+      "category": "network_service"
+    },
+    "pycharm": {
+      "vendor": "apple",
+      "product": "mac_o",
+      "cpe_base": "cpe:/o:apple:mac_o",
+      "category": "network_service"
+    },
+    "ir-alerts": {
+      "vendor": "lexmark",
+      "product": "$1/a",
+      "cpe_base": "cpe:/h:lexmark:$1/a",
+      "category": "network_service"
+    },
+    "irc": {
+      "vendor": "ircd-hybrid",
+      "product": "ircd-hybrid/",
+      "cpe_base": "cpe:/a:ircd-hybrid:ircd-hybrid/",
+      "category": "network_service"
     }
   },
   "os_cpe": {

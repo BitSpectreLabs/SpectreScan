@@ -1,8 +1,8 @@
 {
   "version": "2.1.0",
-  "updated": "2025-01-16",
-  "total_patterns": 145,
-  "description": "Comprehensive version extraction regex patterns for 145+ services and applications",
+  "updated": "2025-12-12",
+  "total_patterns": 137,
+  "description": "Comprehensive version extraction regex patterns for 137+ services and applications",
   "patterns": {
     "apache": [
       "Apache/(\\d+\\.\\d+\\.\\d+)",
@@ -301,8 +301,8 @@
       "travis/(\\d+)"
     ],
     "ansible": [
-      "Ansible (\\d+\\.\\d+\\.\\d+)",
-      "ansible/(\\d+\\.\\d+)"
+      "Ansible/(\\d+\\.\\d+\\.\\d+)",
+      "ansible (\\d+\\.\\d+)"
     ],
     "puppet": [
       "Puppet/(\\d+\\.\\d+\\.\\d+)",
@@ -313,16 +313,16 @@
       "chef (\\d+\\.\\d+)"
     ],
     "terraform": [
-      "Terraform v(\\d+\\.\\d+\\.\\d+)",
-      "terraform/(\\d+\\.\\d+)"
+      "Terraform/(\\d+\\.\\d+\\.\\d+)",
+      "terraform (\\d+\\.\\d+)"
     ],
     "vault": [
-      "Vault v(\\d+\\.\\d+\\.\\d+)",
-      "vault/(\\d+\\.\\d+)"
+      "Vault/(\\d+\\.\\d+\\.\\d+)",
+      "vault (\\d+\\.\\d+)"
     ],
     "consul": [
-      "Consul v(\\d+\\.\\d+\\.\\d+)",
-      "consul/(\\d+\\.\\d+)"
+      "Consul/(\\d+\\.\\d+\\.\\d+)",
+      "consul (\\d+\\.\\d+)"
     ],
     "nagios": [
       "Nagios.*?(\\d+\\.\\d+\\.\\d+)",
@@ -333,16 +333,17 @@
       "zabbix/(\\d+\\.\\d+)"
     ],
     "datadog": [
-      "Datadog Agent (\\d+\\.\\d+\\.\\d+)",
-      "datadog/(\\d+\\.\\d+)"
+      "Datadog Agent/(\\d+\\.\\d+\\.\\d+)",
+      "datadog (\\d+\\.\\d+)"
     ],
     "newrelic": [
-      "NewRelic Agent (\\d+\\.\\d+\\.\\d+)",
+      "New Relic (\\d+\\.\\d+\\.\\d+)",
       "newrelic/(\\d+\\.\\d+)"
     ],
     "splunk": [
-      "Splunk (\\d+\\.\\d+\\.\\d+)",
-      "splunk/(\\d+\\.\\d+)"
+      "Splunk/(\\d+\\.\\d+\\.\\d+)",
+      "X-Splunk-Version: (\\d+\\.\\d+\\.\\d+)",
+      "splunk (\\d+\\.\\d+)"
     ],
     "logstash": [
       "Logstash/(\\d+\\.\\d+\\.\\d+)",
@@ -385,20 +386,20 @@
       "Varnish/(\\d+\\.\\d+)"
     ],
     "envoy": [
-      "envoy.*?(\\d+\\.\\d+\\.\\d+)",
-      "Envoy/(\\d+\\.\\d+)"
+      "envoy/(\\d+\\.\\d+\\.\\d+)",
+      "x-envoy-upstream-service-time.*?envoy/(\\d+\\.\\d+)"
     ],
     "minio": [
-      "MinIO/(\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}Z)",
+      "MinIO/(\\d+\\.\\d+\\.\\d+)",
       "minio (\\d+\\.\\d+)"
     ],
     "ceph": [
-      "Ceph version (\\d+\\.\\d+\\.\\d+)",
-      "ceph/(\\d+\\.\\d+)"
+      "ceph/(\\d+\\.\\d+\\.\\d+)",
+      "Ceph (\\d+\\.\\d+)"
     ],
     "glusterfs": [
-      "GlusterFS (\\d+\\.\\d+)",
-      "glusterfs/(\\d+\\.\\d+)"
+      "GlusterFS/(\\d+\\.\\d+\\.\\d+)",
+      "glusterfs (\\d+\\.\\d+)"
     ],
     "nfs": [
       "NFS v(\\d+)",
@@ -421,8 +422,8 @@
       "snort/(\\d+\\.\\d+)"
     ],
     "suricata": [
-      "Suricata (\\d+\\.\\d+\\.\\d+)",
-      "suricata/(\\d+\\.\\d+)"
+      "Suricata/(\\d+\\.\\d+\\.\\d+)",
+      "suricata (\\d+\\.\\d+)"
     ],
     "fail2ban": [
       "Fail2Ban v(\\d+\\.\\d+\\.\\d+)",
@@ -433,12 +434,12 @@
       "ossec (\\d+\\.\\d+)"
     ],
     "wazuh": [
-      "Wazuh v(\\d+\\.\\d+\\.\\d+)",
-      "wazuh/(\\d+\\.\\d+)"
+      "Wazuh/(\\d+\\.\\d+\\.\\d+)",
+      "wazuh (\\d+\\.\\d+)"
     ],
     "openvas": [
-      "OpenVAS (\\d+\\.\\d+\\.\\d+)",
-      "openvas/(\\d+\\.\\d+)"
+      "OpenVAS/(\\d+\\.\\d+\\.\\d+)",
+      "openvas (\\d+\\.\\d+)"
     ],
     "nessus": [
       "Nessus/(\\d+\\.\\d+\\.\\d+)",
@@ -461,8 +462,8 @@
       "openshift/(\\d+\\.\\d+)"
     ],
     "etcd": [
-      "etcdserver.*?(\\d+\\.\\d+\\.\\d+)",
-      "etcd/(\\d+\\.\\d+)"
+      "etcd/(\\d+\\.\\d+\\.\\d+)",
+      "etcd (\\d+\\.\\d+)"
     ],
     "php-fpm": [
       "PHP[/-](\\d+\\.\\d+\\.\\d+)-fpm",
@@ -480,19 +481,6 @@
       "\\.NET (\\d+\\.\\d+\\.\\d+)",
       "dotnet/(\\d+\\.\\d+)"
     ],
-    "splunk": [
-      "Splunk/(\\d+\\.\\d+\\.\\d+)",
-      "X-Splunk-Version: (\\d+\\.\\d+\\.\\d+)",
-      "splunk (\\d+\\.\\d+)"
-    ],
-    "datadog": [
-      "Datadog Agent/(\\d+\\.\\d+\\.\\d+)",
-      "datadog (\\d+\\.\\d+)"
-    ],
-    "newrelic": [
-      "New Relic (\\d+\\.\\d+\\.\\d+)",
-      "newrelic/(\\d+\\.\\d+)"
-    ],
     "dynatrace": [
       "Dynatrace/(\\d+\\.\\d+\\.\\d+)",
       "dynatrace (\\d+\\.\\d+)"
@@ -509,10 +497,6 @@
       "OpsGenie/(\\d+\\.\\d+\\.\\d+)",
       "opsgenie (\\d+\\.\\d+)"
     ],
-    "envoy": [
-      "envoy/(\\d+\\.\\d+\\.\\d+)",
-      "x-envoy-upstream-service-time.*?envoy/(\\d+\\.\\d+)"
-    ],
     "istio": [
       "istio/(\\d+\\.\\d+\\.\\d+)",
       "Istio (\\d+\\.\\d+)"
@@ -520,34 +504,6 @@
     "linkerd": [
       "linkerd/(\\d+\\.\\d+\\.\\d+)",
       "Linkerd (\\d+\\.\\d+)"
-    ],
-    "consul": [
-      "Consul/(\\d+\\.\\d+\\.\\d+)",
-      "consul (\\d+\\.\\d+)"
-    ],
-    "vault": [
-      "Vault/(\\d+\\.\\d+\\.\\d+)",
-      "vault (\\d+\\.\\d+)"
-    ],
-    "etcd": [
-      "etcd/(\\d+\\.\\d+\\.\\d+)",
-      "etcd (\\d+\\.\\d+)"
-    ],
-    "terraform": [
-      "Terraform/(\\d+\\.\\d+\\.\\d+)",
-      "terraform (\\d+\\.\\d+)"
-    ],
-    "ansible": [
-      "Ansible/(\\d+\\.\\d+\\.\\d+)",
-      "ansible (\\d+\\.\\d+)"
-    ],
-    "puppet": [
-      "Puppet/(\\d+\\.\\d+\\.\\d+)",
-      "puppet (\\d+\\.\\d+)"
-    ],
-    "chef": [
-      "Chef/(\\d+\\.\\d+\\.\\d+)",
-      "chef (\\d+\\.\\d+)"
     ],
     "saltstack": [
       "Salt/(\\d+\\.\\d+\\.\\d+)",
@@ -588,38 +544,6 @@
     "authentik": [
       "authentik/(\\d+\\.\\d+\\.\\d+)",
       "Authentik (\\d+\\.\\d+)"
-    ],
-    "minio": [
-      "MinIO/(\\d+\\.\\d+\\.\\d+)",
-      "minio (\\d+\\.\\d+)"
-    ],
-    "ceph": [
-      "ceph/(\\d+\\.\\d+\\.\\d+)",
-      "Ceph (\\d+\\.\\d+)"
-    ],
-    "glusterfs": [
-      "GlusterFS/(\\d+\\.\\d+\\.\\d+)",
-      "glusterfs (\\d+\\.\\d+)"
-    ],
-    "snort": [
-      "Snort (\\d+\\.\\d+\\.\\d+)",
-      "snort/(\\d+\\.\\d+)"
-    ],
-    "suricata": [
-      "Suricata/(\\d+\\.\\d+\\.\\d+)",
-      "suricata (\\d+\\.\\d+)"
-    ],
-    "wazuh": [
-      "Wazuh/(\\d+\\.\\d+\\.\\d+)",
-      "wazuh (\\d+\\.\\d+)"
-    ],
-    "openvas": [
-      "OpenVAS/(\\d+\\.\\d+\\.\\d+)",
-      "openvas (\\d+\\.\\d+)"
-    ],
-    "nessus": [
-      "Nessus/(\\d+\\.\\d+\\.\\d+)",
-      "nessus (\\d+\\.\\d+)"
     ],
     "burpsuite": [
       "Burp Suite/(\\d+\\.\\d+\\.\\d+)",

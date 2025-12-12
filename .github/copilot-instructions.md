@@ -19,9 +19,10 @@ spectrescan/
 |
 |-- cli/                     # Command-line interface
 |   |-- __init__.py
-|   +-- main.py              # Typer-based CLI with all commands (736 lines)
+|   |-- main.py              # Typer-based CLI with all commands (2300+ lines)
+|   +-- completions.py       # Shell completion generator (250 lines)
 |
-|-- core/                    # Core scanning functionality (31 modules)
+|-- core/                    # Core scanning functionality (40+ modules)
 |   |-- __init__.py
 |   |-- scanner.py           # Main PortScanner class (505 lines)
 |   |-- async_scan.py        # AsyncScanner with timing templates (515 lines)
@@ -54,7 +55,33 @@ spectrescan/
 |   |-- resource_limiter.py  # CPU/memory/network limits (433 lines)
 |   |-- scripting_engine.py  # Python scripting (NSE alternative) (453 lines)
 |   |-- script_manager.py    # -sC/--script flags handler (277 lines)
-|   +-- version_mode.py      # -sV version detection mode (360 lines)
+|   |-- version_mode.py      # -sV version detection mode (360 lines)
+|   |-- ssl_analyzer.py      # SSL/TLS certificate and cipher analysis (600 lines)
+|   |-- cve_matcher.py       # CVE vulnerability matching (450 lines)
+|   |-- checkpoint.py        # Scan resume/checkpoint support (400 lines)
+|   |-- config.py            # TOML configuration management (500 lines)
+|   |-- dns_enum.py          # DNS enumeration and subdomain discovery (450 lines)
+|   +-- nse_engine.py        # NSE Lua script engine (920 lines)
+|
+|-- nse_scripts/             # Bundled NSE Lua scripts
+|   |-- __init__.py
+|   |-- http-title.nse       # HTTP page title detection
+|   |-- ssl-cert.nse         # SSL certificate information
+|   |-- ssh-hostkey.nse      # SSH host key fingerprints
+|   |-- ftp-anon.nse         # FTP anonymous login check
+|   |-- smb-os-discovery.nse # SMB OS discovery
+|   |-- http-headers.nse     # HTTP response headers
+|   |-- http-methods.nse     # HTTP allowed methods
+|   |-- mysql-info.nse       # MySQL server information
+|   |-- redis-info.nse       # Redis server information
+|   +-- smtp-commands.nse    # SMTP supported commands
+|
+|-- api/                     # REST API server (FastAPI)
+|   |-- __init__.py
+|   |-- main.py              # FastAPI application (400 lines)
+|   |-- auth.py              # JWT authentication (300 lines)
+|   |-- routes/              # API route handlers
+|   +-- websocket.py         # WebSocket support (200 lines)
 |
 |-- data/                    # Service signature databases
 |   |-- cpe-dictionary.json       # 200+ CPE entries (719 lines)
@@ -62,7 +89,7 @@ spectrescan/
 |   |-- version-patterns.json     # 100+ version patterns (526 lines)
 |   +-- nmap-service-probes       # Nmap-compatible probes (530 lines)
 |
-|-- reports/                 # Report generation (8 modules)
+|-- reports/                 # Report generation (9 modules)
 |   |-- __init__.py          # JSON/CSV/XML generators
 |   |-- html_report.py       # Static HTML reports (514 lines)
 |   |-- interactive_html.py  # Interactive HTML with JS (492 lines)
@@ -70,7 +97,8 @@ spectrescan/
 |   |-- charts.py            # ReportLab chart generation (395 lines)
 |   |-- comparison_report.py # Scan diff reports (500 lines)
 |   |-- executive_summary.py # Risk scoring reports (363 lines)
-|   +-- templates.py         # Jinja2 template manager (342 lines)
+|   |-- templates.py         # Jinja2 template manager (342 lines)
+|   +-- markdown_report.py   # Markdown report generator (250 lines)
 |
 |-- tui/                     # Terminal UI (Textual-based)
 |   |-- __init__.py
@@ -87,21 +115,21 @@ spectrescan/
 |   |-- __init__.py
 |   +-- app.py               # SpectreScanGUI class (915 lines)
 |
-+-- tests/                   # Unit tests (pytest) - 14 test files
++-- tests/                   # Unit tests (pytest) - 50+ test files, 1650+ tests
     |-- __init__.py
     |-- test_scanner.py
     |-- test_profiles.py
     |-- test_history.py
     |-- test_comparison.py
-    |-- test_enhanced_features.py
-    |-- test_error_recovery.py
-    |-- test_memory_optimizer.py
-    |-- test_multi_target.py
-    |-- test_network_monitor.py
-    |-- test_reporting.py
-    |-- test_resource_limiter.py
-    |-- test_service_detection.py
-    +-- test_version_mode.py
+    |-- test_ssl_analyzer.py     # SSL/TLS analysis tests
+    |-- test_cve_matcher.py      # CVE matching tests
+    |-- test_checkpoint.py       # Scan resume tests
+    |-- test_config.py           # Configuration tests
+    |-- test_dns_enum.py         # DNS enumeration tests
+    |-- test_shell_completion.py # Shell completion tests
+    |-- test_nse_engine.py       # NSE engine tests (63 tests)
+    |-- test_nse_cli.py          # NSE CLI tests (20 tests)
+    +-- ... (50+ test files total)
 ```
 
 ---
@@ -120,7 +148,7 @@ spectrescan/
 - Keep documentation consolidated
 
 ### 3. Version Management
-- **Current Version**: v1.2.0
+- **Current Version**: v2.0.0
 - **ALWAYS** update `pyproject.toml` when starting a new version
 - Follow semantic versioning: `MAJOR.MINOR.PATCH`
 - Update version in:
@@ -372,6 +400,34 @@ spectrescan history compare <scan1> <scan2>
 # Output formats
 spectrescan 192.168.1.1 -o results.json --format json
 spectrescan 192.168.1.1 -o results.html --format html
+
+# v2.0.0 Commands
+spectrescan ssl example.com                    # SSL/TLS analysis
+spectrescan cve search apache 2.4.49           # CVE lookup
+spectrescan dns example.com                    # DNS enumeration
+spectrescan api --port 8000                    # Start REST API server
+spectrescan resume <checkpoint-id>             # Resume interrupted scan
+spectrescan config show                        # Show configuration
+spectrescan completion install bash            # Install shell completion
+
+# v2.1.0 NSE Commands
+spectrescan script list                        # List available scripts
+spectrescan script categories                  # Show script categories
+spectrescan script info http-title             # Script information
+spectrescan script run http-title -t 192.168.1.1 -p 80  # Run script
+
+# v2.1.0 Distributed Scanning Commands
+spectrescan cluster init                       # Initialize master node
+spectrescan cluster status                     # Show cluster status
+spectrescan cluster workers                    # List registered workers
+spectrescan cluster worker --master 192.168.1.100:5000  # Start worker
+spectrescan cluster scan 10.0.0.0/8            # Distributed scan
+
+# v2.1.0 Web Dashboard Commands
+spectrescan web                                # Start dashboard (port 8080)
+spectrescan web --port 9000                    # Custom port
+spectrescan web --no-browser                   # Don't auto-open browser
+spectrescan web --debug                        # Enable debug mode
 ```
 
 ---
@@ -379,7 +435,7 @@ spectrescan 192.168.1.1 -o results.html --format html
 ## <img src="https://cdn.simpleicons.org/pypi/3775A9" width="16" height="16"/> Dependencies
 
 ### Core
-- Python 3.8+
+- Python 3.11+
 - Standard library: socket, asyncio, ipaddress, dataclasses
 
 ### Optional
@@ -390,15 +446,23 @@ spectrescan 192.168.1.1 -o results.html --format html
 | Tkinter | GUI interface |
 | ReportLab | PDF reports |
 | Jinja2 | Custom templates |
-| Click | CLI framework |
+| Typer | CLI framework |
+| FastAPI | REST API server |
+| dnspython | DNS enumeration |
+| Lupa | NSE Lua script execution |
+| Redis | Distributed scanning message queue |
+| Celery | Distributed task queue |
+| uvicorn | ASGI server for web dashboard |
 
 ---
 
 ## <img src="https://cdn.simpleicons.org/folders/F9A825" width="16" height="16"/> Configuration Files
 
+- `~/.spectrescan/config.toml` - Main configuration file
 - `~/.spectrescan/profiles/` - Saved scan profiles (JSON)
 - `~/.spectrescan/history/` - Scan history entries (JSON)
 - `~/.spectrescan/templates/` - Custom report templates
+- `~/.spectrescan/checkpoints/` - Scan checkpoints for resume
 
 ---
 
@@ -406,7 +470,9 @@ spectrescan 192.168.1.1 -o results.html --format html
 
 | Version | Status | Notes |
 |---------|--------|-------|
-| v1.2.0 | Current | Service detection, profiles, history |
+| v2.1.0 | In Progress | NSE Lua script engine, distributed scanning, web dashboard |
+| v2.0.0 | Current | SSL/TLS, CVE matching, REST API, DNS enum, checkpoints |
+| v1.2.0 | Stable | Service detection, profiles, history |
 | v1.1.0 | Stable | TUI/GUI interfaces |
 | v1.0.0 | Stable | Initial release |
 
@@ -418,7 +484,7 @@ spectrescan 192.168.1.1 -o results.html --format html
 1. Create scanner class in `spectrescan/core/`
 2. Implement `scan_port()` and `scan_ports()` methods
 3. Register in `PortScanner._scan()` method
-4. Add CLI option in `spectrescan/cli/app.py`
+4. Add CLI option in `spectrescan/cli/main.py`
 5. Update presets in `spectrescan/core/presets.py`
 6. **Add tests in `spectrescan/tests/test_<scan_type>.py`**
 
@@ -1002,6 +1068,13 @@ spectrescan 192.168.1.1 -o results.html --format html
 | test_resource_limiter.py | Resource limits |
 | test_service_detection.py | Service detection |
 | test_version_mode.py | Version detection |
+| test_ssl_analyzer.py | SSL/TLS analysis |
+| test_cve_matcher.py | CVE matching |
+| test_checkpoint.py | Scan resume |
+| test_config.py | Configuration |
+| test_dns_enum.py | DNS enumeration |
+| test_nse_engine.py | NSE Lua engine |
+| test_nse_cli.py | NSE CLI commands |
 
 ---
 
@@ -1013,4 +1086,4 @@ spectrescan 192.168.1.1 -o results.html --format html
 ---
 
 **SpectreScan** - Professional Port Scanner by BitSpectreLabs  
-License: MIT | Current Version: v1.2.0
+License: MIT | Current Version: v2.0.0

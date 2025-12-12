@@ -26,7 +26,10 @@ class AsyncScanner:
         rate_limit: Optional[int] = None,
         timing_template: Optional[TimingTemplate] = None,
         connection_pool: Optional[ConnectionPool] = None,
-        enable_rtt_adjustment: bool = True
+        enable_rtt_adjustment: bool = True,
+        proxy: Optional["ProxyConfig"] = None,
+        proxy_pool: Optional["ProxyPool"] = None,
+        evasion: Optional["EvasionManager"] = None
     ):
         """
         Initialize async scanner.
@@ -38,6 +41,9 @@ class AsyncScanner:
             timing_template: Timing template (T0-T5)
             connection_pool: Connection pool for reuse
             enable_rtt_adjustment: Enable dynamic RTT-based timeout adjustment
+            proxy: Single proxy configuration for scanning through proxy
+            proxy_pool: Pool of proxies with rotation for scanning
+            evasion: Evasion manager for IDS/IPS evasion techniques
         """
         # Use timing template if provided
         if timing_template:
@@ -57,6 +63,25 @@ class AsyncScanner:
         self.semaphore = asyncio.Semaphore(self.max_concurrent)
         self.connection_pool = connection_pool
         self.enable_rtt_adjustment = enable_rtt_adjustment
+        
+        # Proxy configuration
+        self.proxy = proxy
+        self.proxy_pool = proxy_pool
+        self.proxy_connector = None
+        if proxy or proxy_pool:
+            from spectrescan.core.proxy import ProxyConnector
+            self.proxy_connector = ProxyConnector(
+                proxy=proxy,
+                proxy_pool=proxy_pool,
+                timeout=self.timeout
+            )
+        
+        # Evasion configuration
+        self.evasion = evasion
+        self.evasion_scanner = None
+        if evasion:
+            from spectrescan.core.evasion import EvasionScanner
+            self.evasion_scanner = EvasionScanner(evasion.config)
         
         # RTT calculator for adaptive timeouts
         self.rtt_calculator = RTTCalculator(self.timing_template) if enable_rtt_adjustment else None
@@ -106,8 +131,22 @@ class AsyncScanner:
                 try:
                     start_time = time.time()
                     
-                    # Use connection pool if available
-                    if self.connection_pool:
+                    # Use proxy if configured
+                    if self.proxy_connector:
+                        try:
+                            reader, writer = await asyncio.wait_for(
+                                self.proxy_connector.connect(host, port, current_timeout),
+                                timeout=current_timeout * 2  # Allow extra time for proxy handshake
+                            )
+                        except Exception as e:
+                            # Proxy connection failed
+                            if attempt < self.max_retries - 1:
+                                self.stats["retries"] += 1
+                                await asyncio.sleep(0.1 * (attempt + 1))
+                                continue
+                            raise
+                    # Use connection pool if available (and no proxy)
+                    elif self.connection_pool:
                         try:
                             reader, writer = await self.connection_pool.acquire(
                                 host, port, current_timeout

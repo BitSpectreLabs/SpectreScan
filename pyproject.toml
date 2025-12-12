@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spectrescan"
-version = "2.0.0"
+version = "3.0.0"
 description = "Professional-grade port scanner with CLI, TUI, and GUI interfaces"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["port scanner", "network security", "penetration testing"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: System Administrators",
     "Topic :: Security",
     "License :: OSI Approved :: MIT License",

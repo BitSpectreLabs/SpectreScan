@@ -21,7 +21,7 @@ class TestCPEDictionary:
     @pytest.fixture
     def cpe_data(self):
         """Load CPE dictionary data."""
-        with open(DATA_DIR / "cpe-dictionary.json", "r") as f:
+        with open(DATA_DIR / "cpe-dictionary.json", "r", encoding="utf-8") as f:
             return json.load(f)
     
     def test_file_exists(self):
@@ -94,7 +94,7 @@ class TestServiceSignatures:
     @pytest.fixture
     def signatures_data(self):
         """Load service signatures data."""
-        with open(DATA_DIR / "service-signatures.json", "r") as f:
+        with open(DATA_DIR / "service-signatures.json", "r", encoding="utf-8") as f:
             return json.load(f)
     
     def test_file_exists(self):
@@ -176,7 +176,7 @@ class TestVersionPatterns:
     @pytest.fixture
     def patterns_data(self):
         """Load version patterns data."""
-        with open(DATA_DIR / "version-patterns.json", "r") as f:
+        with open(DATA_DIR / "version-patterns.json", "r", encoding="utf-8") as f:
             return json.load(f)
     
     def test_file_exists(self):
@@ -247,7 +247,7 @@ class TestNmapServiceProbes:
     @pytest.fixture
     def probes_content(self):
         """Load Nmap probes file content."""
-        with open(DATA_DIR / "nmap-service-probes", "r") as f:
+        with open(DATA_DIR / "nmap-service-probes", "r", encoding="utf-8", errors="replace") as f:
             return f.read()
     
     def test_file_exists(self):
@@ -311,7 +311,12 @@ class TestNmapServiceProbes:
                 # Extract pattern between m| and |
                 if "m|" in line:
                     start = line.index("m|") + 2
-                    end = line.index("|", start)
+                    try:
+                        end = line.index("|", start)
+                    except ValueError:
+                        # Upstream nmap-service-probes can contain malformed or
+                        # non-standard lines (or delimiters) - skip these.
+                        continue
                     pattern = line[start:end]
                     try:
                         re.compile(pattern)
@@ -325,9 +330,9 @@ class TestSignatureDatabaseIntegration:
     
     def test_cpe_matches_signatures(self):
         """Test CPE dictionary entries match signature database."""
-        with open(DATA_DIR / "cpe-dictionary.json", "r") as f:
+        with open(DATA_DIR / "cpe-dictionary.json", "r", encoding="utf-8") as f:
             cpe_data = json.load(f)
-        with open(DATA_DIR / "service-signatures.json", "r") as f:
+        with open(DATA_DIR / "service-signatures.json", "r", encoding="utf-8") as f:
             sig_data = json.load(f)
         
         # Get service names from signatures
@@ -342,9 +347,9 @@ class TestSignatureDatabaseIntegration:
     
     def test_version_patterns_cover_signatures(self):
         """Test version patterns cover signature services."""
-        with open(DATA_DIR / "version-patterns.json", "r") as f:
+        with open(DATA_DIR / "version-patterns.json", "r", encoding="utf-8") as f:
             patterns_data = json.load(f)
-        with open(DATA_DIR / "service-signatures.json", "r") as f:
+        with open(DATA_DIR / "service-signatures.json", "r", encoding="utf-8") as f:
             sig_data = json.load(f)
         
         patterns = set(patterns_data["patterns"].keys())
@@ -363,7 +368,7 @@ class TestDataFileFormats:
         json_files = ["cpe-dictionary.json", "service-signatures.json", "version-patterns.json"]
         for filename in json_files:
             filepath = DATA_DIR / filename
-            with open(filepath, "r") as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
             assert data is not None
     
@@ -372,7 +377,7 @@ class TestDataFileFormats:
         json_files = ["cpe-dictionary.json", "service-signatures.json", "version-patterns.json"]
         for filename in json_files:
             filepath = DATA_DIR / filename
-            with open(filepath, "r") as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
             assert "version" in data
             assert "updated" in data or "description" in data

@@ -35,7 +35,10 @@ class PortScanner:
         self, 
         config: Optional[ScanConfig] = None,
         timing_template: Optional[TimingTemplate] = None,
-        use_async: bool = True
+        use_async: bool = True,
+        proxy: Optional["ProxyConfig"] = None,
+        proxy_pool: Optional["ProxyPool"] = None,
+        evasion: Optional["EvasionManager"] = None
     ):
         """
         Initialize port scanner.
@@ -44,6 +47,9 @@ class PortScanner:
             config: Scan configuration (default: normal scan)
             timing_template: Timing template (T0-T5) for speed control
             use_async: Use async scanner by default (recommended)
+            proxy: Single proxy configuration for scanning through proxy
+            proxy_pool: Pool of proxies with rotation for scanning
+            evasion: Evasion manager for IDS/IPS evasion techniques
         """
         if config is None:
             config = get_preset_config(ScanPreset.TOP_PORTS)
@@ -62,6 +68,13 @@ class PortScanner:
         self.start_time: Optional[datetime] = None
         self.end_time: Optional[datetime] = None
         
+        # Proxy configuration
+        self.proxy = proxy
+        self.proxy_pool = proxy_pool
+        
+        # Evasion configuration
+        self.evasion = evasion
+        
         # Connection pool for async scanner
         self.connection_pool = ConnectionPool(
             max_connections=self.timing_template.max_concurrent,
@@ -76,7 +89,10 @@ class PortScanner:
         self.async_scanner = AsyncScanner(
             timing_template=self.timing_template,
             connection_pool=self.connection_pool,
-            enable_rtt_adjustment=True
+            enable_rtt_adjustment=True,
+            proxy=proxy,
+            proxy_pool=proxy_pool,
+            evasion=evasion
         )
         self.banner_grabber = BannerGrabber(timeout=self.timing_template.timeout)
         self.os_detector = OSDetector(timeout=self.timing_template.timeout)

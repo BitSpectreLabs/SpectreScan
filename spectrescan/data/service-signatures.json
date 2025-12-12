@@ -1,13 +1,42 @@
 {
   "version": "2.1.0",
-  "updated": "2025-11-26",
+  "updated": "2025-12-12",
   "total_signatures": 143,
-  "categories": ["container", "orchestration", "database", "web_server", "app_server", "monitoring", "ci_cd", "messaging", "cache", "proxy", "security", "storage", "framework", "version_control", "artifact_repo", "auth", "logging", "tracing", "gitops", "cd", "code_analysis", "vpn", "alerting", "realtime", "graphql"],
+  "categories": [
+    "container",
+    "orchestration",
+    "database",
+    "web_server",
+    "app_server",
+    "monitoring",
+    "ci_cd",
+    "messaging",
+    "cache",
+    "proxy",
+    "security",
+    "storage",
+    "framework",
+    "version_control",
+    "artifact_repo",
+    "auth",
+    "logging",
+    "tracing",
+    "gitops",
+    "cd",
+    "code_analysis",
+    "vpn",
+    "alerting",
+    "realtime",
+    "graphql"
+  ],
   "description": "Comprehensive service signature database for modern applications and infrastructure - 143 signatures",
   "signatures": [
     {
       "name": "docker",
-      "ports": [2375, 2376],
+      "ports": [
+        2375,
+        2376
+      ],
       "protocol": "tcp",
       "patterns": [
         "\"Version\":\"\\d+\\.\\d+\\.\\d+\"",
@@ -20,7 +49,11 @@
     },
     {
       "name": "kubernetes",
-      "ports": [6443, 8080, 10250],
+      "ports": [
+        6443,
+        8080,
+        10250
+      ],
       "protocol": "tcp",
       "patterns": [
         "\"gitVersion\":\"v\\d+\\.\\d+\\.\\d+\"",
@@ -33,7 +66,10 @@
     },
     {
       "name": "elasticsearch",
-      "ports": [9200, 9300],
+      "ports": [
+        9200,
+        9300
+      ],
       "protocol": "tcp",
       "patterns": [
         "\"cluster_name\"",
@@ -46,7 +82,9 @@
     },
     {
       "name": "grafana",
-      "ports": [3000],
+      "ports": [
+        3000
+      ],
       "protocol": "tcp",
       "patterns": [
         "grafana",
@@ -59,7 +97,9 @@
     },
     {
       "name": "prometheus",
-      "ports": [9090],
+      "ports": [
+        9090
+      ],
       "protocol": "tcp",
       "patterns": [
         "Prometheus",
@@ -72,7 +112,10 @@
     },
     {
       "name": "jenkins",
-      "ports": [8080, 8443],
+      "ports": [
+        8080,
+        8443
+      ],
       "protocol": "tcp",
       "patterns": [
         "X-Jenkins:",
@@ -85,7 +128,10 @@
     },
     {
       "name": "gitlab",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "gitlab",
@@ -98,7 +144,10 @@
     },
     {
       "name": "rabbitmq",
-      "ports": [5672, 15672],
+      "ports": [
+        5672,
+        15672
+      ],
       "protocol": "tcp",
       "patterns": [
         "AMQP",
@@ -111,7 +160,9 @@
     },
     {
       "name": "kafka",
-      "ports": [9092],
+      "ports": [
+        9092
+      ],
       "protocol": "tcp",
       "patterns": [
         "kafka"
@@ -123,7 +174,9 @@
     },
     {
       "name": "memcached",
-      "ports": [11211],
+      "ports": [
+        11211
+      ],
       "protocol": "tcp",
       "patterns": [
         "STAT version",
@@ -136,7 +189,10 @@
     },
     {
       "name": "cassandra",
-      "ports": [9042, 9160],
+      "ports": [
+        9042,
+        9160
+      ],
       "protocol": "tcp",
       "patterns": [
         "Cassandra"
@@ -148,7 +204,9 @@
     },
     {
       "name": "couchdb",
-      "ports": [5984],
+      "ports": [
+        5984
+      ],
       "protocol": "tcp",
       "patterns": [
         "CouchDB",
@@ -161,7 +219,10 @@
     },
     {
       "name": "etcd",
-      "ports": [2379, 2380],
+      "ports": [
+        2379,
+        2380
+      ],
       "protocol": "tcp",
       "patterns": [
         "etcd"
@@ -173,7 +234,9 @@
     },
     {
       "name": "consul",
-      "ports": [8500],
+      "ports": [
+        8500
+      ],
       "protocol": "tcp",
       "patterns": [
         "Consul"
@@ -185,7 +248,9 @@
     },
     {
       "name": "vault",
-      "ports": [8200],
+      "ports": [
+        8200
+      ],
       "protocol": "tcp",
       "patterns": [
         "Vault"
@@ -197,7 +262,9 @@
     },
     {
       "name": "minio",
-      "ports": [9000],
+      "ports": [
+        9000
+      ],
       "protocol": "tcp",
       "patterns": [
         "MinIO",
@@ -210,7 +277,11 @@
     },
     {
       "name": "traefik",
-      "ports": [80, 443, 8080],
+      "ports": [
+        80,
+        443,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Traefik"
@@ -222,7 +293,10 @@
     },
     {
       "name": "haproxy",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "HAProxy"
@@ -234,7 +308,10 @@
     },
     {
       "name": "apollo",
-      "ports": [8080, 8090],
+      "ports": [
+        8080,
+        8090
+      ],
       "protocol": "tcp",
       "patterns": [
         "apollo-"
@@ -246,7 +323,9 @@
     },
     {
       "name": "nacos",
-      "ports": [8848],
+      "ports": [
+        8848
+      ],
       "protocol": "tcp",
       "patterns": [
         "Nacos"
@@ -258,7 +337,11 @@
     },
     {
       "name": "nginx",
-      "ports": [80, 443, 8080],
+      "ports": [
+        80,
+        443,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "nginx/",
@@ -271,7 +354,11 @@
     },
     {
       "name": "apache",
-      "ports": [80, 443, 8080],
+      "ports": [
+        80,
+        443,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Apache/",
@@ -284,7 +371,10 @@
     },
     {
       "name": "iis",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Microsoft-IIS/",
@@ -297,7 +387,10 @@
     },
     {
       "name": "tomcat",
-      "ports": [8080, 8443],
+      "ports": [
+        8080,
+        8443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Apache-Coyote",
@@ -310,7 +403,10 @@
     },
     {
       "name": "wildfly",
-      "ports": [8080, 9990],
+      "ports": [
+        8080,
+        9990
+      ],
       "protocol": "tcp",
       "patterns": [
         "WildFly",
@@ -323,7 +419,10 @@
     },
     {
       "name": "weblogic",
-      "ports": [7001, 7002],
+      "ports": [
+        7001,
+        7002
+      ],
       "protocol": "tcp",
       "patterns": [
         "WebLogic"
@@ -335,7 +434,10 @@
     },
     {
       "name": "websphere",
-      "ports": [9080, 9443],
+      "ports": [
+        9080,
+        9443
+      ],
       "protocol": "tcp",
       "patterns": [
         "WebSphere"
@@ -347,7 +449,9 @@
     },
     {
       "name": "mysql",
-      "ports": [3306],
+      "ports": [
+        3306
+      ],
       "protocol": "tcp",
       "patterns": [
         "mysql_native_password",
@@ -360,7 +464,9 @@
     },
     {
       "name": "mariadb",
-      "ports": [3306],
+      "ports": [
+        3306
+      ],
       "protocol": "tcp",
       "patterns": [
         "MariaDB"
@@ -372,7 +478,9 @@
     },
     {
       "name": "postgresql",
-      "ports": [5432],
+      "ports": [
+        5432
+      ],
       "protocol": "tcp",
       "patterns": [
         "PostgreSQL"
@@ -384,7 +492,9 @@
     },
     {
       "name": "mssql",
-      "ports": [1433],
+      "ports": [
+        1433
+      ],
       "protocol": "tcp",
       "patterns": [
         "Microsoft SQL Server"
@@ -396,7 +506,9 @@
     },
     {
       "name": "oracle",
-      "ports": [1521],
+      "ports": [
+        1521
+      ],
       "protocol": "tcp",
       "patterns": [
         "DESCRIPTION=",
@@ -409,7 +521,9 @@
     },
     {
       "name": "redis",
-      "ports": [6379],
+      "ports": [
+        6379
+      ],
       "protocol": "tcp",
       "patterns": [
         "redis_version:",
@@ -422,7 +536,9 @@
     },
     {
       "name": "mongodb",
-      "ports": [27017],
+      "ports": [
+        27017
+      ],
       "protocol": "tcp",
       "patterns": [
         "MongoDB",
@@ -435,7 +551,9 @@
     },
     {
       "name": "influxdb",
-      "ports": [8086],
+      "ports": [
+        8086
+      ],
       "protocol": "tcp",
       "patterns": [
         "InfluxDB",
@@ -448,7 +566,10 @@
     },
     {
       "name": "neo4j",
-      "ports": [7474, 7687],
+      "ports": [
+        7474,
+        7687
+      ],
       "protocol": "tcp",
       "patterns": [
         "Neo4j"
@@ -460,7 +581,9 @@
     },
     {
       "name": "openssh",
-      "ports": [22],
+      "ports": [
+        22
+      ],
       "protocol": "tcp",
       "patterns": [
         "SSH-2.0-OpenSSH"
@@ -472,7 +595,9 @@
     },
     {
       "name": "dropbear",
-      "ports": [22],
+      "ports": [
+        22
+      ],
       "protocol": "tcp",
       "patterns": [
         "SSH-2.0-dropbear"
@@ -484,7 +609,9 @@
     },
     {
       "name": "vsftpd",
-      "ports": [21],
+      "ports": [
+        21
+      ],
       "protocol": "tcp",
       "patterns": [
         "220.*vsFTPd"
@@ -496,7 +623,9 @@
     },
     {
       "name": "proftpd",
-      "ports": [21],
+      "ports": [
+        21
+      ],
       "protocol": "tcp",
       "patterns": [
         "220.*ProFTPD"
@@ -508,7 +637,9 @@
     },
     {
       "name": "pure-ftpd",
-      "ports": [21],
+      "ports": [
+        21
+      ],
       "protocol": "tcp",
       "patterns": [
         "220.*Pure-FTPd"
@@ -520,7 +651,9 @@
     },
     {
       "name": "postfix",
-      "ports": [25],
+      "ports": [
+        25
+      ],
       "protocol": "tcp",
       "patterns": [
         "220.*Postfix"
@@ -532,7 +665,9 @@
     },
     {
       "name": "sendmail",
-      "ports": [25],
+      "ports": [
+        25
+      ],
       "protocol": "tcp",
       "patterns": [
         "220.*Sendmail"
@@ -544,7 +679,9 @@
     },
     {
       "name": "exim",
-      "ports": [25],
+      "ports": [
+        25
+      ],
       "protocol": "tcp",
       "patterns": [
         "220.*Exim"
@@ -556,7 +693,12 @@
     },
     {
       "name": "dovecot",
-      "ports": [143, 993, 110, 995],
+      "ports": [
+        143,
+        993,
+        110,
+        995
+      ],
       "protocol": "tcp",
       "patterns": [
         "Dovecot"
@@ -568,7 +710,12 @@
     },
     {
       "name": "exchange",
-      "ports": [25, 587, 143, 993],
+      "ports": [
+        25,
+        587,
+        143,
+        993
+      ],
       "protocol": "tcp",
       "patterns": [
         "Microsoft ESMTP MAIL Service",
@@ -581,7 +728,10 @@
     },
     {
       "name": "wordpress",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "wp-content",
@@ -594,7 +744,10 @@
     },
     {
       "name": "drupal",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Drupal",
@@ -607,7 +760,10 @@
     },
     {
       "name": "joomla",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Joomla",
@@ -620,7 +776,10 @@
     },
     {
       "name": "magento",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Magento",
@@ -633,7 +792,10 @@
     },
     {
       "name": "django",
-      "ports": [8000, 8080],
+      "ports": [
+        8000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "csrftoken",
@@ -646,7 +808,10 @@
     },
     {
       "name": "flask",
-      "ports": [5000, 8080],
+      "ports": [
+        5000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Werkzeug",
@@ -659,7 +824,10 @@
     },
     {
       "name": "rails",
-      "ports": [3000, 8080],
+      "ports": [
+        3000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "X-Runtime:",
@@ -672,7 +840,10 @@
     },
     {
       "name": "laravel",
-      "ports": [8000, 8080],
+      "ports": [
+        8000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "laravel_session",
@@ -685,7 +856,10 @@
     },
     {
       "name": "spring",
-      "ports": [8080, 8443],
+      "ports": [
+        8080,
+        8443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Spring",
@@ -698,7 +872,10 @@
     },
     {
       "name": "express",
-      "ports": [3000, 8080],
+      "ports": [
+        3000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "X-Powered-By: Express"
@@ -710,7 +887,11 @@
     },
     {
       "name": "nextjs",
-      "ports": [3000, 80, 443],
+      "ports": [
+        3000,
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "_next/static",
@@ -723,7 +904,11 @@
     },
     {
       "name": "react",
-      "ports": [3000, 80, 443],
+      "ports": [
+        3000,
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "react",
@@ -736,7 +921,11 @@
     },
     {
       "name": "angular",
-      "ports": [4200, 80, 443],
+      "ports": [
+        4200,
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "ng-version",
@@ -749,7 +938,11 @@
     },
     {
       "name": "vue",
-      "ports": [8080, 80, 443],
+      "ports": [
+        8080,
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Vue.js",
@@ -762,7 +955,10 @@
     },
     {
       "name": "github-enterprise",
-      "ports": [443, 8443],
+      "ports": [
+        443,
+        8443
+      ],
       "protocol": "tcp",
       "patterns": [
         "X-GitHub-Request-Id",
@@ -775,7 +971,10 @@
     },
     {
       "name": "bitbucket",
-      "ports": [7990, 7999],
+      "ports": [
+        7990,
+        7999
+      ],
       "protocol": "tcp",
       "patterns": [
         "Bitbucket",
@@ -788,7 +987,10 @@
     },
     {
       "name": "nagios",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Nagios",
@@ -801,7 +1003,12 @@
     },
     {
       "name": "zabbix",
-      "ports": [10050, 10051, 80, 443],
+      "ports": [
+        10050,
+        10051,
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Zabbix"
@@ -813,7 +1020,10 @@
     },
     {
       "name": "splunk",
-      "ports": [8000, 8089],
+      "ports": [
+        8000,
+        8089
+      ],
       "protocol": "tcp",
       "patterns": [
         "Splunk"
@@ -825,7 +1035,9 @@
     },
     {
       "name": "kibana",
-      "ports": [5601],
+      "ports": [
+        5601
+      ],
       "protocol": "tcp",
       "patterns": [
         "kbn-name: kibana",
@@ -838,7 +1050,10 @@
     },
     {
       "name": "logstash",
-      "ports": [5044, 9600],
+      "ports": [
+        5044,
+        9600
+      ],
       "protocol": "tcp",
       "patterns": [
         "logstash"
@@ -850,7 +1065,10 @@
     },
     {
       "name": "activemq",
-      "ports": [61616, 8161],
+      "ports": [
+        61616,
+        8161
+      ],
       "protocol": "tcp",
       "patterns": [
         "ActiveMQ"
@@ -862,7 +1080,10 @@
     },
     {
       "name": "mosquitto",
-      "ports": [1883, 8883],
+      "ports": [
+        1883,
+        8883
+      ],
       "protocol": "tcp",
       "patterns": [
         "mosquitto"
@@ -874,7 +1095,10 @@
     },
     {
       "name": "nats",
-      "ports": [4222, 8222],
+      "ports": [
+        4222,
+        8222
+      ],
       "protocol": "tcp",
       "patterns": [
         "INFO.*nats"
@@ -886,7 +1110,10 @@
     },
     {
       "name": "squid",
-      "ports": [3128, 8080],
+      "ports": [
+        3128,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "X-Squid-Error",
@@ -899,7 +1126,10 @@
     },
     {
       "name": "varnish",
-      "ports": [80, 6081],
+      "ports": [
+        80,
+        6081
+      ],
       "protocol": "tcp",
       "patterns": [
         "X-Varnish",
@@ -912,7 +1142,10 @@
     },
     {
       "name": "envoy",
-      "ports": [10000, 10001],
+      "ports": [
+        10000,
+        10001
+      ],
       "protocol": "tcp",
       "patterns": [
         "envoy",
@@ -925,7 +1158,10 @@
     },
     {
       "name": "samba",
-      "ports": [139, 445],
+      "ports": [
+        139,
+        445
+      ],
       "protocol": "tcp",
       "patterns": [
         "Samba"
@@ -937,7 +1173,10 @@
     },
     {
       "name": "nextcloud",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Nextcloud",
@@ -950,7 +1189,10 @@
     },
     {
       "name": "owncloud",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "ownCloud",
@@ -987,7 +1229,11 @@
     },
     {
       "name": "wazuh",
-      "ports": [1514, 1515, 55000],
+      "ports": [
+        1514,
+        1515,
+        55000
+      ],
       "protocol": "tcp",
       "patterns": [
         "Wazuh"
@@ -999,7 +1245,10 @@
     },
     {
       "name": "openvas",
-      "ports": [9390, 9392],
+      "ports": [
+        9390,
+        9392
+      ],
       "protocol": "tcp",
       "patterns": [
         "OpenVAS"
@@ -1035,7 +1284,11 @@
     },
     {
       "name": "rancher",
-      "ports": [80, 443, 8080],
+      "ports": [
+        80,
+        443,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Rancher"
@@ -1047,7 +1300,10 @@
     },
     {
       "name": "openshift",
-      "ports": [8443, 6443],
+      "ports": [
+        8443,
+        6443
+      ],
       "protocol": "tcp",
       "patterns": [
         "OpenShift"
@@ -1059,7 +1315,9 @@
     },
     {
       "name": "php-fpm",
-      "ports": [9000],
+      "ports": [
+        9000
+      ],
       "protocol": "tcp",
       "patterns": [
         "PHP"
@@ -1071,7 +1329,10 @@
     },
     {
       "name": "node",
-      "ports": [3000, 8080],
+      "ports": [
+        3000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Node.js"
@@ -1083,7 +1344,10 @@
     },
     {
       "name": "express",
-      "ports": [3000, 8080],
+      "ports": [
+        3000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Express",
@@ -1096,7 +1360,10 @@
     },
     {
       "name": "django",
-      "ports": [8000, 8080],
+      "ports": [
+        8000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Django",
@@ -1109,7 +1376,9 @@
     },
     {
       "name": "flask",
-      "ports": [5000],
+      "ports": [
+        5000
+      ],
       "protocol": "tcp",
       "patterns": [
         "Werkzeug",
@@ -1122,7 +1391,9 @@
     },
     {
       "name": "rails",
-      "ports": [3000],
+      "ports": [
+        3000
+      ],
       "protocol": "tcp",
       "patterns": [
         "Ruby on Rails",
@@ -1135,7 +1406,10 @@
     },
     {
       "name": "laravel",
-      "ports": [80, 8000],
+      "ports": [
+        80,
+        8000
+      ],
       "protocol": "tcp",
       "patterns": [
         "laravel_session",
@@ -1148,7 +1422,10 @@
     },
     {
       "name": "spring-boot",
-      "ports": [8080, 8443],
+      "ports": [
+        8080,
+        8443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Spring Boot",
@@ -1161,7 +1438,10 @@
     },
     {
       "name": "asp.net",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "X-AspNet-Version",
@@ -1174,7 +1454,9 @@
     },
     {
       "name": "svn",
-      "ports": [3690],
+      "ports": [
+        3690
+      ],
       "protocol": "tcp",
       "patterns": [
         "Subversion",
@@ -1187,7 +1469,9 @@
     },
     {
       "name": "mercurial",
-      "ports": [8000],
+      "ports": [
+        8000
+      ],
       "protocol": "tcp",
       "patterns": [
         "Mercurial",
@@ -1200,7 +1484,9 @@
     },
     {
       "name": "artifactory",
-      "ports": [8081],
+      "ports": [
+        8081
+      ],
       "protocol": "tcp",
       "patterns": [
         "Artifactory",
@@ -1213,7 +1499,9 @@
     },
     {
       "name": "nexus",
-      "ports": [8081],
+      "ports": [
+        8081
+      ],
       "protocol": "tcp",
       "patterns": [
         "Nexus",
@@ -1226,7 +1514,10 @@
     },
     {
       "name": "harbor",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Harbor",
@@ -1239,7 +1530,10 @@
     },
     {
       "name": "keycloak",
-      "ports": [8080, 8443],
+      "ports": [
+        8080,
+        8443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Keycloak",
@@ -1252,7 +1546,9 @@
     },
     {
       "name": "oauth2-proxy",
-      "ports": [4180],
+      "ports": [
+        4180
+      ],
       "protocol": "tcp",
       "patterns": [
         "oauth2_proxy",
@@ -1265,7 +1561,9 @@
     },
     {
       "name": "dex",
-      "ports": [5556],
+      "ports": [
+        5556
+      ],
       "protocol": "tcp",
       "patterns": [
         "Dex",
@@ -1278,7 +1576,10 @@
     },
     {
       "name": "minio",
-      "ports": [9000, 9001],
+      "ports": [
+        9000,
+        9001
+      ],
       "protocol": "tcp",
       "patterns": [
         "MinIO",
@@ -1291,7 +1592,10 @@
     },
     {
       "name": "ceph",
-      "ports": [6789, 3300],
+      "ports": [
+        6789,
+        3300
+      ],
       "protocol": "tcp",
       "patterns": [
         "Ceph",
@@ -1304,7 +1608,9 @@
     },
     {
       "name": "glusterfs",
-      "ports": [24007],
+      "ports": [
+        24007
+      ],
       "protocol": "tcp",
       "patterns": [
         "GlusterFS",
@@ -1317,7 +1623,9 @@
     },
     {
       "name": "nfs",
-      "ports": [2049],
+      "ports": [
+        2049
+      ],
       "protocol": "tcp",
       "patterns": [
         "NFS"
@@ -1329,7 +1637,9 @@
     },
     {
       "name": "iscsi",
-      "ports": [3260],
+      "ports": [
+        3260
+      ],
       "protocol": "tcp",
       "patterns": [
         "iSCSI"
@@ -1341,7 +1651,9 @@
     },
     {
       "name": "fluentd",
-      "ports": [24224],
+      "ports": [
+        24224
+      ],
       "protocol": "tcp",
       "patterns": [
         "Fluentd",
@@ -1354,7 +1666,9 @@
     },
     {
       "name": "fluent-bit",
-      "ports": [2020],
+      "ports": [
+        2020
+      ],
       "protocol": "tcp",
       "patterns": [
         "Fluent Bit",
@@ -1367,7 +1681,9 @@
     },
     {
       "name": "vector",
-      "ports": [8686],
+      "ports": [
+        8686
+      ],
       "protocol": "tcp",
       "patterns": [
         "Vector",
@@ -1380,7 +1696,9 @@
     },
     {
       "name": "loki",
-      "ports": [3100],
+      "ports": [
+        3100
+      ],
       "protocol": "tcp",
       "patterns": [
         "Loki",
@@ -1393,7 +1711,10 @@
     },
     {
       "name": "tempo",
-      "ports": [3200, 14268],
+      "ports": [
+        3200,
+        14268
+      ],
       "protocol": "tcp",
       "patterns": [
         "Tempo",
@@ -1406,7 +1727,10 @@
     },
     {
       "name": "jaeger",
-      "ports": [16686, 14268],
+      "ports": [
+        16686,
+        14268
+      ],
       "protocol": "tcp",
       "patterns": [
         "Jaeger",
@@ -1419,7 +1743,9 @@
     },
     {
       "name": "zipkin",
-      "ports": [9411],
+      "ports": [
+        9411
+      ],
       "protocol": "tcp",
       "patterns": [
         "Zipkin",
@@ -1432,7 +1758,10 @@
     },
     {
       "name": "argocd",
-      "ports": [443, 8080],
+      "ports": [
+        443,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Argo CD",
@@ -1445,7 +1774,9 @@
     },
     {
       "name": "flux",
-      "ports": [9292],
+      "ports": [
+        9292
+      ],
       "protocol": "tcp",
       "patterns": [
         "Flux",
@@ -1458,7 +1789,10 @@
     },
     {
       "name": "spinnaker",
-      "ports": [9000, 8084],
+      "ports": [
+        9000,
+        8084
+      ],
       "protocol": "tcp",
       "patterns": [
         "Spinnaker",
@@ -1471,7 +1805,10 @@
     },
     {
       "name": "tekton",
-      "ports": [8008, 9090],
+      "ports": [
+        8008,
+        9090
+      ],
       "protocol": "tcp",
       "patterns": [
         "Tekton",
@@ -1484,7 +1821,10 @@
     },
     {
       "name": "drone",
-      "ports": [80, 443],
+      "ports": [
+        80,
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Drone",
@@ -1497,7 +1837,9 @@
     },
     {
       "name": "concourse",
-      "ports": [8080],
+      "ports": [
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Concourse",
@@ -1510,7 +1852,9 @@
     },
     {
       "name": "buildkite",
-      "ports": [443],
+      "ports": [
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Buildkite",
@@ -1523,7 +1867,9 @@
     },
     {
       "name": "sonarqube",
-      "ports": [9000],
+      "ports": [
+        9000
+      ],
       "protocol": "tcp",
       "patterns": [
         "SonarQube",
@@ -1536,7 +1882,9 @@
     },
     {
       "name": "snyk",
-      "ports": [443],
+      "ports": [
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "Snyk",
@@ -1549,7 +1897,9 @@
     },
     {
       "name": "trivy",
-      "ports": [4954],
+      "ports": [
+        4954
+      ],
       "protocol": "tcp",
       "patterns": [
         "Trivy",
@@ -1562,7 +1912,9 @@
     },
     {
       "name": "falco",
-      "ports": [8765],
+      "ports": [
+        8765
+      ],
       "protocol": "tcp",
       "patterns": [
         "Falco",
@@ -1575,7 +1927,9 @@
     },
     {
       "name": "openvpn",
-      "ports": [1194],
+      "ports": [
+        1194
+      ],
       "protocol": "udp",
       "patterns": [
         "OpenVPN"
@@ -1587,7 +1941,9 @@
     },
     {
       "name": "wireguard",
-      "ports": [51820],
+      "ports": [
+        51820
+      ],
       "protocol": "udp",
       "patterns": [
         "WireGuard"
@@ -1599,7 +1955,10 @@
     },
     {
       "name": "strongswan",
-      "ports": [500, 4500],
+      "ports": [
+        500,
+        4500
+      ],
       "protocol": "udp",
       "patterns": [
         "strongSwan"
@@ -1611,7 +1970,9 @@
     },
     {
       "name": "zerotier",
-      "ports": [9993],
+      "ports": [
+        9993
+      ],
       "protocol": "udp",
       "patterns": [
         "ZeroTier"
@@ -1623,7 +1984,9 @@
     },
     {
       "name": "tailscale",
-      "ports": [41641],
+      "ports": [
+        41641
+      ],
       "protocol": "udp",
       "patterns": [
         "Tailscale"
@@ -1635,7 +1998,9 @@
     },
     {
       "name": "sentry",
-      "ports": [9000],
+      "ports": [
+        9000
+      ],
       "protocol": "tcp",
       "patterns": [
         "Sentry",
@@ -1648,7 +2013,9 @@
     },
     {
       "name": "pagerduty",
-      "ports": [443],
+      "ports": [
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "PagerDuty"
@@ -1660,7 +2027,9 @@
     },
     {
       "name": "opsgenie",
-      "ports": [443],
+      "ports": [
+        443
+      ],
       "protocol": "tcp",
       "patterns": [
         "OpsGenie"
@@ -1672,7 +2041,9 @@
     },
     {
       "name": "alertmanager",
-      "ports": [9093],
+      "ports": [
+        9093
+      ],
       "protocol": "tcp",
       "patterns": [
         "Alertmanager",
@@ -1685,7 +2056,9 @@
     },
     {
       "name": "victoriametrics",
-      "ports": [8428],
+      "ports": [
+        8428
+      ],
       "protocol": "tcp",
       "patterns": [
         "VictoriaMetrics",
@@ -1698,7 +2071,10 @@
     },
     {
       "name": "thanos",
-      "ports": [10901, 10902],
+      "ports": [
+        10901,
+        10902
+      ],
       "protocol": "tcp",
       "patterns": [
         "Thanos",
@@ -1711,7 +2087,9 @@
     },
     {
       "name": "cortex",
-      "ports": [9009],
+      "ports": [
+        9009
+      ],
       "protocol": "tcp",
       "patterns": [
         "Cortex",
@@ -1724,7 +2102,10 @@
     },
     {
       "name": "mimir",
-      "ports": [8080, 9009],
+      "ports": [
+        8080,
+        9009
+      ],
       "protocol": "tcp",
       "patterns": [
         "Mimir",
@@ -1737,7 +2118,10 @@
     },
     {
       "name": "pulsar",
-      "ports": [6650, 8080],
+      "ports": [
+        6650,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Pulsar",
@@ -1750,7 +2134,10 @@
     },
     {
       "name": "nats-streaming",
-      "ports": [4222, 8222],
+      "ports": [
+        4222,
+        8222
+      ],
       "protocol": "tcp",
       "patterns": [
         "NATS Streaming",
@@ -1763,7 +2150,9 @@
     },
     {
       "name": "centrifugo",
-      "ports": [8000],
+      "ports": [
+        8000
+      ],
       "protocol": "tcp",
       "patterns": [
         "Centrifugo",
@@ -1776,7 +2165,10 @@
     },
     {
       "name": "socket.io",
-      "ports": [3000, 8080],
+      "ports": [
+        3000,
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "socket.io",
@@ -1789,7 +2181,9 @@
     },
     {
       "name": "hasura",
-      "ports": [8080],
+      "ports": [
+        8080
+      ],
       "protocol": "tcp",
       "patterns": [
         "Hasura",
@@ -1802,7 +2196,9 @@
     },
     {
       "name": "apollo",
-      "ports": [4000],
+      "ports": [
+        4000
+      ],
       "protocol": "tcp",
       "patterns": [
         "Apollo",
