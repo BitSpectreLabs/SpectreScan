@@ -1,138 +1,128 @@
-"""
+"""\
 Tests for resource limiter module.
-
-Author: BitSpectreLabs
-License: MIT
+by BitSpectreLabs
 """
+
+from __future__ import annotations
+
+from typing import Any
 
 import pytest
-import sys
 
-# The `resource` module is not available on Windows. Skip these tests on Windows.
-pytest.skip("Skipping resource_limiter tests on Windows (resource module not available)", allow_module_level=True) if sys.platform == "win32" else None
-import asyncio
-from spectrescan.core.resource_limiter import (
-    ResourceLimits,
-    CPULimiter,
-    NetworkThrottler,
-    FileDescriptorManager,
-    ConnectionPool,
-    ResourceLimiter,
-    get_system_limits,
-    recommend_resource_limits
-)
+import spectrescan.core.resource_limiter as rl
 
 
-@pytest.mark.asyncio
-async def test_cpu_limiter():
-    """Test CPU limiter."""
-    limiter = CPULimiter(max_cpu_percent=80)
-    
-    assert limiter.max_cpu_percent == 80
-    
-    # Check and throttle
-    await limiter.check_and_throttle()
-    
-    # Get current usage
-    usage = limiter.get_current_usage()
-    assert usage >= 0
+class TestResourceLimiter:
+    """Test suite for resource limiting utilities."""
 
+    @pytest.mark.asyncio
+    async def test_cpu_limiter_throttles_when_over_limit(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """CPULimiter throttles when usage exceeds max."""
 
-@pytest.mark.asyncio
-async def test_network_throttler():
-    """Test network throttler."""
-    throttler = NetworkThrottler(max_mbps=100.0)
-    
-    assert throttler.max_mbps == 100.0
-    
-    # Wait if needed (small bytes shouldn't throttle)
-    await throttler.wait_if_needed(1024)
-    
-    # Get usage
-    usage = throttler.get_current_usage()
-    assert "current_mbps" in usage
-    assert "max_mbps" in usage
+        limiter = rl.CPULimiter(max_cpu_percent=1)
+        limiter.last_check = 0.0
 
+        monkeypatch.setattr(limiter.process, "cpu_percent", lambda: 100.0)
 
-def test_file_descriptor_manager():
-    """Test file descriptor manager."""
-    manager = FileDescriptorManager(max_fds=1024)
-    
-    # Get FD count
-    count = manager.get_fd_count()
-    assert count >= 0
-    
-    # Check limit
-    within_limit = manager.check_fd_limit()
-    assert isinstance(within_limit, bool)
-    
-    # Get stats
-    stats = manager.get_fd_stats()
-    assert "current" in stats
-    assert "soft_limit" in stats
-    assert "hard_limit" in stats
+        slept: list[float] = []
 
+        async def _fake_sleep(seconds: float) -> None:
+            slept.append(seconds)
 
-@pytest.mark.asyncio
-async def test_connection_pool():
-    """Test connection pool."""
-    pool = ConnectionPool(max_connections=100)
-    
-    assert pool.max_connections == 100
-    assert pool.active_connections == 0
-    
-    # Acquire connection
-    async with pool.acquire():
-        assert pool.active_connections == 1
-    
-    assert pool.active_connections == 0
-    
-    # Get stats
-    stats = pool.get_stats()
-    assert "active" in stats
-    assert "max" in stats
-    assert "total" in stats
+        monkeypatch.setattr(rl.asyncio, "sleep", _fake_sleep)
 
+        await limiter.check_and_throttle()
 
-@pytest.mark.asyncio
-async def test_resource_limiter():
-    """Test unified resource limiter."""
-    limits = ResourceLimits(
-        max_cpu_percent=80,
-        max_network_mbps=100.0,
-        max_connections=1000
-    )
-    
-    limiter = ResourceLimiter(limits)
-    
-    # Check limits
-    status = await limiter.check_limits()
-    assert "fd_ok" in status
-    assert "fd_stats" in status
-    
-    # Get summary
-    summary = limiter.get_resource_summary()
-    assert "limits" in summary
-    assert "file_descriptors" in summary
+        assert limiter.throttle_sleep > 0
+        assert slept
 
+    @pytest.mark.asyncio
+    async def test_network_throttler_waits_when_over_budget(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """NetworkThrottler waits when the window budget would be exceeded."""
 
-def test_get_system_limits():
-    """Test getting system limits."""
-    limits = get_system_limits()
-    
-    assert "memory" in limits
-    assert "cpu" in limits
-    assert "network" in limits
-    
-    assert limits["memory"]["total_mb"] > 0
-    assert limits["cpu"]["count"] > 0
+        now = {"t": 1000.0}
 
+        def _time() -> float:
+            return now["t"]
 
-def test_recommend_resource_limits():
-    """Test resource limit recommendations."""
-    limits = recommend_resource_limits()
-    
-    assert isinstance(limits, ResourceLimits)
-    assert limits.max_memory_mb > 0
-    assert limits.max_cpu_percent > 0
-    assert limits.max_connections > 0
+        monkeypatch.setattr(rl.time, "time", _time)
+
+        slept: list[float] = []
+
+        async def _fake_sleep(seconds: float) -> None:
+            slept.append(seconds)
+            now["t"] += seconds
+
+        monkeypatch.setattr(rl.asyncio, "sleep", _fake_sleep)
+
+        throttler = rl.NetworkThrottler(max_mbps=0.0001)
+
+        # Send enough bytes to force a wait.
+        await throttler.wait_if_needed(int(throttler.max_bytes_per_second) + 1)
+
+        assert slept
+
+        usage = throttler.get_current_usage()
+        assert usage["max_mbps"] == pytest.approx(0.0001)
+        assert usage["bytes_sent"] >= 0
+
+    def test_file_descriptor_manager_reports_stats(self) -> None:
+        """FD manager reports stable stats across platforms."""
+
+        manager = rl.FileDescriptorManager(max_fds=1024)
+        stats = manager.get_fd_stats()
+        assert "current" in stats
+        assert "soft_limit" in stats
+        assert "hard_limit" in stats
+        assert stats["custom_limit"] == 1024
+
+    @pytest.mark.asyncio
+    async def test_connection_pool_tracks_counts(self) -> None:
+        """ConnectionPool tracks active and peak connections."""
+
+        pool = rl.ConnectionPool(max_connections=2)
+        assert pool.active_connections == 0
+
+        async with pool.acquire():
+            assert pool.active_connections == 1
+            assert pool.peak_connections >= 1
+
+        assert pool.active_connections == 0
+
+    @pytest.mark.asyncio
+    async def test_resource_limiter_minimal_configuration(self) -> None:
+        """ResourceLimiter works with default limits."""
+
+        limiter = rl.ResourceLimiter(rl.ResourceLimits())
+        status = await limiter.check_limits()
+        assert "fd_ok" in status
+        assert "fd_stats" in status
+
+    def test_get_system_limits_fast(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """System limits can be gathered without sleeping in tests."""
+
+        monkeypatch.setattr(rl.psutil, "cpu_percent", lambda interval=1: 0.0)
+        limits = rl.get_system_limits()
+
+        assert "memory" in limits
+        assert "cpu" in limits
+        assert "network" in limits
+        assert limits["cpu"]["count"] > 0
+
+    def test_recommend_resource_limits_uses_windows_fallback_when_no_fd_limits(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """recommend_resource_limits uses a fallback when FD limits are unavailable."""
+
+        fake_system: dict[str, Any] = {
+            "memory": {"available_mb": 1000.0},
+            "cpu": {"count": 4},
+            "network": {"bytes_sent": 0, "bytes_recv": 0, "packets_sent": 0, "packets_recv": 0},
+        }
+
+        monkeypatch.setattr(rl, "get_system_limits", lambda: fake_system)
+        limits = rl.recommend_resource_limits()
+
+        assert isinstance(limits, rl.ResourceLimits)
+        assert limits.max_file_descriptors == 400
+        assert limits.max_connections == 200

@@ -10,11 +10,16 @@ import asyncio
 import logging
 import os
 import psutil
-import resource
 import time
 from dataclasses import dataclass
 from typing import Optional
 from contextlib import asynccontextmanager
+
+try:
+    import resource  # type: ignore
+except ImportError:  # pragma: no cover
+    # The stdlib 'resource' module is Unix-only.
+    resource = None
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +163,7 @@ class FileDescriptorManager:
         self.process = psutil.Process()
         
         # Get system limits
-        if os.name != 'nt':  # Unix-like systems
+        if os.name != 'nt' and resource is not None:  # Unix-like systems
             soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
             self.system_soft_limit = soft
             self.system_hard_limit = hard
@@ -377,7 +382,7 @@ def get_system_limits() -> dict:
     }
     
     # File descriptors (Unix only)
-    if os.name != 'nt':
+    if os.name != 'nt' and resource is not None:
         soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
         limits["file_descriptors"] = {
             "soft_limit": soft,
