@@ -48,7 +48,6 @@
 - [Examples](#-examples)
 - [Development](#-development)
 - [Testing](#-testing)
-- [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -116,7 +115,7 @@
 - **Interactive Dashboard** - Modern responsive web interface
 - **User Authentication** - Session-based login with secure password hashing
 - **Role-Based Access Control** - 5 roles with 30+ granular permissions
-- **Scan Management** - Start, stop, pause scans from the browser
+- **Scan Management** - Start and cancel scans from the browser
 - **History Browser** - View and search past scan results
 - **Profile Management** - Create and manage scan profiles via UI
 - **Dark Theme** - Professional dark mode interface
@@ -125,7 +124,7 @@
 ### Scan Scheduling and Automation
 
 - **Cron-like Scheduling** - Full cron expression support with wildcards, ranges, lists, and steps
-- **Multiple Schedule Types** - One-time, cron, interval, daily, weekly, and monthly schedules
+- **Multiple Schedule Types** - One-time, cron, interval, daily, and weekly schedules
 - **Pre/Post Scan Hooks** - Execute shell commands or Python functions before and after scans
 - **Conditional Execution** - Run scans only if host is up, port changed, or within time window
 - **Scan Chaining** - Link scans together to create automated workflows
@@ -833,7 +832,7 @@ spectrescan 192.168.1.1 -p 1-1000 --tui
 - Dark/light theme toggle (`d`)
 - Statistics dashboard
 - **Profile Management** - Press `p` to open profile selection screen
-- **History Browser** - Press `h` to view scan history (coming soon)
+- **History Browser** - Press `h` to view scan history
 - Profile loading with auto-configuration
 - Multi-target support with file import
 
@@ -1560,7 +1559,7 @@ spectrescan vulndb export backup.json
 
 ## <img src="https://cdn.simpleicons.org/kubernetes/326CE5" width="20" height="20" style="vertical-align: middle;"/> Distributed Scanning
 
-Scale your scans across multiple machines with the distributed scanning feature.
+Scale scans using a master + worker architecture.
 
 ### Architecture
 
@@ -1588,19 +1587,13 @@ spectrescan cluster init --workers 4
 spectrescan cluster status
 ```
 
-**Start Worker Nodes:**
-```bash
-# On each worker machine
-spectrescan cluster worker --master 192.168.1.100:5000
-```
-
 **Run Distributed Scan:**
 ```bash
-# Scan large network across all workers
-spectrescan cluster scan 10.0.0.0/8 --workers all
+# Scan a target using a temporary local cluster (if none is running)
+spectrescan cluster scan 10.0.0.0/8 --workers 4
 
-# Scan with specific workers
-spectrescan cluster scan 192.168.0.0/16 --workers worker1,worker2
+# Scan with custom ports
+spectrescan cluster scan 192.168.0.0/16 --workers 4 -p 1-1000
 ```
 
 ### CLI Commands
@@ -1610,15 +1603,12 @@ spectrescan cluster scan 192.168.0.0/16 --workers worker1,worker2
 spectrescan cluster init              # Initialize master node
 spectrescan cluster status            # Show cluster status
 spectrescan cluster workers           # List registered workers
-spectrescan cluster shutdown          # Shutdown cluster
-
-# Worker management
-spectrescan cluster worker            # Start worker node
-spectrescan cluster worker --id node1 # Start with custom ID
+spectrescan cluster add-worker        # Add a local worker to the running cluster
+spectrescan cluster remove-worker     # Remove a local worker from the running cluster
+spectrescan cluster stop              # Stop the cluster
 
 # Distributed scanning
-spectrescan cluster scan <target>     # Run distributed scan
-spectrescan cluster results <scan-id> # Get aggregated results
+spectrescan cluster scan <target>     # Run a distributed scan
 ```
 
 ### Features
@@ -1673,7 +1663,7 @@ Then open your browser to `http://localhost:8080`
 **Scan Management:**
 - Start new scans from the browser
 - Configure scan parameters (ports, timing, detection options)
-- Stop/pause running scans
+- Cancel running scans
 - View detailed scan results
 
 **History Browser:**
@@ -1768,7 +1758,6 @@ spectrescan schedule run --daemon
 | `interval` | Repeat every N seconds/minutes/hours | `--type interval --interval "30m"` |
 | `daily` | Run daily at specific time | `--type daily --at "09:00"` |
 | `weekly` | Run on specific days of week | `--type weekly --days "mon,wed,fri" --at "08:00"` |
-| `monthly` | Run on specific day of month | `--type monthly --day 1 --at "00:00"` |
 
 ### Cron Expression Syntax
 
@@ -1978,7 +1967,7 @@ spectrescan scan 192.168.1.1 --common-source-port
 spectrescan scan 192.168.1.1 --ttl 64 --ttl-style random
 
 # Slow scan to avoid rate-based detection
-spectrescan scan 192.168.1.1 --scan-delay 5.0 --max-parallelism 1
+spectrescan scan 192.168.1.1 --scan-delay 5000 --max-parallelism 1
 ```
 
 ### Evasion Profiles
@@ -2049,11 +2038,11 @@ Control Time-To-Live values:
 spectrescan scan 192.168.1.1 --ttl 64
 
 # TTL styles
-spectrescan scan 192.168.1.1 --ttl-style fixed      # Use exact TTL
-spectrescan scan 192.168.1.1 --ttl-style random     # Random 32-128
-spectrescan scan 192.168.1.1 --ttl-style incremental # Increment each packet
-spectrescan scan 192.168.1.1 --ttl-style decremental # Decrement each packet
-spectrescan scan 192.168.1.1 --ttl-style os_mimic   # Mimic OS defaults
+spectrescan scan 192.168.1.1 --ttl-style default
+spectrescan scan 192.168.1.1 --ttl-style linux
+spectrescan scan 192.168.1.1 --ttl-style windows
+spectrescan scan 192.168.1.1 --ttl-style solaris
+spectrescan scan 192.168.1.1 --ttl-style random
 ```
 
 #### Bad Checksums (`--badsum`)
@@ -2082,14 +2071,14 @@ spectrescan scan 192.168.1.1 -sI 10.0.0.100 --zombie-port 443
 Slow scans to avoid rate-based detection:
 
 ```bash
-# Delay between packets (seconds)
-spectrescan scan 192.168.1.1 --scan-delay 5.0
+# Delay between probes (milliseconds)
+spectrescan scan 192.168.1.1 --scan-delay 5000
 
 # Limit parallel connections
 spectrescan scan 192.168.1.1 --max-parallelism 1
 
-# Random delay jitter (0.5-1.5x delay)
-spectrescan scan 192.168.1.1 --scan-delay 2.0
+# Random delay jitter (example)
+spectrescan scan 192.168.1.1 --scan-delay 2000
 ```
 
 #### Host Randomization
@@ -2111,12 +2100,12 @@ spectrescan scan 192.168.1.0/24 --randomize-hosts
 | `--random-source-port` | Use random source port |
 | `--common-source-port` | Use common ports (53,80,443) |
 | `--ttl` | TTL value (1-255) |
-| `--ttl-style` | TTL style (fixed/random/incremental/decremental/os_mimic) |
+| `--ttl-style` | TTL style (default/linux/windows/solaris/random) |
 | `-f/--fragment` | Enable packet fragmentation |
 | `--mtu` | Fragment MTU size |
 | `--badsum` | Send bad checksums |
 | `--randomize-hosts` | Randomize host scan order |
-| `--scan-delay` | Delay between probes (seconds) |
+| `--scan-delay` | Delay between probes (ms) |
 | `--max-parallelism` | Max concurrent connections |
 | `-sI/--idle-scan` | Zombie host for idle scan |
 | `--zombie-port` | Zombie host port |
@@ -2150,7 +2139,7 @@ config = EvasionConfig(
     ),
     timing=TimingConfig(
         level=TimingLevel.SNEAKY,
-        scan_delay=2.0,
+      delay_ms=2000,
         max_parallelism=5
     ),
     source_port=53,
